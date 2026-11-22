@@ -89,8 +89,8 @@ test('jedes Auto-Item mit eigener Lösung voll, auch mit gerundeter Eingabe wie 
         ok(it.xs.every((x) => x > (it.achsen.x.min || 0) && x <= it.achsen.x.max), tag + ': Zeitpunkt außerhalb der Achse');
       }
       if (it.typ === 'terme') {
-        const gerundet = it.terme.map((z) => z.filter((x) => typeof x !== 'string').map((x) => P.fmt(x.zahl, 3)));
-        ok(A.score(it, gerundet) === 1, tag + ': auf drei Stellen gerundete Terme nicht voll');
+        const gerundet = it.terme.map((z) => z.filter((x) => typeof x !== 'string').map((x) => P.fmt(x.zahl, 2)));
+        ok(A.score(it, gerundet) === 1, tag + ': jede Zahl auf zwei Stellen gerundet: Terme nicht voll');
         ok(it.loesung, tag + ': Terme ohne Musterlösung');
       }
       ok(A.score(it, null) === 0 && A.leer(it, null), tag + ': leere Antwort');
@@ -141,20 +141,52 @@ test('neue Zahlen: keine Tabelle wie auf den Blättern (Δt = 0,2 s im Fall, v�
       ok(Math.abs(a.teile[5].item.antwort - 9) > 1e-9, 'Seed ' + s + ': v₀ = 9 m/s wie Blatt 2 A2');
     }
   });
-  ok(dts.size >= 4, 'nur ' + dts.size + ' verschiedene Δt');
+  ok(dts.size >= 8, 'nur ' + dts.size + ' verschiedene Δt');
   ok(varianten.size >= 12, 'Fall nur ' + varianten.size + ' Varianten');
 });
 
+test('Terme über 3000 Seeds: jede Zahl auf zwei Stellen gerundet gibt volle Punkte, 10 % daneben nicht', () => {
+  for (let s = 1; s <= 3000; s++) {
+    const pr = W.pruefung.erzeuge(s);
+    teile(pr).filter(({ t }) => t.item && t.item.typ === 'terme').forEach(({ t, key }) => {
+      const zahlen = (f) => t.item.terme.map((z) => z.filter((x) => typeof x !== 'string').map(f));
+      eq(W.pruefung.auswerten(pr, { [key]: { auto: zahlen((x) => P.fmt(x.zahl, 2)) } }).punkte, t.p, 'Seed ' + s + ' ' + key + ' gerundet');
+      eq(A.score(t.item, zahlen((x) => String(x.zahl * 1.1))), 0, 'Seed ' + s + ' ' + key + ' 10 % daneben');
+      ok(/Folgefehler/.test(t.item.loesung), 'Seed ' + s + ' ' + key + ': Hinweis auf Folgefehler fehlt');
+    });
+  }
+});
+
+test('Fall über 3000 Seeds: mindestens 8 verschiedene Tabellen, ā aus gerundeten v̄ passt', () => {
+  const tabellen = new Set();
+  for (let s = 1; s <= 3000; s++) {
+    const a = W.pruefung.erzeuge(s).aufgaben[1];
+    if (a.variante !== 'fall') continue;
+    const tab = a.text.match(/<table[\s\S]*?<\/table>/)[0];
+    tabellen.add(tab);
+    const ts = zahlenIn(tab.split('</tr>')[0]);
+    ok(Math.abs(ts[1] - 0.2) > 1e-9, 'Seed ' + s + ': Δt = 0,2 s');
+    const t2d = a.teile[3].item;
+    // Wer mit den auf zwei Stellen gerundeten v̄ aus Tabelle 2 rechnet, bekommt den ersten ā-Wert trotzdem richtig.
+    const v = a.teile[1].item.zeilen[0].zellen.map((c) => Math.round(c.zahl * 100) / 100);
+    const tv = a.teile[1].item.spalten.slice(1).map((x) => parseFloat(x.replace(',', '.')));
+    const aR = (v[1] - v[0]) / (tv[1] - tv[0]);
+    ok(A.score({ typ: 'tabelle', zeilen: [{ zellen: [t2d.zeilen[0].zellen[0]] }] }, [[P.fmt(aR)]]) === 1, 'Seed ' + s + ': ā aus gerundeten Werten ' + aR + ' nicht akzeptiert');
+    ok(t2d.loesung.indexOf(P.fmt(v[1]) + ' m/s − ' + P.fmt(v[0]) + ' m/s') >= 0, 'Seed ' + s + ': Musterlösung 2d nicht mit gerundeten v̄');
+  }
+  ok(tabellen.size >= 8, 'nur ' + tabellen.size + ' verschiedene Fall-Tabellen');
+});
+
 test('Realismus über 3000 Seeds: Geschwindigkeiten passen zum Ort', () => {
-  const GRENZE = { 'E-Bikes an der Ampel': 45, 'Güterzug und Personenzug': 160, 'Lkw und Auto': 100 };
+  const GRENZE = { 'E-Bikes an der Ampel': 45, 'Güterzug und Personenzug': 160, 'Lkw und Auto': 70 };
   for (let s = 1; s <= 3000; s++) {
     const a = W.pruefung.erzeuge(s).aufgaben[0];
     const v1 = a.teile[0].item.antwort, v2 = 2 * v1;
     ok(GRENZE[a.titel], 'Seed ' + s + ': unbekannter Kontext ' + a.titel);
     ok(v2 * 3.6 <= GRENZE[a.titel] + 1e-9, 'Seed ' + s + ' ' + a.titel + ': v₂ = ' + P.fmt(v2 * 3.6) + ' km/h');
     if (a.titel === 'Lkw und Auto') {
-      ok(/Landstraße/.test(a.text), 'Seed ' + s + ': Lkw nicht auf der Landstraße');
-      ok(v1 * 3.6 <= 60 + 1e-9, 'Seed ' + s + ': Lkw schneller als 60 km/h');
+      ok(/Ausfallstraße am Ortsausgang/.test(a.text), 'Seed ' + s + ': Lkw nicht auf der Ausfallstraße');
+      ok(v1 * 3.6 <= 50 + 1e-9, 'Seed ' + s + ': Lkw schneller als 50 km/h');
     }
   }
 });

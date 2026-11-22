@@ -37,10 +37,21 @@
   }
   /** Rechenweg zum Abhaken; bei Zahl-Ergebnissen dazu die Einheit (die App prüft nur die Zahl). Tabellen haben die Einheit im Kopf. */
   function rw(liste, ohneEinheit) {
-    return (ohneEinheit ? liste : liste.concat([['Ergebnis mit der richtigen Einheit auf dem Blatt', 0.5]])).map(function (x) { return { text: x[0], p: x[1] }; });
+    return (ohneEinheit ? liste : liste.concat([['Ergebnis mit richtiger Einheit (bei richtigem Ergebnis oder Folgefehler)', 0.5]])).map(function (x) { return { text: x[0], p: x[1] }; });
   }
   /** terme-Item: jede Zeile Text und Zahlfelder ({ zahl }). */
-  function terme(id, frage, zeilen, loesung) { return { id: id, typ: 'terme', frage: frage, tolRel: 0.01, terme: zeilen, loesung: loesung }; }
+  /** terme-Item. Auf zwei Stellen gerundete Zahlen gelten auch (0,13 für 0,125), wie bei Ergebnissen von Hand. */
+  function terme(id, frage, zeilen, loesung) {
+    zeilen.forEach(function (z) {
+      z.forEach(function (x) {
+        if (typeof x === 'string') return;
+        var r = Math.round(x.zahl * 100) / 100;
+        if (Math.abs(r - x.zahl) > 1e-9) x.auch = [r];
+      });
+    });
+    var folge = p('Folgefehler: Hast du einen Term richtig aus einem falschen Wert von vorher gebildet, stimmt dein Ansatz. Die App prüft nur die Zahlen, notiere dir das bei der Selbstkontrolle.');
+    return { id: id, typ: 'terme', frage: frage, tolRel: 0.01, terme: zeilen, loesung: loesung + folge };
+  }
   /** Term als Text, für die Musterlösung. */
   function termText(zeile) { return zeile.map(function (x) { return typeof x === 'string' ? x : f(x.zahl); }).join(''); }
   function tabelle(kopfT, ts, kopfS, ss, unterschrift) {
@@ -65,10 +76,10 @@
           p('Auf dem Nachbargleis steht ein Personenzug. In dem Augenblick, in dem die Lok des Güterzugs an der Lok des Personenzugs vorbeifährt (t = 0, s = 0 für beide), fährt der Personenzug aus dem Stand gleichmäßig beschleunigt los. In den ersten ' +
             f(z.tA) + ' s legt er ' + f(z.sA) + ' m zurück.');
       } },
-    { titel: 'Lkw und Auto', a: [2, 2.5, 3], T: [6, 8, 10], t0: [2, 4, 5, 10], tA: [2, 3, 4], S: [50, 80, 100, 150], v2Max: 25, xSchritt: 1,
+    { titel: 'Lkw und Auto', a: [2, 2.5, 3], T: [6, 8, 10], t0: [2, 4, 5, 10], tA: [2, 3, 4], S: [50, 80, 100, 150], v2Max: 70 / 3.6, xSchritt: 1,
       nom1: 'der Lkw', nom2: 'das Auto', akk1: 'den Lkw', gen1: 'des Lkw', gen2: 'des Autos',
       text: function (z) {
-        return p('Ein Lkw fährt mit konstanter Geschwindigkeit auf einer Landstraße. Für einen ' + f(z.s0) + ' m langen Abschnitt braucht er ' + f(z.t0) + ' s.') +
+        return p('Ein Lkw fährt mit konstanter Geschwindigkeit auf einer Ausfallstraße am Ortsausgang. Für einen ' + f(z.s0) + ' m langen Abschnitt braucht er ' + f(z.t0) + ' s.') +
           p('An einer Einmündung wartet ein Auto. In dem Augenblick, in dem der Lkw an ihm vorbeifährt (t = 0, s = 0 für beide), fährt das Auto aus dem Stand gleichmäßig beschleunigt los. In den ersten ' +
             f(z.tA) + ' s legt es ' + f(z.sA) + ' m zurück.');
       } }
@@ -137,20 +148,20 @@
 
   /* ---------- Aufgabe 2: Messtabelle (freier Fall oder Bremsen) ---------- */
   var FALL = [
-    { titel: 'Sprungturm', H: [3, 5, 7.5, 10], d: [0.1, 0.15, 0.25], wer: 'die Springerin',
+    { titel: 'Sprungturm', H: [3, 5, 7.5, 10], d: [0.1, 0.12, 0.15, 0.16, 0.18, 0.25], wer: 'die Springerin',
       text: function (H) {
         var platt = H >= 7.5;   // 7,5 m und 10 m sind Plattformen, 3 m und 5 m Bretter
         return p('Eine Springerin springt aufrecht ' + (platt ? 'von der ' + f(H) + '-m-Plattform' : 'vom ' + f(H) + '-m-Brett') + '. Die Tabelle gibt an, wie weit ihre Fußsohlen zur Zeit t unter ' +
           (platt ? 'der Plattform' : 'dem Brett') + ' sind. Den Luftwiderstand lässt du weg.');
       },
       ende: '<strong>Berechne</strong>: Wann berühren ihre Fußsohlen das Wasser?' },
-    { titel: 'Stein von der Brücke', H: [10, 15, 20], d: [0.15, 0.25, 0.3], wer: 'der Stein',
+    { titel: 'Stein von der Brücke', H: [10, 15, 20], d: [0.15, 0.18, 0.24, 0.25, 0.3], wer: 'der Stein',
       text: function (H) { return p('Ein Stein fällt von einer ' + f(H) + ' m hohen Brücke ins Wasser. Eine Videoanalyse liefert, wie weit er zur Zeit t gefallen ist. Den Luftwiderstand lässt du weg.'); },
       ende: '<strong>Berechne</strong>: Wann trifft der Stein auf das Wasser?' },
-    { titel: 'Fallturm', H: [20, 25, 30, 40], d: [0.25, 0.3], wer: 'die Gondel',
-      text: function (H) { return p('Im Freizeitpark fällt die Gondel eines Fallturms aus dem Stand ' + f(H) + ' m frei nach unten, dann setzt die Bremse ein. Ein Sensor misst, wie weit sie zur Zeit t gefallen ist. Reibung und Luftwiderstand lässt du weg.'); },
+    { titel: 'Fallturm', H: [20, 25, 30, 40], d: [0.24, 0.25, 0.3], wer: 'die Gondel',
+      text: function (H) { return p('Im Freizeitpark fällt die Gondel eines Fallturms aus der Ruhe ' + f(H) + ' m frei nach unten, dann setzt die Bremse ein. Ein Sensor misst, wie weit sie zur Zeit t gefallen ist. Reibung und Luftwiderstand lässt du weg.'); },
       ende: '<strong>Berechne</strong>: Nach welcher Zeit setzt die Bremse ein?' },
-    { titel: 'Kugel im Physikraum', H: [1.5, 2, 2.5], d: [0.1, 0.15], wer: 'die Kugel',
+    { titel: 'Kugel im Physikraum', H: [1.5, 1.8, 2], d: [0.1, 0.12], wer: 'die Kugel',
       text: function (H) { return p('Im Physikraum lässt du eine Stahlkugel aus ' + f(H) + ' m Höhe auf den Boden fallen. Eine Videoanalyse liefert, wie weit sie zur Zeit t gefallen ist. Den Luftwiderstand lässt du weg.'); },
       ende: '<strong>Berechne</strong>: Wann schlägt die Kugel auf dem Boden auf?' }
   ];
@@ -232,7 +243,11 @@
     var vListe = v.t.map(function (t, i) { return 'v̄(' + f(t, 3) + ' s) ' + erg(v.wert[i], 'm/s'); }).join('; ');
     var aListe = acc.t.map(function (t, i) { return 'ā(' + f(t, 3) + ' s) ' + erg(acc.wert[i], 'm/s²'); }).join('; ');
     var ersteV = 'v̄(t = ' + f(v.t[0], 3) + ' s) = (' + sT(ss[1]) + ' m − 0 m) / (' + dT + ' − 0 s)';
-    var ersteA = 'ā(t = ' + f(acc.t[0], 3) + ' s) = (' + f(v.wert[1]) + ' m/s − ' + f(v.wert[0]) + ' m/s) / (' + f(v.t[1], 3) + ' s − ' + f(v.t[0], 3) + ' s)';
+    // Im freien Fall rechnen Lernende mit den auf zwei Stellen gerundeten v̄ weiter: Rechenweg damit, ungerundeter Wert in Klammern.
+    var vR = fall ? [v.wert[0], v.wert[1]].map(function (x) { return Math.round(x * 100) / 100; }) : [v.wert[0], v.wert[1]];
+    var aR = (vR[1] - vR[0]) / (v.t[1] - v.t[0]);
+    var ersteA = 'ā(t = ' + f(acc.t[0], 3) + ' s) = (' + f(vR[1]) + ' m/s − ' + f(vR[0]) + ' m/s) / (' + f(v.t[1], 3) + ' s − ' + f(v.t[0], 3) + ' s)';
+    var ersteAErg = ersteA + ' ' + erg(aR, 'm/s²') + (Math.abs(aR - acc.wert[0]) > 0.005 ? ' (mit ungerundeten Werten ' + f(acc.wert[0], 2) + ' m/s²)' : '');
 
     var aT = fall ? '' : f(z.a) + ' m/s²';
     var zeilen2 = fall ? [['a(t) = ', { zahl: G }, ' m/s²'], ['v(t) = ', { zahl: G }, ' m/s² · t'], ['s(t) = ', { zahl: G / 2 }, ' m/s² · t²']]
@@ -276,7 +291,7 @@
           frage: '<strong>Bestimme</strong> aus aufeinanderfolgenden Werten der Tabelle 2 jeweils die mittlere ' + (fall ? '' : '(negative!) ') + 'Beschleunigung ā und <strong>trage</strong> alle drei Werte in Tabelle 3 <strong>ein</strong>. Den Rechenweg für den ersten Wert ā(t = ' + f(acc.t[0], 3) + ' s) schreibst du auf Papier.',
           spalten: ['t in s'].concat(acc.t.map(function (t) { return f(t, 3); })),
           zeilen: [{ kopf: 'ā in m/s²', zellen: acc.wert.map(function (x) { return fall ? { zahl: x, auch: [G] } : { zahl: x }; }) }],
-          loesung: p(ersteA + ' ' + erg(acc.wert[0], 'm/s²')) + p('Die anderen Werte genauso: ' + aListe + '.') +
+          loesung: p(ersteAErg) + p('Die anderen Werte genauso: ' + aListe + '.') +
             p(fall ? 'Alle Werte liegen bei g = 9,81 m/s² (Rundung der Messwerte).' : 'ā ist konstant und negativ: Das Fahrzeug wird gleichmäßig langsamer.') },
         rechenweg: rw([['Rechenweg für den ersten Wert mit Differenzen und Einheiten: ' + ersteA, 1]], true) },
       { b: 'e', p: 3, kurz: 'Funktionsterme', trainer: fall ? 'fall-v' : 'bremsweg', akte: fall ? 'fall' : 'bremsen',
