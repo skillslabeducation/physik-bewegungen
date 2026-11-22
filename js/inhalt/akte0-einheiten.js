@@ -73,7 +73,7 @@
           '<p>Genauso für die anderen Formeln:</p>' +
           '<p>v = a·t &nbsp;| :t &nbsp;⇒ a = v/t<br>v = a·t &nbsp;| :a &nbsp;⇒ t = v/a</p>' +
           '<p>s = a/2·t² &nbsp;| ·2<br>2s = a·t² &nbsp;| :t² &nbsp;⇒ a = 2s/t²<br>2s = a·t² &nbsp;| :a<br>2s/a = t² &nbsp;| √ &nbsp;⇒ t = √(2s/a)</p>',
-        merk: 'Steht die gesuchte Größe unter dem Bruchstrich: mal nehmen. Steht sie in einem Produkt: durch den anderen Faktor teilen.',
+        merk: 'Steht die gesuchte Größe unter dem Bruchstrich: mit ihr malnehmen. Steht sie in einem Produkt: durch den anderen Faktor teilen.',
         achtung: '<p>Bei gesuchter Zeit steht der Weg oder die Geschwindigkeit oben: t = s/v und t = v/a. Wer den Bruch umdreht, bekommt keine Zeit. Die Probe mit den Einheiten verrät das sofort.</p>' },
 
       { titel: 'Mit Einheiten rechnen und kürzen',
@@ -96,7 +96,7 @@
     ueben: [
       { id: 'einheiten-u1', typ: 'wahl',
         frage: 'Welche Einheit hat die Beschleunigung a?',
-        optionen: ['m/s²', 'm/s', 'km/h', 's/m²'],
+        optionen: ['m/s²', 'm/s', 'km/h', 's²/m'],
         richtig: 0,
         optErkl: ['Richtig: a = Δv/Δt, also (m/s)/s = m/s², gesprochen „Meter pro Sekunde pro Sekunde“.',
           'm/s ist die Einheit der Geschwindigkeit. Die Beschleunigung ist die Änderung der Geschwindigkeit pro Sekunde, darum kommt noch einmal „pro Sekunde“ dazu.',
@@ -187,7 +187,7 @@
               'Du hast den Bruch auf den Kopf gestellt. Das ergäbe ≈ ' + f(V_FUSS / S_WL, 5) + ' 1/h, keine Zeit.',
               'km und m/s passen nicht zusammen, die Einheiten kürzen sich nicht. Bleib bei km und km/h, dann bleibt h übrig.'] }
         ],
-        antwort: T_WL, einheit: 'h', formel: 't-gleich',
+        antwort: T_WL, einheit: 'h', formel: 't-gleich-km',
         loesung: '<p>v = s/t &nbsp;| ·t<br>v·t = s &nbsp;| :v<br>t = s/v</p>' +
           '<p>t = ' + WL + ' km / (5 km/h) = 2240 · km/(km/h) = 2240 · km · h/km = 2240 h</p>' +
           '<p>Doppelbruch: (a/b) / (c/d) = a/b · d/c, also km/(km/h) = km · h/km = h.</p>' +
@@ -245,7 +245,7 @@
         antwort: S_8H, einheit: 'km', formel: 's-umstellen',
         loesung: '<p>v = s/t &nbsp;| ·t<br>s = v·t</p><p>s = 5 km/h · 8 h = 40 km (die h kürzen sich)</p>' },
 
-      { id: 'einheiten-u12', typ: 'rechnung',
+      { id: 'einheiten-u12', typ: 'rechnung', quelle: 'Tafel S. 10, (1) a',
         frage: 'Eine Radfahrerin fährt an der Ampel aus dem Stand an, beschleunigt gleichmäßig und ist nach 5 s 6 m/s schnell. Stelle v = a·t nach a um und berechne die Beschleunigung.',
         gegeben: '<p>v = 6 m/s, t = 5 s, aus dem Stand</p>',
         schritte: [
