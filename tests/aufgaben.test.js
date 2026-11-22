@@ -1,7 +1,7 @@
 /* Aufgaben-Engine (reiner Teil): Jede Musterlösung ist richtig, falsche Antworten nicht, Teilpunkte stimmen. */
 const laden = require('./laden');
 const { test, ok, eq, fertig } = require('./mini');
-const W = laden(['js/util.js', 'js/text.js', 'js/logic.js', 'js/state.js', 'js/aufgaben.js']);
+const W = laden(['js/util.js', 'js/text.js', 'js/physik.js', 'js/logic.js', 'js/state.js', 'js/diagramm.js', 'js/aufgaben.js']);
 const A = W.aufgaben;
 
 const BEISPIELE = {
@@ -15,16 +15,23 @@ const BEISPIELE = {
   tabelle: { id: 't', typ: 'tabelle', frage: 'q', spalten: ['Merkmal', 'Arterien', 'Venen'], zeilen: [
     { kopf: 'Richtung', zellen: [{ optionen: ['vom Herzen weg', 'zum Herzen hin'], richtig: 0 }, { optionen: ['vom Herzen weg', 'zum Herzen hin'], richtig: 1 }] },
     { kopf: 'Wand', zellen: [{ fix: 'dick' }, { optionen: ['dick', 'dünn'], richtig: 1 }] }] },
-  matrix: { id: 'x', typ: 'matrix', frage: 'q', zeilenKopf: 'Spender', spaltenKopf: 'Empfänger', zeilen: ['0', 'A'], spalten: ['0', 'A'], richtig: [[true, true], [false, true]] },
   zahl: { id: 'n', typ: 'zahl', frage: 'q', antwort: 192, tol: 0.5, einheit: 'kcal', auch: [197.4] },
-  behauptung: { id: 'bh', typ: 'behauptung', aussage: 'Arterien führen immer sauerstoffreiches Blut.', stimmt: false, gruende: ['g0', 'g1'], richtig: 1 }
+  behauptung: { id: 'bh', typ: 'behauptung', aussage: 'Arterien führen immer sauerstoffreiches Blut.', stimmt: false, gruende: ['g0', 'g1'], richtig: 1 },
+  rechnung: { id: 'rc', typ: 'rechnung', frage: 'Wie lange dauert die Fahrt?', antwort: 63.2456, auch: [63.25], einheit: 's', formel: 's-beschl',
+    loesung: '<p>t = √(2s/a) ≈ 63,25 s</p>',
+    schritte: [{ art: 'formel', optionen: ['s = a/2·t²', 's = v·t'], richtig: 0, optErkl: ['Richtig, hier wird beschleunigt.', 'Das ist die Formel für konstante Geschwindigkeit.'] }] },
+  punkte: { id: 'pk', typ: 'punkte', frage: 'Trage die Punkte ein.', achsen: { x: { g: 't', e: 's', max: 60, schritt: 10 }, y: { g: 's', e: 'm', max: 1250, schritt: 250 } },
+    xs: [0, 20, 40, 60], soll: [0, 375, 750, 1125], kurve: [[0, 0], [60, 1125]] },
+  zahltabelle: { id: 'zt', typ: 'tabelle', frage: 'q', spalten: ['', 'v̄ in m/s', 'ā in m/s²'], zeilen: [
+    { kopf: 'Intervall 1', zellen: [{ zahl: 0.98 }, { zahl: 2.945, auch: [2.95] }] }] }
 };
 
 const FALSCH = {
   wahl: 0, mehrfach: [0], luecke: ['Herz', 'zusammen'], eingabe: 'Bronchien', liste: ['Fette', 'Fett'],
   zuordnen: [1, 0, 2], reihenfolge: [1, 0, 2, 3],
-  tabelle: [[0, 0], [null, 1]], matrix: [[true, true], [true, true]],
-  zahl: '180', behauptung: { stimmt: true, grund: 1 }
+  tabelle: [[0, 0], [null, 1]],
+  zahl: '180', behauptung: { stimmt: true, grund: 1 },
+  rechnung: '62', punkte: [0, 375, 750, null], zahltabelle: [['0,98', '3']]
 };
 
 Object.keys(BEISPIELE).forEach((typ) => {
@@ -68,7 +75,6 @@ test('leer: keine Antwort wird erkannt, eine Teilantwort nicht', () => {
   ok(A.leer(BEISPIELE.eingabe, '   '));
   ok(A.leer(BEISPIELE.luecke, [null, null]));
   ok(!A.leer(BEISPIELE.luecke, [null, 'zusammen']));
-  ok(A.leer(BEISPIELE.matrix, [[false, false], [false, false]]));
   ok(A.leer(BEISPIELE.behauptung, { stimmt: null, grund: null }));
   ok(A.leer(BEISPIELE.reihenfolge, []));
   ok(!A.leer(BEISPIELE.wahl, 0));
@@ -92,6 +98,108 @@ test('eingabe: Sperrliste des Items wird beachtet', () => {
   const it = { id: 'e2', typ: 'eingabe', frage: 'q', akzeptiert: ['Bronchiolen'], nicht: ['Bronchien'] };
   ok(!A.richtig(it, 'Bronchien'));
   ok(A.richtig(it, 'Bronchiolen'));
+});
+
+/* ---------- Physik-Typen ---------- */
+
+test('rechnung: Ergebnis mit relativer Toleranz, Einheit im Lösungstext', () => {
+  const it = BEISPIELE.rechnung;
+  eq(A.score(it, '63,25'), 1);
+  eq(A.score(it, '63.2'), 1);
+  eq(A.score(it, '62'), 0);
+  // 63 liegt nur 0,4 % daneben: mit dem Standard tolRel 0.01 (Datenformate, ENTWURF ±1 %) richtig, mit strengerer Toleranz nicht.
+  eq(A.score(it, '63'), 1);
+  eq(A.score(Object.assign({}, it, { tolRel: 0.001 }), '63'), 0);
+  eq(A.score(it, ''), 0);
+  ok(A.leer(it, ''));
+  ok(!A.leer(it, '63'));
+  ok(A.loesungText(it).indexOf('63,25 s') >= 0, A.loesungText(it));
+});
+
+test('punkte: Anteil der Zeitpunkte innerhalb der Toleranz (Standard y.schritt/2)', () => {
+  const it = BEISPIELE.punkte;
+  eq(A.score(it, [0, 375, 750, 1125]), 1);
+  eq(A.score(it, [0, 375, 750, null]), 0.75);
+  eq(A.score(it, [0, 500, 750, 1125]), 1);
+  eq(A.score(it, [0, 510, 750, 1125]), 0.75);
+  ok(A.leer(it, [null, null, null, null]));
+  ok(!A.leer(it, [null, 375, null, null]));
+  eq(A.score(Object.assign({}, it, { tol: 10 }), [0, 380, 750, 1125]), 1);
+  eq(A.score(Object.assign({}, it, { tol: 10 }), [0, 400, 750, 1125]), 0.75);
+});
+
+test('diagramm.einrasten: auf das Raster runden', () => {
+  eq(W.diagramm.einrasten(137, 50), 150);
+  eq(W.diagramm.einrasten(110, 50), 100);
+  eq(W.diagramm.einrasten(380, 125), 375);
+  eq(W.diagramm.einrasten(0.31, 0.1), 0.3);
+});
+
+test('diagramm.kurve: n Abschnitte von bis', () => {
+  const k = W.diagramm.kurve((t) => t * t, 0, 4, 4);
+  eq(k, [[0, 0], [1, 1], [2, 4], [3, 9], [4, 16]]);
+  eq(W.diagramm.kurve((t) => t, 0, 1).length, 41);
+});
+
+test('diagramm.markup: Karo, Achsentitel, Farben je Größe', () => {
+  const m = W.diagramm.markup({ achsen: BEISPIELE.punkte.achsen, kurven: [{ punkte: [[0, 0], [60, 1125]], farbe: 's' }] }).svg;
+  ok(m.indexOf('t in s') >= 0 && m.indexOf('s in m') >= 0, 'Achsentitel');
+  ok(m.indexOf('dia-karo') >= 0, 'Karo');
+  ok(m.indexOf('dia-kurve--s') >= 0, 'Farbe s');
+  ok(m.indexOf('s(t)') >= 0, 'Kurve beschriftet');
+  ok(m.indexOf('1250') >= 0, 'Skala');
+});
+
+test('diagramm.mini: alle Arten liefern beschriftetes SVG in der richtigen Farbe', () => {
+  ['s-gleich', 'v-gleich', 'a-gleich', 's-beschl', 'v-beschl', 'a-beschl', 's-brems', 'v-brems', 'a-brems', 's-ruhe', 'v-ruhe'].forEach((art) => {
+    const m = W.diagramm.mini(art);
+    ok(/^<svg[^>]*aria-label="[^"]+"/.test(m), art + ': aria-label');
+    ok(m.indexOf('dia-kurve--' + art[0]) >= 0, art + ': Farbe');
+  });
+});
+
+test('tabelle: Zahlzellen mit relativer Toleranz', () => {
+  const it = BEISPIELE.zahltabelle;
+  eq(A.score(it, [['0,98', '2,95']]), 1);
+  eq(A.score(it, [['0,98', '3']]), 0.5);
+  eq(A.score(it, [['0.98', '2,945']]), 1);
+  ok(A.leer(it, [['', '']]));
+  ok(A.loesungText(it).indexOf('0,98') >= 0, A.loesungText(it));
+});
+
+test('wahl: Lösungstext einer Diagramm-Option ist die Beschreibung, kein SVG-Rest', () => {
+  const it = { id: 'wd', typ: 'wahl', frage: 'q', optionen: [W.diagramm.mini('v-gleich'), W.diagramm.mini('v-beschl')], richtig: 1, optErkl: ['a', 'b'] };
+  const t = A.loesungText(it);
+  ok(t.indexOf('v-t-Diagramm') === 0, t);
+});
+
+test('optErklOk: Inhalts-Regel ein Erklärsatz je Option', () => {
+  const w = { typ: 'wahl', optionen: ['a', 'b', 'c'], richtig: 0 };
+  ok(A.optErklOk(Object.assign({}, w, { optErkl: ['x', 'y', 'z'] })), 'passend');
+  ok(!A.optErklOk(Object.assign({}, w, { optErkl: ['x', 'y'] })), 'zu kurz');
+  ok(!A.optErklOk(w), 'fehlt bei wahl');
+  ok(!A.optErklOk({ typ: 'mehrfach', optionen: ['a', 'b'], richtig: [0] }), 'fehlt bei mehrfach');
+  ok(A.optErklOk(BEISPIELE.zahl), 'Nicht-Auswahltyp ohne optErkl');
+  ok(A.optErklOk(BEISPIELE.rechnung), 'rechnung mit passenden Schritten');
+  const kaputt = JSON.parse(JSON.stringify(BEISPIELE.rechnung));
+  kaputt.schritte[0].optErkl = ['nur einer'];
+  ok(!A.optErklOk(kaputt), 'rechnung-Schritt zu kurz');
+});
+
+test('erklaerungen: gewählte Option, bei Fehler zusätzlich die richtige', () => {
+  const w = { typ: 'wahl', optionen: ['a', 'b', 'c'], richtig: 1, optErkl: ['ea', 'eb', 'ec'] };
+  eq(A.erklaerungen(w, 1).map((e) => e.text), ['eb']);
+  eq(A.erklaerungen(w, 0).map((e) => e.text), ['ea', 'eb']);
+  eq(A.erklaerungen(w, 0).map((e) => e.gewaehlt), [true, false]);
+  const m = { typ: 'mehrfach', optionen: ['a', 'b', 'c'], richtig: [0, 2], optErkl: ['ea', 'eb', 'ec'] };
+  eq(A.erklaerungen(m, [0, 2]).map((e) => e.text), ['ea', 'ec']);
+  eq(A.erklaerungen(m, [0, 1]).map((e) => e.text), ['ea', 'eb', 'ec']);
+  eq(A.erklaerungen({ typ: 'wahl', optionen: ['a'], richtig: 0 }, 0), []);
+});
+
+test('Engine kennt die Bio-Spezialtypen nicht mehr', () => {
+  ['kreuzung', 'matrix', 'beschriften'].forEach((t) => ok(A.TYPEN.indexOf(t) < 0, t));
+  ['rechnung', 'punkte'].forEach((t) => ok(A.TYPEN.indexOf(t) >= 0, t));
 });
 
 fertig('aufgaben');

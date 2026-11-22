@@ -305,6 +305,55 @@ table.tab--kreuzung .allel { font-family: var(--mono); font-size: 1.1rem; text-a
 .spiel--ende { text-align: center; padding: 20px 0; }
 .ergebnis { font-size: 2.4rem; margin: 8px 0; color: var(--vital); }
 
+/* ---------- Diagramme (Karo, Tafelfarben: s braun, v blau, a rot) ---------- */
+:root { --g-s: #c8955a; --g-v: #5b9bff; --g-a: #ff5c5c; --karo: rgba(147, 163, 191, .2); }
+.dia { display: block; width: 100%; height: auto; font-family: var(--sans); }
+.dia--klein { max-width: 300px; }
+.dia-karo { fill: none; stroke: var(--karo); stroke-width: 1; }
+.dia-achse, .dia-strich { stroke: var(--text); stroke-width: 1.5; }
+.dia-pfeil { fill: var(--text); }
+.dia-zahl { fill: var(--muted); font: 500 12px var(--mono); }
+.dia-titel { fill: var(--text); font-size: 13px; font-weight: 600; }
+.dia-kurve { fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.dia-kurve--s { stroke: var(--g-s); }
+.dia-kurve--v { stroke: var(--g-v); }
+.dia-kurve--a { stroke: var(--g-a); }
+.dia-label { font-size: 13px; font-weight: 700; paint-order: stroke; stroke: var(--panel2); stroke-width: 4px; stroke-linejoin: round; }
+.dia-label--s { fill: var(--g-s); }
+.dia-label--v { fill: var(--g-v); }
+.dia-label--a { fill: var(--g-a); }
+.dia-marke { fill: var(--text); }
+.dia--mini .dia-titel { font-size: 11px; }
+.dia--mini .dia-kurve { stroke-width: 3.5; }
+.dia--tippen { cursor: crosshair; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.dia-spalte { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 4; opacity: .6; }
+.dia-punkt { fill: var(--blau); stroke: var(--bg); stroke-width: 2; }
+.dia-punkt--richtig { fill: var(--vital); }
+.dia-punkt--falsch { fill: var(--rot); }
+.dia-punkt--soll { fill: none; stroke: var(--vital); stroke-width: 2.5; stroke-dasharray: 3 2; }
+.punkte .abb { padding: 6px; }
+.punkte__anzeige { min-height: 1.5em; margin: 4px 0 0; font-size: .9rem; color: var(--muted); }
+.opts--raster { grid-template-columns: 1fr 1fr; }
+.opt--bild { padding: 6px; min-width: 0; }
+.opt--bild svg { display: block; width: 100%; max-width: 220px; height: auto; margin: 0 auto; }
+
+/* ---------- Geführtes Rechnen ---------- */
+.rechnung__gegeben { margin: 0 0 12px; padding: 8px 12px; background: var(--panel2); border-radius: 10px; font-size: .95rem; }
+.rechnung__gegeben p { margin: 4px 0; }
+.rechnung__schritte { display: grid; gap: 10px; }
+.stufe { border-left: 3px solid var(--line); padding: 2px 0 2px 12px; margin: 0 0 10px; }
+.stufe.geloest { border-left-color: var(--vital); }
+.stufe__titel { font-family: var(--mono); font-size: .74rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+.stufe__erkl { margin: 6px 0 0; font-size: .92rem; }
+.stufe__erkl:empty { display: none; }
+.stufe .opt[hidden], .rechnung .aktionen[hidden] { display: none; }
+.rechnung__ergebnis .einheit { font-family: var(--mono); }
+.aktionen--links { justify-content: flex-start; margin-top: 4px; }
+.feedback__erkl { margin: 6px 0; }
+.loesung { margin-top: 8px; padding: 8px 12px; background: var(--panel); border-radius: 10px; font-family: var(--mono); font-size: .92rem; overflow-x: auto; }
+.loesung p { margin: 4px 0; }
+table.tab .eingabe--zelle { width: 100%; min-width: 72px; min-height: 44px; font-family: var(--mono); }
+
 /* ---------- Erklären ---------- */
 .erkl { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px; }
 .erkl__text { width: 100%; min-height: 160px; padding: 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--text); font-size: 16px; line-height: 1.5; resize: vertical; }

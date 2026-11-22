@@ -67,13 +67,17 @@
     return s.replace('-', '−').replace('.', ',');
   }
 
-  /** Passt die Eingabe zur Antwort (oder einem Wert aus `auch`)? Relative Toleranz, Standard 1 %. */
+  /** Passt die Eingabe zur Antwort (oder einem Wert aus `auch`)? Relative Toleranz, Standard 1 %.
+      „1.125“ ist mehrdeutig (Tausenderpunkt oder Dezimalpunkt): Dann gilt jede der beiden Lesarten. */
   function passt(eingabe, antwort, auch, tolRel) {
     if (tolRel == null) tolRel = 0.01;
     var e = typeof eingabe === 'number' ? eingabe : W.text.parseZahl(eingabe);
     if (typeof e !== 'number' || isNaN(e)) return false;
+    var lesarten = [e];
+    var m = typeof eingabe === 'string' && eingabe.replace(/[−–]/g, '-').match(/^\s*(-?\d{1,3}\.\d{3})(?:\s*[^\d\s.,][^\d]*)?\s*$/);
+    if (m) lesarten.push(parseFloat(m[1]));
     return [antwort].concat(auch || []).some(function (soll) {
-      return Math.abs(e - soll) <= Math.max(Math.abs(soll) * tolRel, 1e-9);
+      return lesarten.some(function (x) { return Math.abs(x - soll) <= Math.max(Math.abs(soll) * tolRel, 1e-9); });
     });
   }
 

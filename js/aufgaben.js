@@ -1,6 +1,6 @@
 /* Aufgaben-Engine: prüft Antworten (rein, testbar) und zeigt Aufgaben an.
-   Typen: wahl, mehrfach, luecke, eingabe, liste, zuordnen, reihenfolge, beschriften,
-   tabelle, matrix, kreuzung, zahl, behauptung. */
+   Typen: wahl, mehrfach, luecke, eingabe, liste, zuordnen, reihenfolge,
+   tabelle (auch Zahlzellen), zahl, behauptung, rechnung, punkte. */
 (function () {
   'use strict';
   var W = (window.W = window.W || {});
@@ -36,14 +36,14 @@
     return out;
   }
 
-  /** Prozentfeld lesen. Leer zählt als 0 %, sobald mindestens ein Feld ausgefüllt ist. */
-  function prozentWert(prozent, gr) {
-    prozent = prozent || {};
-    var irgendwas = Object.keys(prozent).some(function (k) { return String(prozent[k] == null ? '' : prozent[k]).trim() !== ''; });
-    var roh = String(prozent[gr] == null ? '' : prozent[gr]).trim();
-    if (!roh) return irgendwas ? 0 : NaN;
-    return W.text.parseZahl(roh);
+  /** Tabellenzelle prüfen: Zahlzelle mit relativer Toleranz, sonst Auswahl-Index. */
+  function zelleOk(c, v) {
+    if (c.zahl != null) return v != null && W.physik.passt(v, c.zahl, c.auch, c.tolRel);
+    return v === c.richtig;
   }
+
+  function punkteTol(item) { return item.tol == null ? item.achsen.y.schritt / 2 : item.tol; }
+  function punktOk(item, i, v) { return v != null && v !== '' && Math.abs(v - item.soll[i]) <= punkteTol(item) + 1e-9; }
 
   function zahlPasst(item, wert) {
     var z = W.text.parseZahl(wert);
@@ -68,33 +68,13 @@
         case 'zuordnen': return anteil(item.paare.filter(function (p, i) { return a[i] === i; }).length, item.paare.length);
         case 'reihenfolge':
           return a.length === item.schritte.length && a.every(function (x, i) { return x === i; }) ? 1 : 0;
-        case 'beschriften':
-          return anteil(item.strukturen.filter(function (id) { return a[id] === id; }).length, item.strukturen.length);
         case 'tabelle': {
           var o = offeneZellen(item);
-          return anteil(o.filter(function (z) { return a[z.zi] && a[z.zi][z.ci] === z.c.richtig; }).length, o.length);
-        }
-        case 'matrix': {
-          var n = 0, ges = 0;
-          item.richtig.forEach(function (zeile, i) {
-            zeile.forEach(function (v, j) { ges++; if (!!(a[i] && a[i][j]) === v) n++; });
-          });
-          return anteil(n, ges);
-        }
-        case 'kreuzung': {
-          var soll = W.bio.kreuzung(item.mutter, item.vater), treffer = 0, gesamt = 4;
-          soll.forEach(function (z, i) { z.forEach(function (g, j) { if (a.felder && a.felder[i] && a.felder[i][j] === g) treffer++; }); });
-          if (item.mitWahrscheinlichkeit) {
-            var v = W.bio.verteilung(item.mutter, item.vater);
-            W.bio.GRUPPEN.forEach(function (gr) {
-              gesamt++;
-              var z = prozentWert(a.prozent, gr);
-              if (!isNaN(z) && Math.abs(z - v[gr]) < 0.01) treffer++;
-            });
-          }
-          return anteil(treffer, gesamt);
+          return anteil(o.filter(function (z) { return a[z.zi] && zelleOk(z.c, a[z.zi][z.ci]); }).length, o.length);
         }
         case 'zahl': return zahlPasst(item, a) ? 1 : 0;
+        case 'rechnung': return W.physik.passt(a, item.antwort, item.auch, item.tolRel) ? 1 : 0;
+        case 'punkte': return anteil(item.xs.filter(function (x, i) { return punktOk(item, i, a[i]); }).length, item.xs.length);
         case 'behauptung': {
           if (a.stimmt !== item.stimmt) return 0;
           return a.grund === item.richtig ? 1 : 0.5;
@@ -131,15 +111,10 @@
       case 'liste': return item.gruppen.slice(0, item.anzahl).map(function (g) { return g[0]; });
       case 'zuordnen': return item.paare.map(function (p, i) { return i; });
       case 'reihenfolge': return item.schritte.map(function (s, i) { return i; });
-      case 'beschriften': {
-        var o = {};
-        item.strukturen.forEach(function (id) { o[id] = id; });
-        return o;
-      }
-      case 'tabelle': return item.zeilen.map(function (z) { return z.zellen.map(function (c) { return c.fix != null ? null : c.richtig; }); });
-      case 'matrix': return item.richtig.map(function (z) { return z.slice(); });
-      case 'kreuzung': return { felder: W.bio.kreuzung(item.mutter, item.vater), prozent: W.bio.verteilung(item.mutter, item.vater) };
+      case 'tabelle': return item.zeilen.map(function (z) { return z.zellen.map(function (c) { return c.fix != null ? null : c.zahl != null ? String(c.zahl) : c.richtig; }); });
       case 'zahl': return String(item.antwort);
+      case 'rechnung': return String(item.antwort);
+      case 'punkte': return item.soll.slice();
       case 'behauptung': return { stimmt: item.stimmt, grund: item.richtig };
     }
     return null;
@@ -147,51 +122,62 @@
 
   function ohneTags(t) { return String(t).replace(/<sub>(.*?)<\/sub>/g, '$1').replace(/<br\s*\/?>/g, ' ').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim(); }
   function zahlText(x) { return String(x).replace('.', ','); }
-  function label(abb, id) {
-    var l = W.abb && W.abb.liste && W.abb.liste[abb] && W.abb.liste[abb].strukturen[id];
-    return l ? l.label : id;
+  /** Text einer Option; bei einem Mini-Diagramm dessen Beschreibung (aria-label). */
+  function optText(o) {
+    var m = /^\s*<svg[^>]*aria-label="([^"]*)"/.exec(String(o));
+    return m ? m[1].replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&') : ohneTags(o);
   }
+  function fmt(x) { return W.physik.fmt(x); }
 
   /** Die Lösung als lesbarer Text. */
-  function loesungText(item, nummern) {
+  function loesungText(item) {
     switch (item.typ) {
-      case 'wahl': return ohneTags(item.optionen[item.richtig]);
-      case 'mehrfach': return item.richtig.map(function (i) { return ohneTags(item.optionen[i]); }).join('; ');
+      case 'wahl': return optText(item.optionen[item.richtig]);
+      case 'mehrfach': return item.richtig.map(function (i) { return optText(item.optionen[i]); }).join('; ');
       case 'luecke': return ohneTags(item.text.replace(/\{([^}|]+)[^}]*\}/g, '$1'));
       case 'eingabe': return item.akzeptiert[0];
       case 'liste': return item.gruppen.map(function (g) { return g[0]; }).join(', ') + (item.gruppen.length > item.anzahl ? ' (' + item.anzahl + ' davon genügen)' : '');
       case 'zuordnen': return item.paare.map(function (p) { return ohneTags(p[0]) + ' → ' + ohneTags(p[1]); }).join('; ');
       case 'reihenfolge': return item.schritte.map(ohneTags).join(' → ');
-      case 'beschriften':
-        return item.strukturen.map(function (id) { return (nummern && nummern[id] ? nummern[id] + ' = ' : '') + label(item.abb, id); })
-          .sort(function (x, y) { return parseInt(x, 10) - parseInt(y, 10); }).join(', ');
       case 'tabelle': return item.zeilen.map(function (z) {
-        return ohneTags(z.kopf) + ': ' + z.zellen.map(function (c) { return c.fix != null ? c.fix : c.optionen[c.richtig]; }).join(' | ');
+        return ohneTags(z.kopf) + ': ' + z.zellen.map(function (c) { return c.fix != null ? c.fix : c.zahl != null ? fmt(c.zahl) : c.optionen[c.richtig]; }).join(' | ');
       }).join('; ');
-      case 'matrix': return item.zeilen.map(function (z, i) {
-        var ja = item.spalten.filter(function (s, j) { return item.richtig[i][j]; });
-        return z + ' → ' + (ja.length ? ja.join(', ') : 'keine');
-      }).join('; ');
-      case 'kreuzung': {
-        var k = W.bio.kreuzung(item.mutter, item.vater);
-        var t = 'Kinder: ' + k[0].concat(k[1]).join(', ');
-        if (item.mitWahrscheinlichkeit) {
-          var v = W.bio.verteilung(item.mutter, item.vater);
-          t += '. Blutgruppe ' + W.bio.GRUPPEN.map(function (g) { return g + ': ' + v[g] + ' %'; }).join(', ');
-        }
-        return t;
-      }
       case 'zahl': return zahlText(item.antwort) + (item.einheit ? ' ' + item.einheit : '');
+      case 'rechnung': return fmt(item.antwort) + (item.einheit ? ' ' + item.einheit : '');
+      case 'punkte': {
+        var ax = item.achsen.x, ay = item.achsen.y;
+        return item.xs.map(function (x, i) { return ax.g + ' = ' + fmt(x) + ' ' + ax.e + ': ' + ay.g + ' = ' + fmt(item.soll[i]) + ' ' + ay.e; }).join('; ');
+      }
       case 'behauptung': return (item.stimmt ? 'Stimmt. ' : 'Stimmt nicht. ') + ohneTags(item.gruende[item.richtig]);
     }
     return '';
   }
 
+  /** Inhalts-Regel: wahl/mehrfach brauchen einen Erklärsatz je Option, rechnung je Schritt-Option. */
+  function optErklOk(item) {
+    function passend(o) { return Array.isArray(o.optErkl) && Array.isArray(o.optionen) && o.optErkl.length === o.optionen.length; }
+    if (item.typ === 'wahl' || item.typ === 'mehrfach') return passend(item);
+    if (item.typ === 'rechnung') return (item.schritte || []).every(passend);
+    return item.optErkl == null || passend(item);
+  }
+
+  /** Erklärungen nach dem Prüfen: zuerst die gewählte(n) Option(en), bei Fehler zusätzlich die richtige(n). */
+  function erklaerungen(item, a) {
+    if (!item.optErkl) return [];
+    var gew = item.typ === 'mehrfach' ? (a || []).slice() : (a == null ? [] : [a]);
+    var soll = item.typ === 'mehrfach' ? item.richtig : [item.richtig];
+    var ok = score(item, a) >= 1 - 1e-9;
+    var out = gew.map(function (i) { return { i: i, text: item.optErkl[i], gewaehlt: true, richtig: soll.indexOf(i) >= 0 }; });
+    if (!ok) soll.forEach(function (i) { if (gew.indexOf(i) < 0) out.push({ i: i, text: item.optErkl[i], gewaehlt: false, richtig: true }); });
+    return out.filter(function (e) { return e.text; });
+  }
+
   /* ---------- Anzeige ---------- */
 
-  function figur(name, opts) {
-    if (!name || !W.abb || !W.abb.zeichne) return null;
-    return h('figure', { class: 'abb' }, W.abb.zeichne(name, opts || {}));
+  /** Abbildung: `abb` ist ein Options-Objekt für W.diagramm.zeichne. */
+  function figur(abb) {
+    if (!abb || !W.diagramm) return null;
+    return h('figure', { class: 'abb' }, W.diagramm.zeichne(abb));
   }
 
   function auswahl(optionen, onchange, platzhalter) {
@@ -207,8 +193,9 @@
     var reihenfolge = item.fest ? item.optionen.map(function (o, i) { return i; }) : W.shuffle(item.optionen.map(function (o, i) { return i; }));
     var gew = mehr ? [] : null;
     var knoepfe = [];
-    var el = h('div', { class: 'opts' }, reihenfolge.map(function (i) {
-      var b = h('button', { type: 'button', class: 'opt', html: item.optionen[i], onclick: function () {
+    var bilder = item.optionen.some(function (o) { return /<svg/.test(o); });
+    var el = h('div', { class: 'opts' + (bilder ? ' opts--raster' : '') }, reihenfolge.map(function (i) {
+      var b = h('button', { type: 'button', class: 'opt' + (bilder ? ' opt--bild' : ''), html: item.optionen[i], onclick: function () {
         if (el.classList.contains('fertig')) return;
         if (mehr) {
           var p = gew.indexOf(i);
@@ -343,35 +330,6 @@
     };
   };
 
-  /** Nummern für die Beschriftung: fest aus dem Item oder neu gemischt. */
-  function nummernFuer(item, rnd) {
-    if (item.nummern) return Object.assign({}, item.nummern);
-    var o = {};
-    W.shuffle(item.strukturen, rnd).forEach(function (id, i) { o[id] = i + 1; });
-    return o;
-  }
-
-  R.beschriften = function (item, ctx) {
-    var nummern = (ctx && ctx.nummern) || nummernFuer(item);
-    var werte = {};
-    var optionen = item.strukturen.map(function (id) { return { wert: id, text: label(item.abb, id) }; })
-      .sort(function (a, b) { return a.text.localeCompare(b.text, 'de'); });
-    var nachNr = item.strukturen.slice().sort(function (a, b) { return nummern[a] - nummern[b]; });
-    var sels = {};
-    var liste = h('div', { class: 'beschriften' }, nachNr.map(function (id) {
-      var sel = auswahl(optionen, function (v) { werte[id] = v; });
-      sels[id] = sel;
-      return h('label', { class: 'beschriften__zeile' }, h('span', { class: 'nr' }, String(nummern[id])), sel);
-    }));
-    return {
-      el: h('div', null, figur(item.abb, { nummern: nummern }), liste),
-      nummern: nummern,
-      antwort: function () { return Object.assign({}, werte); },
-      setze: function (w) { Object.keys(w || {}).forEach(function (id) { if (sels[id] && w[id] != null) { sels[id].value = w[id]; werte[id] = w[id]; } }); },
-      zeige: function () { Object.keys(sels).forEach(function (id) { sels[id].disabled = true; sels[id].classList.add(werte[id] === id ? 'richtig' : 'falsch'); }); }
-    };
-  };
-
   R.tabelle = function (item) {
     var werte = item.zeilen.map(function (z) { return z.zellen.map(function () { return null; }); });
     var sels = [];
@@ -380,8 +338,14 @@
       h('tbody', null, item.zeilen.map(function (z, zi) {
         return h('tr', null, h('th', { scope: 'row', html: z.kopf }), z.zellen.map(function (c, ci) {
           if (c.fix != null) return h('td', { class: 'fix', html: c.fix });
+          if (c.zahl != null) {
+            var inp = h('input', { type: 'text', inputmode: 'decimal', class: 'eingabe eingabe--zelle', autocomplete: 'off', placeholder: '?',
+              'aria-label': ohneTags(z.kopf) + ', ' + ohneTags(item.spalten[ci + 1] || ''), oninput: function () { werte[zi][ci] = inp.value; } });
+            sels.push({ sel: inp, zi: zi, ci: ci, c: c });
+            return h('td', null, inp);
+          }
           var sel = auswahl(c.optionen.map(function (o, i) { return { wert: i, text: ohneTags(o) }; }), function (v) { werte[zi][ci] = v == null ? null : +v; }, '?');
-          sels.push({ sel: sel, zi: zi, ci: ci, soll: c.richtig });
+          sels.push({ sel: sel, zi: zi, ci: ci, c: c });
           return h('td', null, sel);
         }));
       })));
@@ -389,88 +353,7 @@
       el: h('div', { class: 'tab-wrap' }, tab),
       antwort: function () { return werte.map(function (z) { return z.slice(); }); },
       setze: function (w) { sels.forEach(function (s) { var v = w && w[s.zi] ? w[s.zi][s.ci] : null; if (v != null) { s.sel.value = String(v); werte[s.zi][s.ci] = v; } }); },
-      zeige: function () { sels.forEach(function (s) { s.sel.disabled = true; s.sel.classList.add(werte[s.zi][s.ci] === s.soll ? 'richtig' : 'falsch'); }); }
-    };
-  };
-
-  R.matrix = function (item) {
-    var werte = item.zeilen.map(function () { return item.spalten.map(function () { return false; }); });
-    var knoepfe = [];
-    var tab = h('table', { class: 'tab tab--matrix' },
-      h('thead', null, h('tr', null, h('th', { class: 'ecke' }, item.zeilenKopf + ' ↓ / ' + item.spaltenKopf + ' →'), item.spalten.map(function (s) { return h('th', null, s); }))),
-      h('tbody', null, item.zeilen.map(function (z, i) {
-        return h('tr', null, h('th', { scope: 'row' }, z), item.spalten.map(function (s, j) {
-          var b = h('button', { type: 'button', class: 'kreuz', 'aria-label': item.zeilenKopf + ' ' + z + ', ' + item.spaltenKopf + ' ' + s, 'aria-pressed': 'false', onclick: function () {
-            if (b.disabled) return;
-            werte[i][j] = !werte[i][j];
-            b.textContent = werte[i][j] ? '✕' : '';
-            b.setAttribute('aria-pressed', werte[i][j] ? 'true' : 'false');
-          } });
-          knoepfe.push({ b: b, i: i, j: j });
-          return h('td', null, b);
-        }));
-      })));
-    return {
-      el: h('div', { class: 'tab-wrap' }, tab),
-      antwort: function () { return werte.map(function (z) { return z.slice(); }); },
-      setze: function (w) {
-        knoepfe.forEach(function (k) {
-          var v = !!(w && w[k.i] && w[k.i][k.j]);
-          werte[k.i][k.j] = v;
-          k.b.textContent = v ? '✕' : '';
-          k.b.setAttribute('aria-pressed', v ? 'true' : 'false');
-        });
-      },
-      zeige: function () {
-        knoepfe.forEach(function (k) {
-          k.b.disabled = true;
-          var soll = item.richtig[k.i][k.j];
-          k.b.classList.add(werte[k.i][k.j] === soll ? 'richtig' : 'falsch');
-          if (soll && !werte[k.i][k.j]) k.b.textContent = '○';
-        });
-      }
-    };
-  };
-
-  R.kreuzung = function (item) {
-    var felder = [[null, null], [null, null]];
-    var prozent = {};
-    var sels = [];
-    var gen = W.bio.GENOTYPEN.map(function (g) { return { wert: g, text: g }; });
-    var m = item.mutter.split(''), v = item.vater.split('');
-    var tab = h('table', { class: 'tab tab--kreuzung' },
-      h('thead', null, h('tr', null, h('th', { class: 'ecke' }, 'Mutter ↓ / Vater →'), v.map(function (a) { return h('th', { class: 'allel' }, a); }))),
-      h('tbody', null, m.map(function (a, i) {
-        return h('tr', null, h('th', { class: 'allel', scope: 'row' }, a), v.map(function (b, j) {
-          var sel = auswahl(gen, function (x) { felder[i][j] = x; }, '?');
-          sels.push({ sel: sel, i: i, j: j });
-          return h('td', null, sel);
-        }));
-      })));
-    var pf = {};
-    var prozentEl = item.mitWahrscheinlichkeit ? h('div', { class: 'prozente' },
-      h('p', { class: 'hinweis-klein' }, 'Mit welcher Wahrscheinlichkeit hat ein Kind diese Blutgruppe? Leere Felder zählen als 0 %.'),
-      W.bio.GRUPPEN.map(function (g) {
-        var inp = h('input', { type: 'text', inputmode: 'decimal', class: 'eingabe eingabe--zahl', placeholder: '–', oninput: function () { prozent[g] = inp.value; } });
-        pf[g] = inp;
-        return h('label', { class: 'prozent' }, h('span', null, g), inp, h('span', null, '%'));
-      })) : null;
-    return {
-      el: h('div', null, h('p', { class: 'hinweis-klein' }, 'Mutter: ' + item.mutter + ' · Vater: ' + item.vater), h('div', { class: 'tab-wrap' }, tab), prozentEl),
-      antwort: function () { return { felder: felder.map(function (z) { return z.slice(); }), prozent: Object.assign({}, prozent) }; },
-      setze: function (w) {
-        if (!w) return;
-        sels.forEach(function (s) { var g = w.felder && w.felder[s.i] ? w.felder[s.i][s.j] : null; if (g) { s.sel.value = g; felder[s.i][s.j] = g; } });
-        Object.keys(pf).forEach(function (g) { if (w.prozent && w.prozent[g] != null) { pf[g].value = w.prozent[g]; prozent[g] = w.prozent[g]; } });
-      },
-      zeige: function () {
-        var soll = W.bio.kreuzung(item.mutter, item.vater);
-        sels.forEach(function (s) { s.sel.disabled = true; s.sel.classList.add(felder[s.i][s.j] === soll[s.i][s.j] ? 'richtig' : 'falsch'); });
-        if (item.mitWahrscheinlichkeit) {
-          var vt = W.bio.verteilung(item.mutter, item.vater);
-          Object.keys(pf).forEach(function (g) { pf[g].disabled = true; pf[g].classList.add(Math.abs(prozentWert(prozent, g) - vt[g]) < 0.01 ? 'richtig' : 'falsch'); });
-        }
-      }
+      zeige: function () { sels.forEach(function (s) { s.sel.disabled = true; s.sel.classList.add(zelleOk(s.c, werte[s.zi][s.ci]) ? 'richtig' : 'falsch'); }); }
     };
   };
 
@@ -521,7 +404,147 @@
     };
   };
 
-  /** Eine Aufgabe anzeigen. Gibt { el, antwort(), zeige(), nummern? } zurück. */
+  /** Eine Auswahl, bei der man so lange wählt, bis es stimmt. Falsche Wahl zeigt deren Erklärung. */
+  function stufe(titel, s, fest, weiter) {
+    var idx = s.optionen.map(function (o, i) { return i; });
+    var erkl = h('p', { class: 'stufe__erkl', 'aria-live': 'polite' });
+    var knoepfe = [];
+    var box = h('div', { class: 'stufe' }, h('p', { class: 'stufe__titel' }, titel),
+      h('div', { class: 'opts' }, (fest ? idx : W.shuffle(idx)).map(function (i) {
+        var b = h('button', { type: 'button', class: 'opt', html: s.optionen[i], onclick: function () {
+          if (box.classList.contains('geloest') || b.disabled) return;
+          erkl.innerHTML = '';
+          if (s.optErkl && s.optErkl[i]) erkl.textContent = s.optErkl[i];
+          if (i === s.richtig) {
+            b.classList.add('richtig');
+            box.classList.add('geloest');
+            knoepfe.forEach(function (k) { if (k !== b) k.hidden = true; });
+            if (weiter) weiter();
+          } else {
+            b.classList.add('falsch');
+            b.disabled = true;
+          }
+        } });
+        knoepfe.push(b);
+        return b;
+      })), erkl);
+    return { el: box, sperren: function () { knoepfe.forEach(function (k) { k.disabled = true; }); } };
+  }
+
+  var SCHRITT = { gg: 'Gegeben und gesucht', formel: 'Formel', umstellen: 'Umstellen', einsetzen: 'Einsetzen' };
+
+  /** Geführtes Rechnen: Schritte nacheinander, dann Ergebnis. ctx.kurz: nur Ergebnis, Schritte auf Wunsch.
+      ctx.gutachten: nach richtigem Ergebnis den Antwortsatz wählen (zählt nicht). */
+  R.rechnung = function (item, ctx) {
+    ctx = ctx || {};
+    var schritte = item.schritte || [];
+    var stufen = [];
+    var inp = h('input', { type: 'text', inputmode: 'decimal', class: 'eingabe eingabe--zahl', placeholder: 'Zahl', autocomplete: 'off', 'aria-label': 'Ergebnis' + (item.einheit ? ' in ' + item.einheit : '') });
+    var ergebnis = h('div', { class: 'stufe rechnung__ergebnis' }, h('p', { class: 'stufe__titel' }, 'Ergebnis'),
+      h('label', { class: 'zahl' }, inp, item.einheit ? h('span', { class: 'einheit' }, item.einheit) : null));
+    var liste = h('div', { class: 'rechnung__schritte' });
+    var nach = h('div');
+    function schritt(k) {
+      if (k >= schritte.length) { ergebnis.hidden = false; return; }
+      var st = stufe(SCHRITT[schritte[k].art] || schritte[k].art, schritte[k], item.fest, function () { schritt(k + 1); });
+      stufen.push(st);
+      liste.appendChild(st.el);
+    }
+    var hilfe = null;
+    if (ctx.kurz && schritte.length) {
+      hilfe = h('div', { class: 'aktionen aktionen--links' },
+        h('button', { type: 'button', class: 'btn btn--klein', onclick: function () { hilfe.hidden = true; schritt(0); } }, 'Schritte zeigen'));
+    } else {
+      ergebnis.hidden = true;
+      schritt(0);
+    }
+    return {
+      el: h('div', { class: 'rechnung' }, item.gegeben ? h('div', { class: 'rechnung__gegeben', html: item.gegeben }) : null,
+        hilfe ? h('p', { class: 'hinweis-klein' }, 'Kurzform: Diese Formel sitzt schon. Tippe das Ergebnis ein.') : null,
+        liste, ergebnis, hilfe, nach),
+      antwort: function () { return inp.value; },
+      setze: function (w) { inp.value = w || ''; if (inp.value) ergebnis.hidden = false; },
+      zeige: function () {
+        var ok = W.physik.passt(inp.value, item.antwort, item.auch, item.tolRel);
+        inp.disabled = true;
+        inp.classList.add(ok ? 'richtig' : 'falsch');
+        if (hilfe) hilfe.hidden = true;
+        stufen.forEach(function (s) { s.sperren(); });
+        if (ok && ctx.gutachten && item.satz) {
+          var satz = item.satz;
+          var st = stufe('Antwortsatz', { optionen: satz.optionen, richtig: satz.richtig, optErkl: satz.optErkl }, item.fest);
+          nach.appendChild(st.el);
+        }
+      }
+    };
+  };
+
+  /** Punkte setzen: Tippen in eine Spalte setzt den eingerasteten Wert, erneutes Tippen verschiebt. */
+  R.punkte = function (item) {
+    var ax = item.achsen.x, ay = item.achsen.y;
+    var werte = item.xs.map(function () { return null; });
+    var fertig = false;
+    var svg = W.diagramm.zeichne({ achsen: item.achsen, kurven: [] });
+    var L = svg.diagramm;
+    svg.setAttribute('role', 'group');
+    svg.setAttribute('aria-label', 'Koordinatengitter ' + ay.g + ' in ' + ay.e + ' über ' + ax.g + ' in ' + ax.e);
+    svg.classList.add('dia--tippen');
+    var ymin = ay.min || 0;
+    var spalten = W.s('g', { class: 'dia-spalten' });
+    item.xs.forEach(function (x) { spalten.appendChild(W.s('line', { class: 'dia-spalte', x1: L.px(x), x2: L.px(x), y1: L.oben, y2: L.oben + L.ph })); });
+    var ueber = W.s('g');
+    var punkteG = W.s('g');
+    svg.appendChild(spalten);
+    svg.appendChild(ueber);
+    svg.appendChild(punkteG);
+    var anzeige = h('p', { class: 'punkte__anzeige mono', 'aria-live': 'polite' }, ' ');
+    function txt(i, y) { return ax.g + ' = ' + W.physik.fmt(item.xs[i]) + ' ' + ax.e + ': ' + ay.g + ' = ' + (y == null ? '?' : W.physik.fmt(y) + ' ' + ay.e); }
+    function punkt(i, y, klasse) {
+      return W.s('circle', { class: 'dia-punkt ' + (klasse || ''), cx: L.px(item.xs[i]), cy: L.py(y), r: 7, role: 'img', 'aria-label': txt(i, y) });
+    }
+    function zeichnen() {
+      punkteG.innerHTML = '';
+      werte.forEach(function (y, i) { if (y != null) punkteG.appendChild(punkt(i, y)); });
+    }
+    svg.addEventListener('click', function (ev) {
+      if (fertig) return;
+      var r = svg.getBoundingClientRect();
+      if (!r.width || !r.height) return;
+      var x = L.xAus((ev.clientX - r.left) / r.width * L.breite);
+      var y = L.yAus((ev.clientY - r.top) / r.height * L.hoehe);
+      var i = 0;
+      item.xs.forEach(function (xx, k) { if (Math.abs(xx - x) < Math.abs(item.xs[i] - x)) i = k; });
+      werte[i] = Math.min(ay.max, Math.max(ymin, W.diagramm.einrasten(y, ay.schritt / 2)));
+      zeichnen();
+      anzeige.textContent = 'Gesetzt: ' + txt(i, werte[i]);
+    });
+    return {
+      el: h('div', { class: 'punkte' },
+        h('p', { class: 'hinweis-klein' }, 'Tippe für jeden Zeitpunkt in seine Spalte. Der Punkt rastet im Karo ein, nochmal tippen verschiebt ihn.'),
+        h('figure', { class: 'abb' }, svg), anzeige),
+      antwort: function () { return werte.slice(); },
+      setze: function (w) { (w || []).forEach(function (y, i) { if (i < werte.length) werte[i] = y == null ? null : y; }); zeichnen(); },
+      zeige: function () {
+        fertig = true;
+        svg.classList.remove('dia--tippen');
+        var f = ay.g === 'v' || ay.g === 'a' ? ay.g : 's';
+        if (item.kurve && item.kurve.length) {
+          var ende = item.kurve[item.kurve.length - 1];
+          ueber.appendChild(W.s('path', { class: 'dia-kurve dia-kurve--' + f, d: L.pfad(item.kurve) }));
+          ueber.appendChild(W.s('text', { class: 'dia-label dia-label--' + f, x: L.px(ende[0]) - 12, y: L.py(ende[1]) - 12, 'text-anchor': 'end' }, f + '(t)'));
+        }
+        punkteG.innerHTML = '';
+        werte.forEach(function (y, i) {
+          var ok = punktOk(item, i, y);
+          if (!ok) punkteG.appendChild(punkt(i, item.soll[i], 'dia-punkt--soll'));
+          if (y != null) punkteG.appendChild(punkt(i, y, ok ? 'dia-punkt--richtig' : 'dia-punkt--falsch'));
+        });
+        anzeige.textContent = '';
+      }
+    };
+  };
+
+  /** Eine Aufgabe anzeigen. Gibt { el, antwort(), zeige() } zurück. ctx: { wert, kurz, gutachten } */
   function render(item, ctx) {
     var r = R[item.typ];
     if (!r) throw new Error('Unbekannter Aufgabentyp: ' + item.typ);
@@ -530,17 +553,32 @@
     var kopf = item.typ === 'behauptung' ? h('p', { class: 'frage' }, item.frage ? h('span', { html: item.frage }) : 'Ein Mitschüler behauptet:')
       : item.typ === 'luecke' ? (item.frage ? h('p', { class: 'frage', html: item.frage }) : h('p', { class: 'frage' }, 'Wähle die passenden Wörter.'))
         : h('p', { class: 'frage', html: item.frage });
-    var bild = item.typ !== 'beschriften' && item.abb ? figur(item.abb, item.abbOpts) : null;
+    var bild = item.abb ? figur(item.abb) : null;
     return {
       el: h('div', { class: 'aufgabe aufgabe--' + item.typ }, item.plus ? h('span', { class: 'tag tag--plus' }, 'Plus') : null, kopf, bild, api.el),
-      antwort: api.antwort, zeige: api.zeige, nummern: api.nummern
+      antwort: api.antwort, zeige: api.zeige
     };
   }
 
   var LOB = ['Richtig.', 'Sitzt.', 'Korrekt.', 'Genau so.', 'Sauber.'];
   function lob() { return LOB[Math.floor(Math.random() * LOB.length)]; }
 
-  /** Spielt eine Folge von Aufgaben ab. opts: { titel, mischen, melden (default true), onFertig(erg), nochmal } */
+  /** Kurzform, sobald die Formel zweimal richtig gerechnet wurde. */
+  function kurzform(item) {
+    var f = item.formel && W.state && W.state.data && W.state.data.formeln;
+    return !!(f && f[item.formel] >= 2);
+  }
+
+  /** Erklärsätze der Optionen als Absätze. */
+  function erklAbsaetze(item, a) {
+    var mehr = item.typ === 'mehrfach';
+    return erklaerungen(item, a).map(function (e) {
+      var kopf = mehr ? '„' + optText(item.optionen[e.i]) + '“' + (e.gewaehlt ? '' : ' (fehlte)') + ': ' : e.gewaehlt ? 'Deine Wahl: ' : 'Richtig: ';
+      return h('p', { class: 'feedback__erkl' }, h('strong', null, kopf), e.text);
+    });
+  }
+
+  /** Spielt eine Folge von Aufgaben ab. opts: { titel, mischen, melden (default true), gutachten, onFertig(erg), nochmal } */
   function spiele(host, items, opts) {
     opts = opts || {};
     var folge = opts.mischen === false ? items.slice() : W.shuffle(items);
@@ -548,7 +586,7 @@
     function zeigeAufgabe() {
       host.innerHTML = '';
       var item = folge[i];
-      var r = render(item);
+      var r = render(item, { kurz: item.typ === 'rechnung' && kurzform(item), gutachten: !!opts.gutachten });
       var fb = h('div', { class: 'feedback', 'aria-live': 'polite' });
       var weiter = h('button', { type: 'button', class: 'btn btn--haupt' }, 'Prüfen');
       var geprueft = false;
@@ -564,7 +602,12 @@
           var beh = opts.melden === false ? { behoben: false } : W.state.itemErgebnis(item.id, ok);
           fb.className = 'feedback ' + (ok ? 'feedback--ok' : 'feedback--falsch');
           fb.appendChild(h('p', { class: 'feedback__kopf' }, ok ? lob() : (sc > 0 ? 'Teilweise richtig.' : 'Nicht ganz.')));
-          if (!ok) fb.appendChild(h('p', null, h('strong', null, 'Richtig wäre: '), loesungText(item, r.nummern)));
+          if (!ok) fb.appendChild(h('p', null, h('strong', null, 'Richtig wäre: '), loesungText(item)));
+          if (item.typ === 'wahl' || item.typ === 'mehrfach') erklAbsaetze(item, a).forEach(function (p) { fb.appendChild(p); });
+          if (item.typ === 'rechnung') {
+            if (ok && item.formel && W.state && W.state.formelRichtig) W.state.formelRichtig(item.formel);
+            if (item.loesung) fb.appendChild(h('div', { class: 'loesung', html: item.loesung }));
+          }
           if (item.erkl) fb.appendChild(h('p', { html: item.erkl }));
           if (beh.behoben) W.toast('Wiedervorlage erledigt', 'ok');
           if (W.ton && ok) W.ton.piep();
@@ -598,6 +641,7 @@
 
   W.aufgaben = {
     score: score, richtig: richtig, leer: leer, loesung: loesung, loesungText: loesungText,
-    render: render, spiele: spiele, nummernFuer: nummernFuer, parseLuecke: parseLuecke, ohneTags: ohneTags, TYPEN: Object.keys(R)
+    optErklOk: optErklOk, erklaerungen: erklaerungen,
+    render: render, spiele: spiele, parseLuecke: parseLuecke, ohneTags: ohneTags, TYPEN: Object.keys(R)
   };
 })();

@@ -172,7 +172,7 @@
       var sp = h('div');
       host.appendChild(sp);
       W.aufgaben.spiele(sp, a.gutachten || [], {
-        titel: 'Gutachten', mischen: false, nochmal: false, fertigText: 'Weiter',
+        titel: 'Gutachten', mischen: false, nochmal: false, gutachten: true, fertigText: 'Weiter',
         onFertig: function (erg) {
           host.innerHTML = '';
           if (erg.richtig === erg.gesamt) {

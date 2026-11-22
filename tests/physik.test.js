@@ -108,6 +108,11 @@ test('passt', () => {
   ok(P.passt('5', 18.75, [5]));
   ok(!P.passt('abc', 18.75));
   ok(P.passt('0', 0));
+  // 1.125 ist mehrdeutig (Tausenderpunkt oder Dezimalpunkt): beide Lesarten gelten.
+  ok(P.passt('1.125', 1.125));
+  ok(P.passt('1.125 m', 1.125));
+  ok(P.passt('1.125', 1125));
+  ok(!P.passt('1,125', 1125));
 });
 
 test('rnd und ganz', () => {
