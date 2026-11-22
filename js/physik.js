@@ -61,7 +61,9 @@
   function fmt(x, stellen) {
     if (stellen == null) stellen = 2;
     if (typeof x !== 'number' || !isFinite(x)) return '';
-    var s = x.toFixed(stellen);
+    var m = Math.pow(10, stellen);
+    var r = Math.round(Math.abs(x) * m + 1e-7) / m;
+    var s = (x < 0 && r > 0 ? '-' : '') + r.toFixed(stellen);
     if (s.indexOf('.') >= 0) s = s.replace(/0+$/, '').replace(/\.$/, '');
     if (s === '-0') s = '0';
     return s.replace('-', '−').replace('.', ',');

@@ -98,6 +98,19 @@ test('fmt', () => {
   eq(P.fmt(3.14159, 3), '3,142');
 });
 
+test('fmt rundet kaufmännisch trotz Gleitkomma', () => {
+  eq(P.fmt(2.945), '2,95');
+  eq(P.fmt(9.825), '9,83');
+  eq(P.fmt(1.005), '1,01');
+  eq(P.fmt(4.905), '4,91');
+  eq(P.fmt(6.865), '6,87');
+  eq(P.fmt(-4.5), '−4,5');
+  eq(P.fmt(-2.945), '−2,95');
+  eq(P.fmt(-0.001), '0');
+  eq(P.fmt(0.0625, 3), '0,063');
+  eq(P.fmt(1406.25, 1), '1406,3');
+});
+
 test('passt', () => {
   ['18,75', '18.75', ' 18,75 ', '18,75 m/s', 18.75].forEach((e) => ok(P.passt(e, 18.75), String(e)));
   ok(P.passt('1.125', 1125));
