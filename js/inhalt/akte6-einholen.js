@@ -52,7 +52,7 @@
         text: '<p>Beide starten bei t = 0 an derselben Stelle (s = 0).</p>' +
           '<p><strong>E-Bike 1</strong> fährt gleichförmig: v₁ = konst, also s₁(t) = v₁·t. Der s(t)-Graph ist eine Ursprungsgerade.</p>' +
           '<p><strong>E-Bike 2</strong> fährt aus dem Stand gleichmäßig beschleunigt: v₂(t) = a₂·t und s₂(t) = a₂/2·t². Der s(t)-Graph ist eine Parabel.</p>' +
-          '<p>Im Fall: s₁(t) = ' + V1 + ' m/s·t und s₂(t) = ' + H2 + ' m/s²·t². Die Gerade und die Parabel schneiden sich bei t = 6 s und s = 28 m.</p>',
+          '<p>Im Fall: s₁(t) = ' + V1 + ' m/s · t und s₂(t) = ' + H2 + ' m/s² · t². Die Gerade und die Parabel schneiden sich bei t = 6 s und s = 28 m.</p>',
         abb: { achsen: AX_S, kurven: [k(s1, 0, 7, 's₁(t)', 's'), k(s2, 0, 7, 's₂(t)', 's')], marken: [[6, 28]] },
         merk: 'Gleicher Ort, gleiche Startzeit: s₁(t) = v₁·t (Gerade) und s₂(t) = a/2·t² (Parabel). Der Schnittpunkt bei t &gt; 0 ist der Treffpunkt.'
       },
@@ -60,18 +60,18 @@
         titel: 'Einholen: gleichsetzen und t ausklammern',
         text: '<p>Eingeholt ist, wenn beide am <strong>gleichen Ort</strong> sind: s₁(t) = s₂(t). Beispiel Blatt 1, A2 d: Der Güterzug fährt konstant 18,75 m/s, ' +
           'der Personenzug fährt neben ihm aus dem Stand mit a = 0,5 m/s² los.</p>' +
-          '<p>1. Beide Terme aufstellen: s_G = 18,75 m/s·t und s_P = 0,5 m/s² / 2·t² = 0,25 m/s²·t²<br>' +
-          '2. Gleichsetzen: 0,25 m/s²·t² = 18,75 m/s·t<br>' +
-          '3. Alles auf eine Seite, t ausklammern: t·(0,25 m/s²·t − 18,75 m/s) = 0<br>' +
-          '4. Ein Produkt ist null, wenn ein Faktor null ist: t = 0 (das ist der Start) oder 0,25 m/s²·t = 18,75 m/s ⇒ t = 75 s<br>' +
+          '<p>1. Beide Terme aufstellen: s_G = 18,75 m/s · t und s_P = 0,5 m/s² / 2 · t² = 0,25 m/s² · t²<br>' +
+          '2. Gleichsetzen: 0,25 m/s² · t² = 18,75 m/s · t<br>' +
+          '3. Alles auf eine Seite, t ausklammern: t·(0,25 m/s² · t − 18,75 m/s) = 0<br>' +
+          '4. Ein Produkt ist null, wenn ein Faktor null ist: t = 0 (das ist der Start) oder 0,25 m/s² · t = 18,75 m/s ⇒ t = 75 s<br>' +
           '5. Treffpunkt: s = 18,75 m/s · 75 s = ' + f(zug.s) + ' m</p>',
         abb: {
           achsen: { x: { g: 't', e: 's', max: 80, schritt: 10 }, y: { g: 's', e: 'm', max: 1600, schritt: 200 } },
           kurven: [k(function (t) { return 18.75 * t; }, 0, 80, 'Güterzug', 's'), k(function (t) { return 0.25 * t * t; }, 0, 80, 'Personenzug', 's')],
           marken: [[zug.t, zug.s]]
         },
-        merk: 'Einholen: s₁(t) = s₂(t) gleichsetzen, t ausklammern. t = 0 ist der Start, die zweite Lösung ist der Einholzeitpunkt. Aus dem Stand gegen konstante Geschwindigkeit: t = 2·v₁/a.',
-        achtung: '<p>Die Hälfte nicht vergessen: s = a/2·t², also 0,25 m/s²·t² bei a = 0,5 m/s². Mit 0,5 m/s²·t² kommt 37,5 s heraus, das ist falsch.</p>' +
+        merk: 'Einholen: s₁(t) = s₂(t) gleichsetzen, t ausklammern. t = 0 ist der Start, die zweite Lösung ist der Einholzeitpunkt. Aus dem Stand gegen konstante Geschwindigkeit: t = 2·v₁/a (Abkürzung; in der Arbeit über Gleichsetzen herleiten).',
+        achtung: '<p>Die Hälfte nicht vergessen: s = a/2·t², also 0,25 m/s² · t² bei a = 0,5 m/s². Mit 0,5 m/s² · t² kommt 37,5 s heraus, das ist falsch.</p>' +
           '<p>Nach dem Ausklammern steht t nur noch einfach da. Keine Wurzel ziehen.</p>'
       },
       {
@@ -157,28 +157,27 @@
         id: 'einholen-u4', typ: 'wahl', quelle: 'Blatt 2, A1 c',
         frage: 'Gib die genauen Funktionsterme für die Geschwindigkeiten an. Welche Zeile stimmt?',
         optionen: [
-          'v₁(t) = ' + V1 + ' m/s und v₂(t) = ' + A2 + ' m/s²·t',
-          'v₁(t) = ' + V1 + ' m/s·t und v₂(t) = ' + A2 + ' m/s²·t',
-          'v₁(t) = ' + V1 + ' m/s und v₂(t) = ' + H2 + ' m/s²·t²',
+          'v₁(t) = ' + V1 + ' m/s und v₂(t) = ' + A2 + ' m/s² · t',
+          'v₁(t) = ' + V1 + ' m/s · t und v₂(t) = ' + A2 + ' m/s² · t',
+          'v₁(t) = ' + V1 + ' m/s und v₂(t) = ' + H2 + ' m/s² · t²',
           'v₁(t) = ' + V1 + ' m/s und v₂(t) = ' + A2 + ' m/s'
         ],
         richtig: 0,
         optErkl: [
           'Richtig: v₁ ist konstant, v₂ wächst gleichmäßig mit der Zeit: v = a·t.',
-          'E-Bike 1 fährt konstant, v₁ hängt nicht von t ab. ' + V1 + ' m/s·t ist der Weg s₁(t), nicht die Geschwindigkeit.',
+          'E-Bike 1 fährt konstant, v₁ hängt nicht von t ab. ' + V1 + ' m/s · t ist der Weg s₁(t), nicht die Geschwindigkeit.',
           'Das ist der Weg s₂(t) = a₂/2·t². Die Geschwindigkeit aus dem Stand ist v₂(t) = a₂·t.',
           'Bei v₂ fehlt das t. Eine konstante Geschwindigkeit hätte E-Bike 2 nur ohne Beschleunigung.'
         ]
       },
       {
         id: 'einholen-u5', typ: 'punkte', quelle: 'Blatt 2, A1 d',
-        frage: 'Zeichne den Graphen von v₂(t) = ' + A2 + ' m/s²·t für 0 ≤ t ≤ 7 s. Setze die Punkte bei t = 0, 1, 2, …, 7 s. (v₁(t) = ' + V1 + ' m/s wäre eine waagerechte Linie.)',
+        frage: 'Zeichne den Graphen von v₂(t) = ' + A2 + ' m/s² · t für 0 ≤ t ≤ 7 s. Setze die Punkte bei t = 0, 1, 2, …, 7 s. (v₁(t) = ' + V1 + ' m/s wäre eine waagerechte Linie.)',
         achsen: AX_V,
         xs: [0, 1, 2, 3, 4, 5, 6, 7],
         soll: [0, 1, 2, 3, 4, 5, 6, 7].map(function (t) { return a2 * t; }),
-        tol: 0.6,
         kurve: D.kurve(function (t) { return a2 * t; }, 0, 7),
-        erkl: 'v₂ ist eine Ursprungsgerade mit der Steigung ' + A2 + ' m/s². Bei t = 3 s ist v₂ = ' + V1 + ' m/s, so schnell wie E-Bike 1: Dort schneidet sie die waagerechte v₁-Linie. Bei 7 s sind es ' + f(a2 * 7) + ' m/s.'
+        erkl: 'v₂ ist eine Ursprungsgerade mit der Steigung ' + A2 + ' m/s². Bei t = 3 s ist v₂ = ' + V1 + ' m/s, so schnell wie E-Bike 1: Dort schneidet sie die waagerechte v₁-Linie. Bei 7 s sind es ' + f(a2 * 7) + ' m/s. Auf dem Blatt: v₁ als waagerechte Linie bei ' + V1 + ' m/s ergänzen; Achsen: t in s, v in m/s.'
       },
       {
         id: 'einholen-u6', typ: 'wahl', quelle: 'Blatt 2, A1 d',
@@ -213,28 +212,27 @@
         id: 'einholen-u8', typ: 'wahl', quelle: 'Blatt 2, A1 e',
         frage: 'Gib die Funktionsterme für die zurückgelegten Strecken an. Welche Zeile stimmt?',
         optionen: [
-          's₁(t) = ' + V1 + ' m/s·t und s₂(t) = ' + H2 + ' m/s²·t²',
-          's₁(t) = ' + V1 + ' m/s·t und s₂(t) = ' + A2 + ' m/s²·t²',
-          's₁(t) = ' + V1 + ' m/s·t und s₂(t) = ' + H2 + ' m/s²·t',
-          's₁(t) = ' + V1 + ' m/s und s₂(t) = ' + H2 + ' m/s²·t²'
+          's₁(t) = ' + V1 + ' m/s · t und s₂(t) = ' + H2 + ' m/s² · t²',
+          's₁(t) = ' + V1 + ' m/s · t und s₂(t) = ' + A2 + ' m/s² · t²',
+          's₁(t) = ' + V1 + ' m/s · t und s₂(t) = ' + H2 + ' m/s² · t',
+          's₁(t) = ' + V1 + ' m/s und s₂(t) = ' + H2 + ' m/s² · t²'
         ],
         richtig: 0,
         optErkl: [
           'Richtig: s₁ = v₁·t (Gerade), s₂ = a₂/2·t² mit a₂/2 = ' + H2 + ' m/s² (Parabel).',
-          FE.halbVergessen.erkl + ' Mit ' + A2 + ' m/s²·t² wäre E-Bike 2 nach 6 s schon 56 m weit.',
+          FE.halbVergessen.erkl + ' Mit ' + A2 + ' m/s² · t² wäre E-Bike 2 nach 6 s schon 56 m weit.',
           FE.quadratVergessen.erkl,
           's₁(t) = ' + V1 + ' m/s ist die Geschwindigkeit v₁. Der Weg wächst mit der Zeit: s₁(t) = v₁·t.'
         ]
       },
       {
         id: 'einholen-u9', typ: 'punkte', quelle: 'Blatt 2, A1 e',
-        frage: 'Zeichne den Graphen von s₂(t) = ' + H2 + ' m/s²·t² für 0 ≤ t ≤ 7 s. Setze die Punkte bei t = 0, 1, 2, …, 7 s.',
+        frage: 'Zeichne den Graphen von s₂(t) = ' + H2 + ' m/s² · t² für 0 ≤ t ≤ 7 s. Setze die Punkte bei t = 0, 1, 2, …, 7 s.',
         achsen: AX_S,
         xs: [0, 1, 2, 3, 4, 5, 6, 7],
         soll: [0, 1, 2, 3, 4, 5, 6, 7].map(s2),
-        tol: 1.3,
         kurve: D.kurve(s2, 0, 7),
-        erkl: 's₂ ist eine Parabel: erst flach, dann immer steiler. Bei t = 6 s ist s₂ = 28 m. Die Gerade s₁(t) = ' + V1 + ' m/s·t geht durch denselben Punkt: Dort ist der Treffpunkt.'
+        erkl: 's₂ ist eine Parabel: erst flach, dann immer steiler. Bei t = 6 s ist s₂ = 28 m. Die Gerade s₁(t) = ' + V1 + ' m/s · t geht durch denselben Punkt: Dort ist der Treffpunkt. Auf dem Blatt: s₁ als Ursprungsgerade durch (6 s | 28 m) ergänzen; Achsen: t in s, s in m.'
       },
       {
         id: 'einholen-u10', typ: 'wahl', quelle: 'Blatt 2, A1 e',
@@ -287,7 +285,7 @@
         antwort: aG, auch: [1.87], einheit: 'm/s²', formel: 'a-beschl',
         loesung: '<p>Ort von E-Bike 1 nach 5 s: s₁(5 s) = 28 m / 6 s · 5 s ≈ ' + f(s5) + ' m<br>' +
           's = a/2·t² ⇒ a = 2s/t²<br>a = 2·' + f(s5) + ' m / (5 s)² ≈ ' + f(aG) + ' m/s²</p>' +
-          '<p>Kürzer: a = 2·v₁/t = 2·28 m / 6 s / 5 s ≈ ' + f(aG) + ' m/s²</p>'
+          '<p>Kürzer: a = 2·v₁/t = 2 · ' + V1 + ' m/s : 5 s ≈ ' + f(2 * 4.67 / 5) + ' m/s² (Abkürzung; in der Arbeit über Gleichsetzen herleiten)</p>'
       },
       {
         id: 'einholen-u13', typ: 'rechnung', quelle: 'Blatt 1, A2 d',
@@ -297,8 +295,8 @@
           { art: 'gg', optionen: ['Gegeben: v = 18,75 m/s, a = 0,5 m/s²<br>Gesucht: t in s', 'Gegeben: v = 18,75 m/s, a = 0,5 m/s²<br>Gesucht: s in m', 'Gegeben: v = 18,75 m/s², a = 0,5 m/s²<br>Gesucht: t in s'], richtig: 0,
             optErkl: ['Richtig: Gefragt ist der Zeitpunkt, an dem beide gleich weit sind.', 'Gefragt ist „wann“, also die Zeit t. Den Treffpunkt s rechnest du danach.', 'Schau auf die Einheit: Der Güterzug hat eine Geschwindigkeit in m/s, keine Beschleunigung.'] },
           { art: 'formel', optionen: ['18,75 m/s · t = 0,25 m/s² · t²', '18,75 m/s = 0,5 m/s² · t', '18,75 m/s · t = 0,5 m/s² · t²'], richtig: 0,
-            optErkl: ['Richtig: Beide Wege gleichsetzen. s_P = a/2·t² = 0,25 m/s²·t².', 'Das setzt die Geschwindigkeiten gleich. Dann sind beide nur gleich schnell (nach 37,5 s), aber nicht gleich weit.', FE.halbVergessen.erkl + ' Das ergäbe 37,5 s.'] },
-          { art: 'umstellen', optionen: ['t·(0,25 m/s²·t − 18,75 m/s) = 0 ⇒ t = 0 oder t = 18,75 m/s / 0,25 m/s²', 't = √(18,75 m/s / 0,25 m/s²)', 't = 0,25 m/s² / 18,75 m/s'], richtig: 0,
+            optErkl: ['Richtig: Beide Wege gleichsetzen. s_P = a/2·t² = 0,25 m/s² · t².', 'Das setzt die Geschwindigkeiten gleich. Dann sind beide nur gleich schnell (nach 37,5 s), aber nicht gleich weit.', FE.halbVergessen.erkl + ' Das ergäbe 37,5 s.'] },
+          { art: 'umstellen', optionen: ['t·(0,25 m/s² · t − 18,75 m/s) = 0 ⇒ t = 0 oder t = 18,75 m/s / 0,25 m/s²', 't = √(18,75 m/s / 0,25 m/s²)', 't = 0,25 m/s² / 18,75 m/s'], richtig: 0,
             optErkl: ['Richtig: t ausklammern. t = 0 ist der Start, die zweite Lösung ist das Einholen.', 'Nach dem Ausklammern steht t nur noch einfach da, eine Wurzel brauchst du nicht. Das ergäbe ' + f(Math.sqrt(75)) + ' s.', FE.kehrwert.erkl] }
         ],
         antwort: zug.t, einheit: 's', formel: 'einholen',
@@ -407,7 +405,7 @@
             optErkl: ['Richtig: Gesucht ist der Zeitpunkt des Einholens.', 'Schau auf die Einheit: Der Kurier hat eine Geschwindigkeit in m/s.', 'Gefragt ist „nach welcher Zeit“, also t.'] },
           { art: 'formel', optionen: ['5 m/s · t = 0,625 m/s² · t²', '5 m/s = 1,25 m/s² · t', '5 m/s · t = 1,25 m/s² · t²'], richtig: 0,
             optErkl: ['Richtig: gleicher Ort, also s₁ = s₂ mit a/2 = 0,625 m/s².', 'Das setzt die Geschwindigkeiten gleich: gleich schnell nach 4 s, aber noch nicht gleichauf.', FE.halbVergessen.erkl + ' Das ergäbe 4 s.'] },
-          { art: 'umstellen', optionen: ['t·(0,625 m/s²·t − 5 m/s) = 0 ⇒ t = 5 m/s / 0,625 m/s²', 't = √(5 m/s / 0,625 m/s²)', 't = 0,625 m/s² / 5 m/s'], richtig: 0,
+          { art: 'umstellen', optionen: ['t·(0,625 m/s² · t − 5 m/s) = 0 ⇒ t = 5 m/s / 0,625 m/s²', 't = √(5 m/s / 0,625 m/s²)', 't = 0,625 m/s² / 5 m/s'], richtig: 0,
             optErkl: ['Richtig: t ausklammern, t = 0 ist der Start.', 'Nach dem Ausklammern steht t nur einfach da, keine Wurzel. Das ergäbe ' + f(Math.sqrt(8)) + ' s.', FE.kehrwert.erkl] }
         ],
         antwort: morgen.t, einheit: 's', formel: 'einholen',
