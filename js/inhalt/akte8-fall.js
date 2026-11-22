@@ -110,7 +110,7 @@
           kurven: [{ punkte: D.kurve(function (t) { return G / 2 * t * t; }, 0, P.tAusS(10, G)), farbe: 's', label: 'Erde' },
             { punkte: D.kurve(function (t) { return gMond / 2 * t * t; }, 0, 3.3), farbe: 's', label: 'Mond' }] },
         merk: 'g = 2s/t² aus Fallstrecke und Fallzeit.',
-        achtung: '<p>Auf dem Mond nicht mit 9,81 m/s² rechnen. Plus: Der echte Wert auf dem Mond ist etwa 1,62 m/s², die Zahlen der Tafelaufgabe sind gerundet.</p>' },
+        achtung: '<p>Auf dem Mond nicht mit 9,81 m/s² rechnen. Plus: Der echte Wert auf dem Mond ist etwa 1,62 m/s², die Tafelaufgabe rechnet mit ausgedachten Messwerten (mit 1,62 m/s² dauert der Fall über 10 m etwa 3,5 s).</p>' },
 
       { titel: 'Versuch: Wagen auf der geneigten Fahrbahn', plus: true,
         text: '<p>Ein freier Fall ist zu schnell, um ihn mit der Stoppuhr gut zu messen. Im Unterricht rollte deshalb ein Wagen aus dem Stand eine um den Winkel α geneigte Fahrbahn hinunter (Tafel S. 4 bis 6). ' +

@@ -48,7 +48,7 @@
     A('messdaten', true, 'Die mittlere Geschwindigkeit zwischen t = 0,2 s und t = 0,4 s gehört zum Zeitpunkt t = 0,3 s.', 'Mittelpunkt-Regel: t₁₂ = (t₁ + t₂)/2.'),
     A('messdaten', false, 'Die mittlere Geschwindigkeit zwischen zwei Messungen gehört zum Anfang des Zeitintervalls.', 'Sie gehört zur Mitte des Intervalls: t₁₂ = (t₁ + t₂)/2.'),
     A('messdaten', true, 'Aus 5 Messwerten für s erhältst du 4 Geschwindigkeiten und 3 Beschleunigungen.', 'Aus n Messwerten werden n − 1 Geschwindigkeiten und n − 2 Beschleunigungen.'),
-    A('messdaten', false, 'Beim Sprung vom Turm erhältst du die Geschwindigkeit bei t = 0,4 s, indem du s(0,4 s) durch 0,4 s teilst.', 'Das ist die mittlere Geschwindigkeit von 0 bis 0,4 s. Sie gehört zur Intervallmitte 0,2 s (0,785 m : 0,4 s ≈ 1,96 m/s). Bei 0,4 s ist der Springer schon doppelt so schnell.'),
+    A('messdaten', false, 'Beim Sprung vom Turm (freier Fall aus der Ruhe) erhältst du die Geschwindigkeit bei t = 0,4 s, indem du s(0,4 s) durch 0,4 s teilst.', 'Das ist die mittlere Geschwindigkeit von 0 bis 0,4 s. Sie gehört zur Intervallmitte 0,2 s (0,785 m : 0,4 s ≈ 1,96 m/s). Bei 0,4 s ist der Springer schon doppelt so schnell.'),
     A('messdaten', true, 'Aus s = 0 m bei 0 s und s = 0,196 m bei 0,2 s folgt v̄(0,1 s) = 0,98 m/s.', 'v̄ = (0,196 m − 0 m)/(0,2 s − 0 s) = 0,98 m/s, der Wert gehört zur Intervallmitte 0,1 s.'),
     A('messdaten', false, 'Sind die mittleren Beschleunigungen aus einer Tabelle alle ungefähr 9,8 m/s², ist die Bewegung gleichförmig.', 'Konstante Beschleunigung heißt gleichmäßig beschleunigt. Gleichförmig wäre a = 0.'),
     // Akte 6: Einholen

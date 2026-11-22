@@ -436,7 +436,7 @@ test('Radarfalle: eindeutige Aussagen aus dem Fachreview', () => {
   eq(A[48].text, 'Im freien Fall auf der Erde beträgt die Beschleunigung g = 9,81 m/s².');
   eq(A[48].erkl, 'Ohne Luftwiderstand fallen auf der Erde alle Körper mit dieser Beschleunigung. Auf dem Mond ist g kleiner.');
   ok(/alle ungefähr 9,8 m\/s², ist die Bewegung gleichförmig\.$/.test(A[35].text), 'r:35');
-  eq(A[33].text, 'Beim Sprung vom Turm erhältst du die Geschwindigkeit bei t = 0,4 s, indem du s(0,4 s) durch 0,4 s teilst.');
+  eq(A[33].text, 'Beim Sprung vom Turm (freier Fall aus der Ruhe) erhältst du die Geschwindigkeit bei t = 0,4 s, indem du s(0,4 s) durch 0,4 s teilst.');
   const s04 = P.sBeschl(P.G, 0.4);
   eq(P.fmt(s04, 3), '0,785'); eq(P.fmt(s04 / 0.4), '1,96'); near(P.vBeschl(P.G, 0.4), 2 * s04 / 0.4, 1e-9);
   eq(A[33].erkl, 'Das ist die mittlere Geschwindigkeit von 0 bis 0,4 s. Sie gehört zur Intervallmitte 0,2 s (' + P.fmt(s04, 3) + ' m : 0,4 s ≈ ' + P.fmt(s04 / 0.4) + ' m/s). Bei 0,4 s ist der Springer schon doppelt so schnell.');
