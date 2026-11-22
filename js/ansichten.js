@@ -34,7 +34,7 @@
     return akten().filter(function (a) { return !a.folgt && status(a).status !== 'geschlossen'; })[0] || null;
   }
 
-  /** Aufgabe zu einer ID: Rechentrainer ('t:<id>', jedes Mal neue Zahlen), Prüfung, Akten. */
+  /** Aufgabe zu einer ID: Rechentrainer ('t:<id>', jedes Mal neue Zahlen) oder Akten. */
   var wurf = 0;
   function trainerBekannt(id) { return !!(W.trainer && W.trainer.IDS.indexOf(id) >= 0); }
   function itemNachId(id) {
@@ -42,7 +42,6 @@
       var tid = id.slice(2);
       return trainerBekannt(tid) ? W.trainer.erzeuge(tid, W.physik.rnd(Date.now() + (wurf++))) : null;
     }
-    if (/^p\d/.test(id) && W.pruefung && W.pruefung.itemNachId) return W.pruefung.itemNachId(id);
     var gefunden = null;
     akten().forEach(function (a) {
       (a.ueben || []).concat(a.gutachten || []).forEach(function (it) { if (it.id === id) gefunden = it; });
@@ -68,6 +67,9 @@
   function aktenschrank(host) {
     var alle = akten();
     var rang = W.logic.rang(W.state.data, alle);
+    // Akten, die noch folgen, zählen im Fortschritt nicht als offen.
+    var mitInhalt = alle.filter(function (a) { return !a.folgt; }).length;
+    var folgen = alle.length - mitInhalt;
     var next = naechsteAkte();
     var nm = nmAnzahl();
     var best = W.state.data.pruefung.best || {};
@@ -95,9 +97,9 @@
       pruefHinweis,
       karte('rang',
         h('div', { class: 'rang__kopf' }, h('span', { class: 'rang__titel' }, rang.titel),
-          h('span', { class: 'mono hinweis-klein' }, rang.geschlossen + ' von ' + alle.length + ' Akten geschlossen')),
-        h('div', { class: 'balken', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': String(alle.length), 'aria-valuenow': String(rang.geschlossen) },
-          h('span', { style: { width: Math.round(100 * rang.geschlossen / Math.max(1, alle.length)) + '%' } })),
+          h('span', { class: 'mono hinweis-klein' }, rang.geschlossen + ' von ' + mitInhalt + ' Akten geschlossen' + (folgen ? ' (' + folgen + ' folgen)' : ''))),
+        h('div', { class: 'balken', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': String(mitInhalt), 'aria-valuenow': String(rang.geschlossen) },
+          h('span', { style: { width: Math.round(100 * rang.geschlossen / Math.max(1, mitInhalt)) + '%' } })),
         rang.naechster ? h('p', { class: 'hinweis-klein' }, 'Nächster Rang: ' + rang.naechster) : null),
       h('div', { class: 'protokoll' },
         h('div', { class: 'protokoll__kopf mono', 'aria-hidden': 'true' }, h('span', null, 'Nr.'), h('span', null, 'Fall und Thema'), h('span', null, 'Status')),
@@ -399,6 +401,17 @@
           h('button', { type: 'button', class: 'btn', onclick: function () { fertig(false); } }, 'Ohne Namen'),
           h('button', { type: 'button', class: 'btn btn--haupt', onclick: function () { fertig(true); } }, 'Anfangen'))));
     name.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); fertig(true); } });
+    // Fokus bleibt im Dialog (Tab läuft im Kreis), Escape heißt „ohne Namen“.
+    dlg.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { e.preventDefault(); fertig(false); return; }
+      if (e.key !== 'Tab') return;
+      var f = Array.prototype.filter.call(dlg.querySelectorAll('input, button'), function (x) { return !x.disabled; });
+      if (!f.length) return;
+      var erstes = f[0], letztes = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === erstes) { e.preventDefault(); letztes.focus(); }
+      else if (!e.shiftKey && document.activeElement === letztes) { e.preventDefault(); erstes.focus(); }
+      else if (!dlg.contains(document.activeElement)) { e.preventDefault(); erstes.focus(); }
+    });
     document.body.appendChild(dlg);
     name.focus();
   }

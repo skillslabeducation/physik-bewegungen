@@ -23,7 +23,11 @@ const BEISPIELE = {
   punkte: { id: 'pk', typ: 'punkte', frage: 'Trage die Punkte ein.', achsen: { x: { g: 't', e: 's', max: 60, schritt: 10 }, y: { g: 's', e: 'm', max: 1250, schritt: 250 } },
     xs: [0, 20, 40, 60], soll: [0, 375, 750, 1125], kurve: [[0, 0], [60, 1125]] },
   zahltabelle: { id: 'zt', typ: 'tabelle', frage: 'q', spalten: ['', 'v̄ in m/s', 'ā in m/s²'], zeilen: [
-    { kopf: 'Intervall 1', zellen: [{ zahl: 0.98 }, { zahl: 2.945, auch: [2.95] }] }] }
+    { kopf: 'Intervall 1', zellen: [{ zahl: 0.98 }, { zahl: 2.945, auch: [2.95] }] }] },
+  terme: { id: 'tm', typ: 'terme', frage: 'Gib die Funktionsterme an.', tolRel: 0.01, terme: [
+    ['a(t) = ', { zahl: -4.5 }, ' m/s²'],
+    ['v(t) = ', { zahl: 9 }, ' m/s − ', { zahl: 4.5 }, ' m/s² · t'],
+    ['s(t) = ', { zahl: 9 }, ' m/s · t − ', { zahl: 2.25 }, ' m/s² · t²']] }
 };
 
 const FALSCH = {
@@ -31,7 +35,8 @@ const FALSCH = {
   zuordnen: [1, 0, 2], reihenfolge: [1, 0, 2, 3],
   tabelle: [[0, 0], [null, 1]],
   zahl: '180', behauptung: { stimmt: true, grund: 1 },
-  rechnung: '62', punkte: [0, 375, 750, null], zahltabelle: [['0,98', '3']]
+  rechnung: '62', punkte: [0, 375, 750, null], zahltabelle: [['0,98', '3']],
+  terme: [['-4,5'], ['9', '4,5'], ['9', '4,5']]
 };
 
 Object.keys(BEISPIELE).forEach((typ) => {
@@ -169,6 +174,37 @@ test('tabelle: Zahlzellen mit relativer Toleranz', () => {
   eq(A.score(it, [['0.98', '2,945']]), 1);
   ok(A.leer(it, [['', '']]));
   ok(A.loesungText(it).indexOf('0,98') >= 0, A.loesungText(it));
+});
+
+test('terme: ein Punktanteil je Term, ein Term zählt nur mit allen Zahlen', () => {
+  const it = BEISPIELE.terme;
+  eq(A.loesung(it), [['-4.5'], ['9', '4.5'], ['9', '2.25']]);
+  eq(A.score(it, [['−4,5'], ['9', '4,5'], ['9', '2,25']]), 1);
+  eq(A.score(it, [['-4,5'], ['9', '4,5'], ['9', '4,5']]), 2 / 3);
+  eq(A.score(it, [['4,5'], ['9', ''], ['9', '2,25']]), 1 / 3);
+  eq(A.score(it, [['-4.5'], ['9 m/s', '4,5'], ['9', '2,25']]), 1);
+  eq(A.score(it, 'kaputt'), 0);
+  ok(A.leer(it, [[''], ['', ''], ['', '']]));
+  ok(!A.leer(it, [[''], ['9', ''], ['', '']]));
+  eq(A.loesungText(it), 'a(t) = −4,5 m/s²; v(t) = 9 m/s − 4,5 m/s² · t; s(t) = 9 m/s · t − 2,25 m/s² · t²');
+});
+
+test('rechnung: Lösungstext mit drei Nachkommastellen, wenn zwei das Ergebnis verfälschen', () => {
+  const it = Object.assign({}, BEISPIELE.rechnung, { antwort: 0.625, auch: [], einheit: 'm/s²' });
+  eq(A.loesungText(it), '0,625 m/s²');
+  eq(A.loesungText(Object.assign({}, it, { antwort: 63.2456 })), '63,25 m/s²');
+  eq(A.loesungText(Object.assign({}, it, { antwort: 1.5 })), '1,5 m/s²');
+  eq(A.fmtErgebnis(0.625), '0,625');
+  eq(A.fmtErgebnis(2.25), '2,25');
+  eq(A.fmtErgebnis(56.568542), '56,57');
+});
+
+test('erklaerungen: führendes „Richtig:“ im Erklärsatz der richtigen Option fällt weg, wenn sie nachgereicht wird', () => {
+  const w = { typ: 'wahl', optionen: ['a', 'b'], richtig: 1, optErkl: ['Falsch gerechnet.', 'Richtig: So geht es.'] };
+  eq(A.erklaerungen(w, 0).map((e) => e.text), ['Falsch gerechnet.', 'So geht es.']);
+  eq(A.erklaerungen(w, 1).map((e) => e.text), ['Richtig: So geht es.']);
+  const m = { typ: 'mehrfach', optionen: ['a', 'b'], richtig: [0, 1], optErkl: ['Richtig:  A.', 'Richtig, B.'] };
+  eq(A.erklaerungen(m, [0]).map((e) => e.text), ['Richtig:  A.', 'Richtig, B.']);
 });
 
 test('wahl: Lösungstext einer Diagramm-Option ist die Beschreibung, kein SVG-Rest', () => {

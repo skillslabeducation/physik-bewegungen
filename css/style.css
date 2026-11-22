@@ -320,6 +320,9 @@ table.tab td.fix { color: var(--grau); font-family: var(--mono); }
 table.tab select.auswahl { width: 100%; min-width: 92px; }
 table.tab .eingabe--zelle { width: 100%; min-width: 72px; min-height: 44px; font-family: var(--mono); }
 .zahl { display: flex; align-items: center; gap: 10px; }
+.terme { display: grid; gap: 8px; }
+.term { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+.term .eingabe--zelle { width: 96px; min-height: 44px; font-family: var(--mono); }
 .feedback { margin-top: 12px; border-radius: var(--r); }
 .feedback:empty { display: none; }
 .feedback--ok { background: var(--akzent-hell); border: 1px solid #9cc7b7; padding: 10px 14px; }
@@ -431,10 +434,13 @@ table.tab .eingabe--zelle { width: 100%; min-width: 72px; min-height: 44px; font
   .aufgabe, .erkl, .wissen { padding: 20px 24px; }
   .karte { padding: 16px 20px; }
 }
+@media (min-width: 700px) {
+  /* Am Rechner bleibt die Tab-Leiste in der Inhaltsspalte. */
+  .tabs { margin-left: 0; margin-right: 0; padding-left: 0; padding-right: 0; }
+}
 @media (min-width: 1000px) {
   #inhalt { padding: 0 24px; }
   .kopf__innen { padding-left: 24px; padding-right: 24px; }
-  .tabs { margin-left: -24px; margin-right: -24px; padding-left: 24px; padding-right: 24px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }

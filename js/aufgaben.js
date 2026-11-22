@@ -1,6 +1,6 @@
 /* Aufgaben-Engine: prüft Antworten (rein, testbar) und zeigt Aufgaben an.
    Typen: wahl, mehrfach, luecke, eingabe, liste, zuordnen, reihenfolge,
-   tabelle (auch Zahlzellen), zahl, behauptung, rechnung, punkte. */
+   tabelle (auch Zahlzellen), zahl, terme (Funktionsterme mit Zahlfeldern), behauptung, rechnung, punkte. */
 (function () {
   'use strict';
   var W = (window.W = window.W || {});
@@ -42,6 +42,15 @@
     return v === c.richtig;
   }
 
+  /** Zahlfelder eines Terms (Teile, die keine Texte sind). */
+  function termZahlen(term) { return term.filter(function (x) { return typeof x !== 'string'; }); }
+  /** Ein Term ist richtig, wenn alle seine Zahlen passen. */
+  function termOk(item, term, werte) {
+    return Array.isArray(werte) && termZahlen(term).every(function (z, k) {
+      return werte[k] != null && W.physik.passt(werte[k], z.zahl, z.auch, item.tolRel);
+    });
+  }
+
   /** Standard: y.schritt/4, also nur der nächste Rasterpunkt (Raster y.schritt/2), nicht der Nachbar. */
   function punkteTol(item) { return item.tol == null ? item.achsen.y.schritt / 4 : item.tol; }
   function punktOk(item, i, v) { return v != null && v !== '' && Math.abs(v - item.soll[i]) <= punkteTol(item) + 1e-9; }
@@ -76,6 +85,7 @@
           return anteil(o.filter(function (z) { return a[z.zi] && zelleOk(z.c, a[z.zi][z.ci]); }).length, o.length);
         }
         case 'zahl': return zahlPasst(item, a) ? 1 : 0;
+        case 'terme': return anteil(item.terme.filter(function (t, i) { return termOk(item, t, a[i]); }).length, item.terme.length);
         case 'rechnung': return W.physik.passt(a, item.antwort, item.auch, item.tolRel) ? 1 : 0;
         case 'punkte': return anteil(item.xs.filter(function (x, i) { return punktOk(item, i, a[i]); }).length, item.xs.length);
         case 'behauptung': {
@@ -116,6 +126,7 @@
       case 'reihenfolge': return item.schritte.map(function (s, i) { return i; });
       case 'tabelle': return item.zeilen.map(function (z) { return z.zellen.map(function (c) { return c.fix != null ? null : c.zahl != null ? String(c.zahl) : c.richtig; }); });
       case 'zahl': return String(item.antwort);
+      case 'terme': return item.terme.map(function (t) { return termZahlen(t).map(function (z) { return String(z.zahl); }); });
       case 'rechnung': return String(item.antwort);
       case 'punkte': return item.soll.slice();
       case 'behauptung': return { stimmt: item.stimmt, grund: item.richtig };
@@ -131,6 +142,11 @@
     return m ? m[1].replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&') : ohneTags(o);
   }
   function fmt(x) { return W.physik.fmt(x); }
+  /** Ergebnis mit zwei Nachkommastellen, mit drei, wenn das Ergebnis genau drei hat (0,625 statt 0,63). */
+  function fmtErgebnis(x) {
+    var drei = Math.abs(x * 1000 - Math.round(x * 1000)) < 1e-6, zwei = Math.abs(x * 100 - Math.round(x * 100)) < 1e-6;
+    return W.physik.fmt(x, drei && !zwei ? 3 : 2);
+  }
 
   /** Die Lösung als lesbarer Text. */
   function loesungText(item) {
@@ -146,7 +162,8 @@
         return ohneTags(z.kopf) + ': ' + z.zellen.map(function (c) { return c.fix != null ? c.fix : c.zahl != null ? fmt(c.zahl) : c.optionen[c.richtig]; }).join(' | ');
       }).join('; ');
       case 'zahl': return zahlText(item.antwort) + (item.einheit ? ' ' + item.einheit : '');
-      case 'rechnung': return fmt(item.antwort) + (item.einheit ? ' ' + item.einheit : '');
+      case 'terme': return item.terme.map(function (t) { return t.map(function (x) { return typeof x === 'string' ? x : W.physik.fmt(x.zahl, 3); }).join(''); }).join('; ');
+      case 'rechnung': return fmtErgebnis(item.antwort) + (item.einheit ? ' ' + item.einheit : '');
       case 'punkte': {
         var ax = item.achsen.x, ay = item.achsen.y;
         return item.xs.map(function (x, i) { return ax.g + ' = ' + fmt(x) + ' ' + ax.e + ': ' + ay.g + ' = ' + fmt(item.soll[i]) + ' ' + ay.e; }).join('; ');
@@ -171,7 +188,8 @@
     var soll = item.typ === 'mehrfach' ? item.richtig : [item.richtig];
     var ok = score(item, a) >= 1 - 1e-9;
     var out = gew.map(function (i) { return { i: i, text: item.optErkl[i], gewaehlt: true, richtig: soll.indexOf(i) >= 0 }; });
-    if (!ok) soll.forEach(function (i) { if (gew.indexOf(i) < 0) out.push({ i: i, text: item.optErkl[i], gewaehlt: false, richtig: true }); });
+    // Nachgereichte richtige Option: Die Anzeige sagt schon „Richtig:“, ein „Richtig:“ am Satzanfang fällt weg.
+    if (!ok) soll.forEach(function (i) { if (gew.indexOf(i) < 0) out.push({ i: i, text: String(item.optErkl[i] || '').replace(/^Richtig:\s*/, ''), gewaehlt: false, richtig: true }); });
     return out.filter(function (e) { return e.text; });
   }
 
@@ -320,7 +338,7 @@
     }
     zeichnen();
     return {
-      el: h('div', { class: 'reihenfolge' }, h('p', { class: 'hinweis-klein' }, 'Tippe die Stationen in der richtigen Reihenfolge an. Antippen in der Liste nimmt sie wieder heraus.'), reihe, pool),
+      el: h('div', { class: 'reihenfolge' }, h('p', { class: 'hinweis-klein' }, 'Klicke die Schritte in der richtigen Reihenfolge an. Ein Klick in der Liste nimmt einen Schritt wieder heraus.'), reihe, pool),
       antwort: function () { return start.concat(gewaehlt); },
       setze: function (w) { gewaehlt = (w || []).filter(function (i) { return start.indexOf(i) < 0; }); zeichnen(); },
       zeige: function () {
@@ -370,6 +388,36 @@
     };
   };
 
+  /** Funktionsterme: Text und Zahlfelder in einer Zeile je Term, z. B. „s(t) = [ ] m/s² · t²“. */
+  R.terme = function (item) {
+    var felder = item.terme.map(function (t) {
+      return termZahlen(t).map(function () {
+        return h('input', { type: 'text', inputmode: 'decimal', class: 'eingabe eingabe--zelle', autocomplete: 'off', placeholder: '?' });
+      });
+    });
+    var zeilen = item.terme.map(function (t, i) {
+      var k = 0;
+      return h('p', { class: 'term mono' }, t.map(function (x) {
+        if (typeof x === 'string') return h('span', null, x);
+        var f = felder[i][k++];
+        f.setAttribute('aria-label', ohneTags(t[0]).replace(/=\s*$/, '').trim() + ', Zahl ' + k);
+        return f;
+      }));
+    });
+    return {
+      el: h('div', { class: 'terme' }, zeilen),
+      antwort: function () { return felder.map(function (fs) { return fs.map(function (f) { return f.value; }); }); },
+      setze: function (w) { felder.forEach(function (fs, i) { fs.forEach(function (f, k) { var v = Array.isArray(w) && Array.isArray(w[i]) ? w[i][k] : null; f.value = v == null ? '' : String(v); }); }); },
+      zeige: function () {
+        felder.forEach(function (fs, i) {
+          var werte = fs.map(function (f) { return f.value; });
+          var ok = termOk(item, item.terme[i], werte);
+          fs.forEach(function (f) { f.disabled = true; f.classList.add(ok ? 'richtig' : 'falsch'); });
+        });
+      }
+    };
+  };
+
   R.behauptung = function (item) {
     var urteil = null, grund = null;
     var ja = h('button', { type: 'button', class: 'opt opt--kurz', onclick: function () { urteil = true; ja.classList.add('gewaehlt'); nein.classList.remove('gewaehlt'); } }, 'Stimmt');
@@ -407,51 +455,86 @@
     };
   };
 
-  /** Eine Auswahl, bei der man so lange wählt, bis es stimmt. Falsche Wahl zeigt deren Erklärung. */
-  function stufe(titel, s, fest, weiter) {
+  /** Eine Auswahl, bei der man so lange wählt, bis es stimmt. Falsche Wahl zeigt deren Erklärung.
+      weiter: nach der richtigen Wahl; fehler: nach jeder falschen Wahl. */
+  function stufe(titel, s, fest, weiter, fehler, klasse) {
     var idx = s.optionen.map(function (o, i) { return i; });
     var erkl = h('p', { class: 'stufe__erkl', 'aria-live': 'polite' });
     var knoepfe = [];
-    var box = h('div', { class: 'stufe' }, h('p', { class: 'stufe__titel' }, titel),
+    function richtigWaehlen(b) {
+      b.classList.add('richtig');
+      box.classList.add('geloest');
+      knoepfe.forEach(function (k) { if (k !== b) k.hidden = true; });
+    }
+    var box = h('div', { class: 'stufe' + (klasse ? ' ' + klasse : '') }, h('p', { class: 'stufe__titel' }, titel),
       h('div', { class: 'opts' }, (fest ? idx : W.shuffle(idx)).map(function (i) {
         var b = h('button', { type: 'button', class: 'opt', html: s.optionen[i], onclick: function () {
           if (box.classList.contains('geloest') || b.disabled) return;
           erkl.innerHTML = '';
           if (s.optErkl && s.optErkl[i]) erkl.textContent = s.optErkl[i];
           if (i === s.richtig) {
-            b.classList.add('richtig');
-            box.classList.add('geloest');
-            knoepfe.forEach(function (k) { if (k !== b) k.hidden = true; });
+            richtigWaehlen(b);
             if (weiter) weiter();
           } else {
             b.classList.add('falsch');
             b.disabled = true;
+            if (fehler) fehler();
+            // Fokus auf die nächste noch wählbare Option, damit Tastatur und Enter weiter funktionieren.
+            var pos = knoepfe.indexOf(b);
+            for (var n = 1; n < knoepfe.length; n++) {
+              var k = knoepfe[(pos + n) % knoepfe.length];
+              if (!k.disabled && !k.hidden) { k.focus({ preventScroll: true }); break; }
+            }
           }
         } });
+        b.dataset.i = String(i);
         knoepfe.push(b);
         return b;
       })), erkl);
-    return { el: box, sperren: function () { knoepfe.forEach(function (k) { k.disabled = true; }); } };
+    return {
+      el: box,
+      sperren: function () { knoepfe.forEach(function (k) { k.disabled = true; }); },
+      geloest: function () { return box.classList.contains('geloest'); },
+      /** Lösung zeigen: richtige Option markieren, die anderen ausblenden. */
+      aufloesen: function () {
+        if (!box.classList.contains('geloest')) richtigWaehlen(knoepfe.filter(function (k) { return +k.dataset.i === s.richtig; })[0]);
+        box.classList.add('stufe--aufgeloest');
+        knoepfe.forEach(function (k) { k.disabled = true; });
+      }
+    };
   }
 
   var SCHRITT = { gg: 'Gegeben und gesucht', formel: 'Formel', umstellen: 'Umstellen', einsetzen: 'Einsetzen' };
 
-  /** Geführtes Rechnen: Schritte nacheinander, dann Ergebnis. ctx.kurz: nur Ergebnis, Schritte auf Wunsch.
-      ctx.gutachten: nach richtigem Ergebnis den Antwortsatz wählen (zählt nicht). */
+  /** Geführtes Rechnen: Schritte nacheinander, dann Ergebnis. Von Anfang an geht auch „Ergebnis direkt eingeben“.
+      ctx.kurz: nur Ergebnis, Schritte auf Wunsch. Bei falschem Ergebnis werden alle Schritte aufgelöst gezeigt.
+      ctx.gutachten: nach richtigem Ergebnis den Antwortsatz wählen (freiwillig, zählt nicht).
+      formelOk(): kein Fehlgriff bei den Schritten (dann zählt die Formel für die Kurzform). */
   R.rechnung = function (item, ctx) {
     ctx = ctx || {};
     var schritte = item.schritte || [];
     var stufen = [];
+    var fehlgriff = false;
     var inp = h('input', { type: 'text', inputmode: 'decimal', class: 'eingabe eingabe--zahl', placeholder: 'Zahl', autocomplete: 'off', 'aria-label': 'Ergebnis' + (item.einheit ? ' in ' + item.einheit : '') });
     var ergebnis = h('div', { class: 'stufe rechnung__ergebnis' }, h('p', { class: 'stufe__titel' }, 'Ergebnis'),
       h('label', { class: 'zahl' }, inp, item.einheit ? h('span', { class: 'einheit' }, item.einheit) : null));
     var liste = h('div', { class: 'rechnung__schritte' });
     var nach = h('div');
-    function schritt(k) {
-      if (k >= schritte.length) { ergebnis.hidden = false; if (k > 0 && feinerZeiger()) inp.focus(); return; }
-      var st = stufe(SCHRITT[schritte[k].art] || schritte[k].art, schritte[k], item.fest, function () { schritt(k + 1); });
+    var direkt = null;
+    function ergebnisZeigen(fokus) {
+      ergebnis.hidden = false;
+      if (direkt) direkt.hidden = true;
+      if (fokus && feinerZeiger()) inp.focus();
+    }
+    function neueStufe(k) {
+      var st = stufe(SCHRITT[schritte[k].art] || schritte[k].art, schritte[k], item.fest, function () { schritt(k + 1); }, function () { fehlgriff = true; });
       stufen.push(st);
       liste.appendChild(st.el);
+      return st;
+    }
+    function schritt(k) {
+      if (k >= schritte.length) { ergebnisZeigen(k > 0); return; }
+      neueStufe(k);
     }
     var hilfe = null;
     if (ctx.kurz && schritte.length) {
@@ -459,30 +542,50 @@
         h('button', { type: 'button', class: 'btn btn--klein', onclick: function () { hilfe.hidden = true; schritt(0); } }, 'Schritte zeigen'));
     } else {
       ergebnis.hidden = true;
+      if (schritte.length) {
+        direkt = h('div', { class: 'aktionen aktionen--links rechnung__direkt' },
+          h('button', { type: 'button', class: 'btn btn--klein', onclick: function () {
+            // Offene Schritte ausblenden: Wer direkt rechnet, braucht sie nicht. Bei falschem Ergebnis kommen sie aufgelöst zurück.
+            stufen.forEach(function (s) { if (!s.geloest()) s.el.hidden = true; });
+            ergebnisZeigen(true);
+          } }, 'Ergebnis direkt eingeben'));
+      }
       schritt(0);
     }
     return {
       el: h('div', { class: 'rechnung' }, item.gegeben ? h('div', { class: 'rechnung__gegeben', html: item.gegeben }) : null,
-        hilfe ? h('p', { class: 'hinweis-klein' }, 'Kurzform: Diese Formel sitzt schon. Tippe das Ergebnis ein.') : null,
-        liste, ergebnis, hilfe, nach),
+        hilfe ? h('p', { class: 'hinweis-klein' }, 'Kurzform: Diese Formel sitzt schon. Gib das Ergebnis ein.') : null,
+        liste, direkt, ergebnis, hilfe, nach),
       antwort: function () { return inp.value; },
-      setze: function (w) { inp.value = w || ''; if (inp.value) ergebnis.hidden = false; },
+      setze: function (w) { inp.value = w || ''; if (inp.value) ergebnisZeigen(false); },
+      formelOk: function () { return !fehlgriff; },
       zeige: function () {
         var ok = W.physik.passt(inp.value, item.antwort, item.auch, item.tolRel);
         inp.disabled = true;
         inp.classList.add(ok ? 'richtig' : 'falsch');
         if (hilfe) hilfe.hidden = true;
+        if (direkt) direkt.hidden = true;
         stufen.forEach(function (s) { s.sperren(); });
+        if (!ok) {
+          // Falsches Ergebnis: alle Schritte aufgelöst zeigen, die Lösung steht im Feedback.
+          for (var k = 0; k < schritte.length; k++) {
+            var st = stufen[k] || neueStufe(k);
+            st.el.hidden = false;
+            st.aufloesen();
+          }
+        }
         if (ok && ctx.gutachten && item.satz) {
           var satz = item.satz;
-          var st = stufe('Antwortsatz', { optionen: satz.optionen, richtig: satz.richtig, optErkl: satz.optErkl }, item.fest);
-          nach.appendChild(st.el);
+          var sst = stufe('Antwortsatz (freiwillig, zählt nicht)', { optionen: satz.optionen, richtig: satz.richtig, optErkl: satz.optErkl }, item.fest, function () {
+            nach.dispatchEvent(new CustomEvent('satzfertig', { bubbles: true }));
+          }, null, 'stufe--satz');
+          nach.appendChild(sst.el);
         }
       }
     };
   };
 
-  /** Punkte setzen: Tippen in eine Spalte setzt den eingerasteten Wert, erneutes Tippen verschiebt. */
+  /** Punkte setzen: Klick in eine Spalte setzt den eingerasteten Wert, ein weiterer Klick verschiebt. */
   R.punkte = function (item) {
     var ax = item.achsen.x, ay = item.achsen.y;
     var werte = item.xs.map(function () { return null; });
@@ -528,7 +631,7 @@
     });
     return {
       el: h('div', { class: 'punkte' },
-        h('p', { class: 'hinweis-klein' }, 'Tippe für jeden Zeitpunkt in seine Spalte. Der Punkt rastet im Karo ein, nochmal tippen verschiebt ihn.'),
+        h('p', { class: 'hinweis-klein' }, 'Klicke für jeden Zeitpunkt in seine Spalte. Der Punkt rastet im Karo ein, ein weiterer Klick verschiebt ihn.'),
         h('figure', { class: 'abb' }, svg), anzeige),
       antwort: function () { return werte.slice(); },
       setze: function (w) { (w || []).forEach(function (y, i) { if (i < werte.length) werte[i] = y == null ? null : y; }); zeichnen(); },
@@ -557,14 +660,15 @@
     var r = R[item.typ];
     if (!r) throw new Error('Unbekannter Aufgabentyp: ' + item.typ);
     var api = r(item, ctx);
-    if (ctx && ctx.wert != null && api.setze) api.setze(ctx.wert);
+    // Gespeicherte Antwort kann aus einem alten oder kaputten Stand kommen: dann leer anfangen.
+    if (ctx && ctx.wert != null && api.setze) { try { api.setze(ctx.wert); } catch (e) { /* leer lassen */ } }
     var kopf = item.typ === 'behauptung' ? h('p', { class: 'frage' }, item.frage ? h('span', { html: item.frage }) : 'Ein Mitschüler behauptet:')
       : item.typ === 'luecke' ? (item.frage ? h('p', { class: 'frage', html: item.frage }) : h('p', { class: 'frage' }, 'Wähle die passenden Wörter.'))
         : h('p', { class: 'frage', html: item.frage });
     var bild = item.abb ? figur(item.abb) : null;
     return {
-      el: h('div', { class: 'aufgabe aufgabe--' + item.typ }, item.plus ? h('span', { class: 'tag tag--plus' }, 'Plus') : null, kopf, bild, api.el),
-      antwort: api.antwort, zeige: api.zeige
+      el: h('div', { class: 'aufgabe aufgabe--' + item.typ, 'data-id': item.id }, item.plus ? h('span', { class: 'tag tag--plus' }, 'Plus') : null, kopf, bild, api.el),
+      antwort: api.antwort, zeige: api.zeige, formelOk: api.formelOk
     };
   }
 
@@ -637,7 +741,8 @@
       var r = render(item, { kurz: item.typ === 'rechnung' && kurzform(item), gutachten: !!opts.gutachten });
       var fb = h('div', { class: 'feedback', 'aria-live': 'polite' });
       var weiter = h('button', { type: 'button', class: 'btn btn--haupt', 'data-enter': '' }, 'Prüfen');
-      var geprueft = false;
+      var geprueft = false, satzOffen = false;
+      weiter.addEventListener('keydown', function (e) { if (e.key === 'Enter' && satzOffen) e.preventDefault(); });
       weiter.addEventListener('click', function () {
         if (!geprueft) {
           var a = r.antwort();
@@ -653,7 +758,8 @@
           if (!ok) fb.appendChild(h('p', null, h('strong', null, 'Richtig wäre: '), loesungText(item)));
           if (item.typ === 'wahl' || item.typ === 'mehrfach') erklAbsaetze(item, a).forEach(function (p) { fb.appendChild(p); });
           if (item.typ === 'rechnung') {
-            if (ok && item.formel && W.state && W.state.formelRichtig) W.state.formelRichtig(item.formel);
+            // Für die Kurzform zählt die Formel nur, wenn kein Schritt daneben ging (oder das Ergebnis direkt richtig war).
+            if (ok && item.formel && W.state && W.state.formelRichtig && (!r.formelOk || r.formelOk())) W.state.formelRichtig(item.formel);
             if (item.loesung) fb.appendChild(h('div', { class: 'loesung', html: item.loesung }));
           }
           if (item.erkl) fb.appendChild(h('p', { html: item.erkl }));
@@ -661,6 +767,15 @@
           if (W.ton && ok) W.ton.piep();
           weiter.textContent = i + 1 < folge.length ? 'Weiter' : 'Auswertung';
           weiter.scrollIntoView({ block: 'nearest', behavior: W.reducedMotion() ? 'auto' : 'smooth' });
+          // Freiwilliger Antwortsatz: Enter überspringt ihn nicht. Weiter per Enter erst nach der Wahl, per Klick jederzeit.
+          var satz = r.el.querySelector('.stufe--satz');
+          if (satz) {
+            satzOffen = true;
+            weiter.removeAttribute('data-enter');
+            r.el.addEventListener('satzfertig', function () { satzOffen = false; weiter.setAttribute('data-enter', ''); weiter.focus({ preventScroll: true }); });
+            var erste = satz.querySelector('.opt');
+            if (erste) erste.focus({ preventScroll: true });
+          }
         } else {
           i++;
           if (i < folge.length) zeigeAufgabe(); else ende();
@@ -689,7 +804,7 @@
   }
 
   W.aufgaben = {
-    score: score, richtig: richtig, leer: leer, loesung: loesung, loesungText: loesungText,
+    score: score, richtig: richtig, leer: leer, loesung: loesung, loesungText: loesungText, fmtErgebnis: fmtErgebnis,
     optErklOk: optErklOk, erklaerungen: erklaerungen,
     render: render, spiele: spiele, parseLuecke: parseLuecke, ohneTags: ohneTags, TYPEN: Object.keys(R)
   };
