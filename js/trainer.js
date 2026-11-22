@@ -29,24 +29,24 @@
 
   /* Kontexte mit sinnvollen Zahlenbereichen. Bereiche als [min, max, schritt]. */
   var GLEICH = [
-    { wer: 'Ein Läufer', verb: 'läuft', pron: 'er', v: [3, 4, 5, 6, 6.25, 7.5, 8], t: [40, 200, 4] },
-    { wer: 'Ein Auto', verb: 'fährt', pron: 'es', v: [10, 12.5, 15, 20, 25, 30], t: [8, 60, 4] },
-    { wer: 'Ein Güterzug', verb: 'fährt', pron: 'er', v: [12.5, 15, 18.75, 20, 22.5, 25], t: [20, 160, 4] }
+    { wer: 'Ein Läufer', verb: 'läuft', pron: 'er', v: [3, 4, 5, 6, 6.25, 7.5, 8], t: [40, 200, 4], vMax: 10 },
+    { wer: 'Ein Auto', verb: 'fährt', pron: 'es', v: [10, 12.5, 15, 20, 25, 30], t: [8, 60, 4], vMax: 40 },
+    { wer: 'Ein Güterzug', verb: 'fährt', pron: 'er', v: [12.5, 15, 18.75, 20, 22.5, 25], t: [20, 160, 4], vMax: 30 }
   ];
   var ANFAHREN = [
-    { wer: 'Ein E-Bike', pron: 'es', a: [1, 1.25, 1.5, 2, 2.5], t: [2, 8, 1], sRund: [10, 20, 25, 30, 40, 50] },
-    { wer: 'Ein Auto', pron: 'es', a: [2, 2.5, 3, 4, 5], t: [2, 8, 1], sRund: [25, 50, 75, 100, 150] },
-    { wer: 'Ein Zug', pron: 'er', a: [0.25, 0.5, 0.75, 1], t: [10, 40, 5], sRund: [100, 200, 250, 400, 500, 800, 1000] }
+    { wer: 'Ein E-Bike', pron: 'es', a: [1, 1.25, 1.5, 2, 2.5], t: [2, 6, 1], sRund: [10, 15, 20, 25, 30], aMax: 3, vMax: 10 },
+    { wer: 'Ein Auto', pron: 'es', a: [2, 2.5, 3, 4, 5], t: [2, 8, 1], sRund: [25, 50, 75, 100, 150], aMax: 6, vMax: 40 },
+    { wer: 'Ein Zug', pron: 'er', a: [0.25, 0.5, 0.75, 1], t: [10, 40, 5], sRund: [100, 200, 250, 400, 500, 800, 1000], aMax: 1.5, vMax: 70 }
   ];
   var AENDERN = [
-    { wer: 'Ein E-Bike', a: [0.5, 1, 1.5, 2], t: [2, 6, 1], v1: [2, 6, 1] },
-    { wer: 'Ein Auto', a: [1, 1.5, 2, 2.5, 3], t: [2, 8, 1], v1: [5, 20, 1] },
-    { wer: 'Ein Zug', a: [0.25, 0.5, 0.75, 1], t: [10, 40, 5], v1: [5, 20, 1] }
+    { wer: 'Ein E-Bike', a: [0.5, 1, 1.5, 2], t: [2, 5, 1], v1: [2, 5, 1], aMax: 3, vMax: 10 },
+    { wer: 'Ein Auto', a: [1, 1.5, 2, 2.5, 3], t: [2, 8, 1], v1: [5, 20, 1], aMax: 6, vMax: 40 },
+    { wer: 'Ein Zug', a: [0.25, 0.5, 0.75, 1], t: [10, 40, 5], v1: [5, 20, 1], aMax: 1.5, vMax: 70 }
   ];
   var BREMSEN = [
-    { wer: 'Ein Auto', a: [4, 4.5, 5, 6, 7.5, 8], t: [2, 4, 0.5] },
-    { wer: 'Ein E-Bike', a: [2, 2.5, 3, 4, 4.5], t: [1, 3, 0.5] },
-    { wer: 'Ein Zug', a: [0.5, 0.75, 1], t: [20, 60, 5] }
+    { wer: 'Ein Auto', a: [4, 4.5, 5, 6, 7.5, 8], t: [2, 4, 0.5], aMax: 8, vMax: 40 },
+    { wer: 'Ein E-Bike', a: [2, 2.5, 3, 4, 4.5], t: [1, 3, 0.5], aMax: 4.5, vMax: 10 },
+    { wer: 'Ein Zug', a: [0.5, 0.75, 1], t: [20, 60, 5], aMax: 1.5, vMax: 70 }
   ];
 
   /* Gemeinsame Formel-Auswahlen. Erste Option ist jeweils richtig. */
@@ -61,6 +61,7 @@
   /* ---------- Die Trainer ----------
      zahlen(r) würfelt, baue(z) liefert { frage, geg, ges, gesFalsch, formel, umstellen?, ein, antwort, einheit, loesung }.
      ein: { richtig: [text, erkl], fehler: [{ t, w, f, e, erkl }] } mit w aus der Fehlerrechnung, e der Einheit dieses Werts.
+     real: [{ a?, aMax?, v?, vMax? }] realistische Grenzen des Fahrzeugs (Anfahren bzw. Bremsen), sonst wird neu gewürfelt.
      glatt: Ergebnis muss auf zwei Stellen exakt sein. rueck: feste Rückfallzahlen. */
 
   var DEF = {};
@@ -138,7 +139,7 @@
         ein: { richtig: ['v = ' + f(s) + ' m / ' + f(t) + ' s', 'Richtig: Weg geteilt durch Zeit.'],
           fehler: [{ t: 'v = ' + f(t) + ' s / ' + f(s) + ' m', w: t / s, f: 'kehrwert', e: 's/m', erkl: F.kehrwert.erkl },
             { t: 'v = ' + f(s) + ' m · ' + f(t) + ' s', w: s * t, f: 'malStattGeteilt', e: 'm·s', erkl: 'Geschwindigkeit ist Weg pro Zeit. Du musst teilen, nicht malnehmen.' }] },
-        antwort: x, einheit: 'm/s',
+        antwort: x, einheit: 'm/s', real: [{ v: x, vMax: z.k.vMax }],
         loesung: p('v = s/t') + p('v = ' + f(s) + ' m / ' + f(t) + ' s ' + erg(x, 'm/s'))
       };
     }
@@ -158,7 +159,7 @@
         ein: { richtig: ['s = ' + f(v) + ' m/s · ' + f(t) + ' s', 'Richtig: Geschwindigkeit mal Zeit, die Sekunden kürzen sich weg.'],
           fehler: [{ t: 's = ' + f(v) + ' m/s / ' + f(t) + ' s', w: v / t, f: 'geteiltStattMal', e: 'm/s²', erkl: 'Der Weg ist Geschwindigkeit mal Zeit. Du hast geteilt.' },
             { t: 's = ' + f(t) + ' s / ' + f(v) + ' m/s', w: t / v, f: 'kehrwert', e: 's²/m', erkl: 'Du hast die Zeit durch die Geschwindigkeit geteilt. Für den Weg rechnest du v mal t.' }] },
-        antwort: x, einheit: 'm',
+        antwort: x, einheit: 'm', real: [{ v: v, vMax: z.k.vMax }],
         loesung: p('s = v·t') + p('s = ' + f(v) + ' m/s · ' + f(t) + ' s ' + erg(x, 'm'))
       };
     }
@@ -181,7 +182,7 @@
         ein: { richtig: ['t = ' + f(s) + ' m / ' + f(v) + ' m/s', 'Richtig: Weg geteilt durch Geschwindigkeit, die Meter kürzen sich weg.'],
           fehler: [{ t: 't = ' + f(v) + ' m/s / ' + f(s) + ' m', w: v / s, f: 'kehrwert', e: '1/s', erkl: 'Du hast den Bruch auf den Kopf gestellt. Der Weg steht oben: t = s/v.' },
             { t: 't = ' + f(s) + ' m · ' + f(v) + ' m/s', w: s * v, f: 'malStattGeteilt', e: 'm²/s', erkl: 'Für die Zeit teilst du den Weg durch die Geschwindigkeit. Du hast malgenommen.' }] },
-        antwort: x, einheit: 's',
+        antwort: x, einheit: 's', real: [{ v: v, vMax: z.k.vMax }],
         loesung: p('v = s/t ⇒ t = s/v') + p('t = ' + f(s) + ' m / ' + f(v) + ' m/s ' + erg(x, 's'))
       };
     }
@@ -209,7 +210,7 @@
         ein: { richtig: ['a = ' + dv + ' / ' + f(t) + ' s', 'Richtig: Δv ist Endwert minus Anfangswert, geteilt durch Δt.'],
           fehler: [{ t: 'a = ' + f(v2) + ' m/s / ' + f(t) + ' s', w: v2 / t, f: 'messwertStattDifferenz', e: 'm/s²', erkl: F.messwertStattDifferenz.erkl },
             { t: 'a = ' + f(t) + ' s / ' + dv, w: t / (v2 - v1), f: 'kehrwert', e: 's²/m', erkl: F.kehrwert.erkl }] },
-        antwort: x, einheit: 'm/s²',
+        antwort: x, einheit: 'm/s²', real: [{ a: x, aMax: z.k.aMax, v: v2, vMax: z.k.vMax }],
         loesung: p('a = Δv/Δt = (v₂ − v₁)/Δt') + p('a = ' + dv + ' / ' + f(t) + ' s = ' + f(v2 - v1) + ' m/s / ' + f(t) + ' s ' + erg(x, 'm/s²'))
       };
     }
@@ -234,7 +235,7 @@
         ein: { richtig: ['v = ' + f(a) + ' m/s² · ' + f(t) + ' s', 'Richtig: Beschleunigung mal Zeit, eine Sekunde kürzt sich weg.'],
           fehler: [{ t: 'v = ' + f(a) + ' m/s² / ' + f(t) + ' s', w: a / t, f: 'geteiltStattMal', e: 'm/s³', erkl: 'Es gilt v = a·t: Beschleunigung mal Zeit. Du hast geteilt.' },
             { t: 'v = ' + f(a) + ' m/s² / 2 · (' + f(t) + ' s)²', w: P.sBeschl(a, t), f: 'wegStattGeschwindigkeit', e: 'm', erkl: 'Das ist die Formel für den Weg. Für die Geschwindigkeit gilt v = a·t.' }] },
-        antwort: x, einheit: 'm/s',
+        antwort: x, einheit: 'm/s', real: [{ a: a, aMax: z.k.aMax, v: x, vMax: z.k.vMax }],
         loesung: p('v = a·t') + p('v = ' + f(a) + ' m/s² · ' + f(t) + ' s ' + erg(x, 'm/s'))
       };
     }
@@ -257,7 +258,7 @@
         ein: { richtig: ['t = ' + f(v) + ' m/s / ' + f(a) + ' m/s²', 'Richtig: Geschwindigkeit geteilt durch Beschleunigung ergibt Sekunden.'],
           fehler: [{ t: 't = ' + f(v) + ' m/s · ' + f(a) + ' m/s²', w: v * a, f: 'malStattGeteilt', e: 'm²/s³', erkl: 'Beim Umstellen von v = a·t nach t teilst du durch a. Du hast malgenommen.' },
             { t: 't = ' + f(a) + ' m/s² / ' + f(v) + ' m/s', w: a / v, f: 'kehrwert', e: '1/s', erkl: 'Du hast den Bruch auf den Kopf gestellt. Die Geschwindigkeit steht oben: t = v/a.' }] },
-        antwort: x, einheit: 's',
+        antwort: x, einheit: 's', real: [{ a: a, aMax: z.k.aMax, v: v, vMax: z.k.vMax }],
         loesung: p('v = a·t ⇒ t = v/a') + p('t = ' + f(v) + ' m/s / ' + f(a) + ' m/s² ' + erg(x, 's'))
       };
     }
@@ -278,8 +279,9 @@
         ein: { richtig: [ein, 'Richtig: halbe Beschleunigung mal Zeit zum Quadrat.'],
           fehler: [{ t: 's = ' + f(a) + ' m/s² · (' + f(t) + ' s)²', w: a * t * t, f: 'halbVergessen', e: 'm', erkl: F.halbVergessen.erkl },
             { t: 's = ' + f(a) + ' m/s² / 2 · ' + f(t) + ' s', w: a / 2 * t, f: 'quadratVergessen', e: 'm/s', erkl: F.quadratVergessen.erkl }] },
-        antwort: x, einheit: 'm',
-        loesung: p('s = a/2·t²') + p(ein + ' = ' + f(a / 2) + ' m/s² · ' + f(t * t) + ' s² ' + erg(x, 'm'))
+        antwort: x, einheit: 'm', real: [{ a: a, aMax: z.k.aMax, v: P.vBeschl(a, t), vMax: z.k.vMax }],
+        // a hat höchstens 2 Nachkommastellen, a/2 also höchstens 3: So bleibt der Zwischenschritt exakt.
+        loesung: p('s = a/2·t²') + p(ein + ' = ' + f(a / 2, 3) + ' m/s² · ' + f(t * t, 3) + ' s² ' + erg(x, 'm'))
       };
     }
   };
@@ -299,13 +301,14 @@
 
   /** Wurzel-Umstellung für t-beschl und fall-t; aSym ist 'a' oder 'g'. */
   function wurzelTeil(s, a, aSym) {
+    var wurzelErkl = F.wurzelVergessen.erkl.replace('2s/a', '2s/' + aSym);
     var aT = f(a) + ' m/s²', sT = f(s) + ' m', x = P.tAusS(s, a), innen = 2 * s / a;
     return {
       umstellen: [['t = √(2s/' + aSym + ')', 'Richtig: s = ' + aSym + '/2·t² | ·2 | :' + aSym + ' | √ ergibt t = √(2s/' + aSym + ').'],
-        ['t = 2s/' + aSym, F.wurzelVergessen.erkl],
+        ['t = 2s/' + aSym, wurzelErkl],
         ['t = √(s/(2' + aSym + '))', 'Beim Umstellen nimmst du mal 2. Die 2 gehört in den Zähler: t = √(2s/' + aSym + ').']],
       ein: { richtig: ['t = √(2·' + sT + ' / ' + aT + ')', 'Richtig: Unter der Wurzel bleiben s² übrig, die Wurzel daraus ergibt Sekunden.'],
-        fehler: [{ t: 't = 2·' + sT + ' / ' + aT, w: innen, f: 'wurzelVergessen', e: 's²', erkl: F.wurzelVergessen.erkl },
+        fehler: [{ t: 't = 2·' + sT + ' / ' + aT, w: innen, f: 'wurzelVergessen', e: 's²', erkl: wurzelErkl },
           { t: 't = √(' + sT + ' / ' + aT + ')', w: Math.sqrt(s / a), f: 'zweiVergessen', e: 's', erkl: 'In t = √(2s/' + aSym + ') steht oben die 2. Du hast sie vergessen.' },
           { t: 't = ' + sT + ' / ' + aT, w: s / a, f: 'gleichfoermig', e: 's²', erkl: F.gleichfoermig.erkl + ' Wie bei t = s/v durch ' + aSym + ' zu teilen, passt nicht.' }] },
       antwort: x,
@@ -324,7 +327,8 @@
         frage: z.k.wer + ' fährt aus dem Stand mit a = ' + f(a) + ' m/s² los. Wie lange braucht ' + z.k.pron + ' für ' + f(s) + ' m?',
         geg: [['a', a, 'm/s²'], ['s', s, 'm']], ges: 't in s', gesFalsch: falschGesucht('t', 'v', 'm/s'),
         formel: [F_ANF_S[0], F_ANF_S[1], ['v = a·t', 'Hier ist keine Geschwindigkeit gegeben. Du kennst den Weg s und die Beschleunigung a.']],
-        umstellen: w.umstellen, ein: w.ein, antwort: w.antwort, einheit: 's', loesung: w.loesung
+        umstellen: w.umstellen, ein: w.ein, antwort: w.antwort, einheit: 's', loesung: w.loesung,
+        real: [{ a: a, aMax: z.k.aMax, v: Math.sqrt(2 * a * s), vMax: z.k.vMax }]
       };
     }
   };
@@ -348,22 +352,22 @@
           fehler: [{ t: 'a = ' + sT + ' / (' + tT + ')²', w: s / (t * t), f: 'zweiVergessen', e: 'm/s²', erkl: F.zweiVergessen.erkl },
             { t: 'a = 2·' + sT + ' / ' + tT, w: 2 * s / t, f: 'quadratVergessen', e: 'm/s', erkl: F.quadratVergessen.erkl },
             { t: 'a = ' + sT + ' / ' + tT, w: P.vGleich(s, t), f: 'gleichfoermig', e: 'm/s', erkl: F.gleichfoermig.erkl + ' s/t ist eine Geschwindigkeit, keine Beschleunigung.' }] },
-        antwort: x, einheit: 'm/s²',
+        antwort: x, einheit: 'm/s²', real: [{ a: x, aMax: z.k.aMax, v: 2 * s / t, vMax: z.k.vMax }],
         loesung: p('s = a/2·t² ⇒ a = 2s/t²') + p('a = 2·' + sT + ' / (' + tT + ')² = ' + f(2 * s) + ' m / ' + f(t * t) + ' s² ' + erg(x, 'm/s²'))
       };
     }
   };
 
   var EINHOLEN = [
-    { a: [1.5, 2, 2.5, 3], t: [4, 8, 1], text: function (v, a) {
+    { a: [1.5, 2, 2.5, 3], t: [4, 8, 1], v1Max: 12, aMax: 6, vMax: 40, text: function (v, a) {
       return 'Ein Radfahrer fährt mit konstant ' + f(v) + ' m/s an einer Ampel vorbei. Im selben Moment fährt dort ein Auto mit a = ' + f(a) +
         ' m/s² aus dem Stand los. Nach welcher Zeit holt das Auto den Radfahrer ein?';
     } },
-    { a: [0.75, 1, 1.25, 1.5], t: [6, 10, 1], text: function (v, a) {
+    { a: [0.75, 1, 1.25, 1.5], t: [4, 8, 1], v1Max: 10, aMax: 3, vMax: 10, text: function (v, a) {
       return 'Ein E-Bike fährt mit konstant ' + f(v) + ' m/s an einem stehenden E-Bike vorbei. Genau da fährt dieses mit a = ' + f(a) +
         ' m/s² los. Nach welcher Zeit holt es das erste E-Bike ein?';
     } },
-    { a: [0.25, 0.5, 0.75], t: [40, 80, 5], text: function (v, a) {
+    { a: [0.25, 0.5], t: [40, 80, 5], v1Max: 30, aMax: 1.5, vMax: 70, text: function (v, a) {
       return 'Ein Güterzug fährt mit konstant ' + f(v) + ' m/s an einem Bahnsteig vorbei. Im selben Moment fährt dort ein Personenzug mit a = ' + f(a) +
         ' m/s² an. Nach welcher Zeit holt der Personenzug den Güterzug ein?';
     } }
@@ -393,7 +397,8 @@
         ein: { richtig: ['t = 2·' + vT + ' / ' + aT, 'Richtig: doppelte Geschwindigkeit geteilt durch die Beschleunigung.'],
           fehler: [{ t: 't = ' + vT + ' / ' + aT, w: v / a, f: 'gleichSchnell', e: 's', erkl: 'Das ist der Moment, in dem beide gleich schnell sind. Eingeholt ist erst, wenn beide denselben Weg haben.' },
             { t: 't = ' + aT + ' / (2·' + vT + ')', w: a / (2 * v), f: 'kehrwert', e: '1/s', erkl: 'Du hast den Bruch auf den Kopf gestellt. Die Geschwindigkeit steht oben: t = 2·v₁/a.' }] },
-        antwort: x, einheit: 's',
+        // Am Treffpunkt ist das anfahrende Fahrzeug doppelt so schnell: a·t = 2·v₁.
+        antwort: x, einheit: 's', real: [{ v: v, vMax: z.k.v1Max }, { a: a, aMax: z.k.aMax, v: P.vBeschl(a, x), vMax: z.k.vMax }],
         loesung: p('v₁·t = a/2·t² | :t ⇒ v₁ = a/2·t ⇒ t = 2·v₁/a') + p('t = 2·' + vT + ' / ' + aT + ' ' + erg(x, 's')) +
           p('Treffpunkt: s = v₁·t = ' + vT + ' · ' + f(x) + ' s ' + erg(e.s, 'm'))
       };
@@ -415,7 +420,7 @@
       var v = z.v, t = z.t, x = P.aAusV(0 - v, t);
       var dv = '(0 m/s − ' + f(v) + ' m/s)';
       return {
-        frage: z.k.wer + ' bremst gleichmäßig von ' + f(v) + ' m/s bis zum Stand. Das dauert ' + f(t) + ' s. Wie groß ist die Beschleunigung? Achte auf das Vorzeichen.',
+        frage: z.k.wer + ' bremst gleichmäßig von ' + f(v) + ' m/s bis zum Stand. Das dauert ' + f(t) + ' s. Wie groß ist die Beschleunigung?',
         geg: [['v₀', v, 'm/s'], ['v', 0, 'm/s'], ['Δt', t, 's']], ges: 'a in m/s²',
         gesFalsch: ['s in m', 'Nach dem Bremsweg ist nicht gefragt. Gesucht ist die Beschleunigung a.'],
         formel: [['a = Δv/Δt', 'Richtig: Beschleunigung ist Geschwindigkeitsänderung pro Zeit, auch beim Bremsen.'],
@@ -424,9 +429,10 @@
         ein: { richtig: ['a = ' + dv + ' / ' + f(t) + ' s', 'Richtig: Endwert minus Anfangswert. Weil die Geschwindigkeit abnimmt, wird a negativ.'],
           fehler: [{ t: 'a = (' + f(v) + ' m/s − 0 m/s) / ' + f(t) + ' s', w: v / t, f: 'vorzeichen', e: 'm/s²', erkl: F.vorzeichen.erkl + ' Δv ist Endwert minus Anfangswert.' },
             { t: 'a = ' + f(t) + ' s / ' + dv, w: t / (0 - v), f: 'kehrwert', e: 's²/m', erkl: F.kehrwert.erkl }] },
-        antwort: x, einheit: 'm/s²',
+        // Im Unterricht steht v = v₀ − a·t mit dem Betrag. Deshalb zählt der Betrag auch.
+        antwort: x, auch: [-x], einheit: 'm/s²', real: [{ a: -x, aMax: z.k.aMax, v: v, vMax: z.k.vMax }],
         loesung: p('a = Δv/Δt = (v − v₀)/Δt') + p('a = ' + dv + ' / ' + f(t) + ' s ' + erg(x, 'm/s²')) +
-          p('Das Minus zeigt: Das Fahrzeug wird langsamer. Der Betrag der Bremsbeschleunigung ist ' + f(-x) + ' m/s².')
+          p('Das Minus zeigt: Das Fahrzeug wird langsamer. Die Beschleunigung ist negativ (a = ' + f(x) + ' m/s²); der Betrag ' + f(-x) + ' m/s² ist die Bremsverzögerung.')
       };
     }
   };
@@ -452,8 +458,8 @@
         ein: { richtig: [zeit + 's = ' + vT + ' · ' + tT + ' − ' + aT + ' / 2 · (' + tT + ')²', 'Richtig: erst die Bremszeit, dann beide Teile des Wegs mit Einheiten.'],
           fehler: [{ t: zeit + 's = ' + vT + ' · ' + tT + ' + ' + aT + ' / 2 · (' + tT + ')²', w: v * t + a / 2 * t * t, f: 'vorzeichen', e: 'm', erkl: F.vorzeichen.erkl + ' Deshalb steht in s = v₀·t − a/2·t² ein Minus.' },
             { t: zeit + 's = ' + vT + ' · ' + tT, w: P.sGleich(v, t), f: 'gleichfoermig', e: 'm', erkl: 'Das wäre der Weg ohne Bremsen, mit konstanter Geschwindigkeit. Der Teil − a/2·t² fehlt.' },
-            { t: zeit + 's = ' + vT + ' · ' + tT + ' − ' + aT + ' / 2 · ' + tT, w: v * t - a / 2 * t, f: 'quadratVergessen', e: 'm', erkl: 'In s = v₀·t − a/2·t² steht die Zeit im Quadrat. Du hast t nur einfach genommen.' }] },
-        antwort: x, einheit: 'm',
+            { t: zeit + 's = ' + vT + ' · ' + tT + ' − ' + aT + ' / 2 · ' + tT, w: v * t - a / 2 * t, f: 'quadratVergessen', e: null, erkl: 'In s = v₀·t − a/2·t² steht die Zeit im Quadrat. Du hast t nur einfach genommen.' }] },
+        antwort: x, einheit: 'm', real: [{ a: a, aMax: z.k.aMax, v: v, vMax: z.k.vMax }],
         loesung: p('Bremszeit: 0 = v₀ − a·t ⇒ t = v₀/a = ' + vT + ' / ' + aT + ' ' + erg(t, 's')) + p('s = v₀·t − a/2·t²') +
           p('s = ' + vT + ' · ' + tT + ' − ' + aT + ' / 2 · (' + tT + ')² = ' + f(v * t) + ' m − ' + f(a / 2 * t * t) + ' m ' + erg(x, 'm'))
       };
@@ -469,7 +475,7 @@
   DEF['fall-t'] = {
     titel: 'Freier Fall: t = √(2s/g)',
     zahlen: function (r) { var k = wahl(r, FALLEN); return { k: k, s: wahl(r, k.s) }; },
-    rueck: { k: FALLEN[1], s: 5 },
+    rueck: { k: FALLEN[0], s: 45 },
     baue: function (z) {
       var s = z.s, w = wurzelTeil(s, G, 'g');
       return {
@@ -528,7 +534,9 @@
 
   function einOptionen(a) {
     return [a.ein.richtig].concat(a.ein.fehler.map(function (x) {
-      return [x.t, x.erkl + ' Das ergäbe ' + zahl(x.w) + ' ' + x.e + '.'];
+      // e null: Die Einheiten passen nicht zusammen, dann keine Einheit behaupten.
+      return [x.t, x.erkl + (x.e ? ' Das ergäbe ' + zahl(x.w) + ' ' + x.e + '.'
+        : ' Es käme ' + zahl(x.w) + ' heraus, aber das ist kein sinnvoller Weg: Die Einheiten passen nicht zusammen.')];
     }));
   }
 
@@ -561,6 +569,9 @@
     // Auch ohne glatt: Das auf zwei Stellen gerundete Ergebnis muss innerhalb der Toleranz liegen.
     if (Math.abs(zurueck(f(a.antwort)) - a.antwort) > Math.abs(a.antwort) * 0.005) return false;
     if (!a.geg.every(function (g) { return exakt(g[1]); })) return false;
+    if (!(a.real || []).every(function (x) {
+      return (x.a == null || x.a <= x.aMax + 1e-9) && (x.v == null || x.v <= x.vMax + 1e-9);
+    })) return false;
     var listen = [a.formel, einOptionen(a)];
     if (a.umstellen) listen.push(a.umstellen);
     return listen.every(function (l) { return verschieden(texte(l)); });
@@ -585,6 +596,7 @@
       frage: a.frage,
       schritte: schritte,
       antwort: a.antwort,
+      auch: a.auch,
       einheit: a.einheit,
       loesung: a.loesung,
       formel: id,
@@ -594,5 +606,8 @@
 
   function titel(id) { return DEF[id] ? DEF[id].titel : id; }
 
-  W.trainer = { IDS: IDS, erzeuge: erzeuge, titel: titel };
+  /** Bestehen die festen Rückfallzahlen die eigene Prüfung? (für Tests) */
+  function rueckfallOk(id) { return taugt(DEF[id], DEF[id].baue(DEF[id].rueck)); }
+
+  W.trainer = { IDS: IDS, erzeuge: erzeuge, titel: titel, rueckfallOk: rueckfallOk };
 })();

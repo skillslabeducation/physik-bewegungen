@@ -88,7 +88,8 @@
     });
   }
 
-  /** Die letzte Zahl im Text: „ca. 192“, „197,4 kcal“, „1.125“ (Tausenderpunkt), „1 125“, „67,5 km/h“. */
+  /** Die letzte Zahl im Text, nachdem eine Einheit am Ende abgeschnitten wurde (auch mit Ziffern oder Hochzahl):
+      „ca. 192“, „197,4 kcal“, „1.125“ (Tausenderpunkt), „1 125“, „67,5 km/h“, „1,56 m/s2“ → 1,56, „9,81 m/s²“ → 9,81. */
   function parseZahl(s) {
     var t = String(s == null ? '' : s).replace(/[−–]/g, '-').replace(/(\d)[ \u00a0](?=\d{3}(?!\d))/g, '$1');
     // Einheit am Ende abschneiden, auch mit Ziffern oder Hochzahl (m/s2, m/s^2, m/s²).
