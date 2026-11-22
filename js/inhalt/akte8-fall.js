@@ -135,6 +135,7 @@
         frage: 'Zeichne s(t) für den Sprung: Setze die Messwerte der Videoanalyse als Punkte (0,2 s bis 0,8 s). Ein halbes Karo sind 0,25 m, setze den Punkt so nah wie möglich.<br>' + MESS,
         achsen: { x: { g: 't', e: 's', max: 1, schritt: 0.2 }, y: { g: 's', e: 'm', max: 3.5, schritt: 0.5 } },
         xs: [0.2, 0.4, 0.6, 0.8], soll: [0.196, 0.785, 1.766, 3.139], tol: 0.15,
+        erkl: 'Halbparabel: Die Abschnitte werden immer größer.',
         kurve: D.kurve(function (t) { return G / 2 * t * t; }, 0, 0.8) },
 
       { id: 'fall-u2', typ: 'wahl', quelle: 'Blatt 1, A3 b',
@@ -164,6 +165,13 @@
         ] }],
         erkl: 'v̄(0,3 s) = (0,785 m − 0,196 m) / 0,2 s = ' + f(V.wert[1], 3) + ' m/s; v̄(0,5 s) = (1,766 m − 0,785 m) / 0,2 s = ' + f(V.wert[2], 3) +
           ' m/s; v̄(0,7 s) = (3,139 m − 1,766 m) / 0,2 s = ' + f(V.wert[3], 3) + ' m/s.' },
+
+      { id: 'fall-u17', typ: 'punkte', quelle: 'Blatt 1, A3 b',
+        frage: 'Zeichne v(t): Setze die mittleren Geschwindigkeiten aus der Tabelle als Punkte, jeweils zur Intervallmitte. Der Punkt rastet auf 0,5 m/s ein, setze ihn so nah wie möglich.<br>' + VTAB,
+        achsen: { x: { g: 't', e: 's', max: 0.8, schritt: 0.2 }, y: { g: 'v', e: 'm/s', max: 8, schritt: 1 } },
+        xs: V.t.map(function (t) { return Math.round(t * 10) / 10; }), soll: V.wert,
+        kurve: D.kurve(function (t) { return G * t; }, 0, 0.8),
+        erkl: 'Die Punkte liegen auf einer Ursprungsgeraden. Ihre Steigung ist etwa g = 9,81 m/s²: v = g·t.' },
 
       { id: 'fall-u4', typ: 'wahl', quelle: 'Blatt 1, A3 c',
         frage: 'Wie berechnest du den ersten Wert der mittleren Beschleunigung aus der v̄-Tabelle?<br>' + VTAB,
@@ -199,7 +207,7 @@
           'Richtig: s = g/2·t² mit g/2 = 4,905 m/s². Probe: 4,905 · 0,2² = 0,196, wie in der Tabelle.',
           FE.halbVergessen.erkl + ' Probe: 9,81 · 0,2² = 0,392, nicht 0,196.',
           FE.quadratVergessen.erkl + ' Probe: 4,905 · 0,2 = 0,981, nicht 0,196.',
-          FE.gleichfoermig.erkl + ' Die Abschnitte in der Tabelle werden aber immer größer.'
+          FE.gleichfoermig.erkl + ' Das sieht man daran, dass die Abschnitte immer größer werden.'
         ] },
 
       { id: 'fall-u7', typ: 'wahl', quelle: 'Blatt 1, A3 d',
@@ -299,7 +307,7 @@
             'Richtig: m kürzt sich, unter der Wurzel bleibt s².',
             FE.wurzelVergessen.erkl + ' Das ergäbe ' + f(2000 / G, 1) + ' s².',
             'In t = √(2s/g) steht oben die 2. Du hast sie vergessen. Das ergäbe ' + f(Math.sqrt(1000 / G)) + ' s.',
-            FE.kehrwert.erkl + ' Unter der Wurzel stünde 1/s², das ist keine Zeit.'
+            'Du hast den Bruch umgedreht: In t = √(2s/g) steht der Weg oben und g unten. Unter der Wurzel stünde 1/s², das ist keine Zeit.'
           ] }
         ],
         antwort: tStein, auch: [14.27, 14.28], einheit: 's',
@@ -376,7 +384,7 @@
           ], richtig: 0, optErkl: [
             'Richtig: m durch s² ergibt m/s².',
             FE.zweiVergessen.erkl.replace('a = 2s/t²', 'g = 2s/t²') + ' Das ergäbe ' + f(10 / (3.3 * 3.3)) + ' m/s².',
-            FE.quadratVergessen.erkl.replace('In s = g/2·t²', 'In g = 2s/t²') + ' Das ergäbe ' + f(20 / 3.3) + ' m/s, eine Geschwindigkeit.',
+            FE.quadratVergessen.erkl.replace('In s = g/2·t²', 'In g = 2s/t²') + ' Das ergäbe ' + f(20 / 3.3) + ' m/s, und 2s/t ist genau die Endgeschwindigkeit des Steins, keine Beschleunigung.',
             FE.kehrwert.erkl
           ] }
         ],
@@ -490,7 +498,7 @@
         ] },
 
       { id: 'fall-g2', typ: 'rechnung', formel: 'fall-v',
-        frage: 'Mit welcher Geschwindigkeit trifft die Springerin auf das Wasser? Die Fallzeit kennst du aus Aufgabe e: t ≈ 1,01 s.',
+        frage: 'Mit welcher Geschwindigkeit trifft die Springerin auf das Wasser? Die Fallzeit kennst du aus der Übung zum Sprung (t ≈ 1,01 s).',
         gegeben: '<p>t ≈ 1,01 s, g = 9,81 m/s², Start aus der Ruhe</p>',
         schritte: [
           { art: 'gg', optionen: [
