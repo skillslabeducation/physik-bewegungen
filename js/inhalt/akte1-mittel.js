@@ -69,8 +69,9 @@
 
       { titel: 'Mittel ist nicht momentan',
         text: '<p>Der Tacho zeigt die <strong>Momentangeschwindigkeit</strong>, also wie schnell ein Fahrzeug in genau diesem Augenblick ist. Die mittlere Geschwindigkeit tut so, als wäre es die ganze Zeit gleich schnell gefahren.</p>' +
-          '<p>Beispiel Transporter im Tunnel: erst ' + f(P.kmh(TR_V[0])) + ' km/h, dann ' + f(P.kmh(TR_V[1])) + ' km/h, am Ende im Stau ' + f(P.kmh(TR_V[2])) + ' km/h. ' +
-          'Insgesamt ' + f(TR_S[3]) + ' m in ' + f(TR_T[3]) + ' s, also v̄ ≈ ' + f(TR_VM) + ' m/s = ' + f(P.kmh(TR_VM)) + ' km/h. Dazwischen war er schneller und langsamer als v̄.</p>',
+          '<p>Beispiel Transporter im Tunnel: erst ' + f(P.kmh(TR_V[0])) + ' km/h, dann ' + f(P.kmh(TR_V[1])) + ' km/h, am Ende im zähen Verkehr nur noch ' + f(P.kmh(TR_V[2])) + ' km/h. ' +
+          'Insgesamt ' + f(TR_S[3]) + ' m in ' + f(TR_T[3]) + ' s, also v̄ ≈ ' + f(TR_VM) + ' m/s = ' + f(P.kmh(TR_VM)) + ' km/h. Dazwischen war er schneller und langsamer als v̄.</p>' +
+          '<p>Das Diagramm ist vereinfacht: Die Tempowechsel passieren darin sofort.</p>',
         abb: { achsen: { x: AX_TR_T, y: { g: 'v', e: 'm/s', max: 30, schritt: 5 } },
           kurven: [{ punkte: TR_VT, farbe: 'v', label: 'v(t)' }, { punkte: [[0, TR_VM], [180, TR_VM]], farbe: 'v', label: 'v̄ ≈ ' + f(TR_VM) + ' m/s' }] },
         merk: 'Liegt v̄ über dem Tempolimit, war das Fahrzeug mindestens zeitweise zu schnell. Liegt v̄ darunter, kann es trotzdem zeitweise zu schnell gewesen sein.',
@@ -165,7 +166,7 @@
           { art: 'einsetzen', optionen: ['s = 1,38 m/s · 60 s', 's = 1,38 m/s / 60 s', 's = 1,38 m/s · 1 min'], richtig: 0,
             optErkl: ['Richtig: Die Sekunden kürzen sich weg, übrig bleibt m.',
               'Du hast geteilt statt malgenommen. Das ergäbe ' + f(1.38 / 60, 3) + ' m/s², keine Strecke.',
-              'Minuten und m/s passen nicht zusammen. Erst umrechnen: 1 min = 60 s.'] }
+              'Die Einheiten kürzen sich nicht. Erst 1 min = 60 s umrechnen, sonst rechnest du 1,38 · 1.'] }
         ],
         antwort: S60, auch: [P.sGleich(VT, 60)], einheit: 'm', formel: 's-gleich',
         loesung: '<p>v = s/t | ·t (Seitentausch)<br>s = v·t</p><p>s = 1,38 m/s · 60 s = ' + f(S60) + ' m</p>' +
@@ -186,7 +187,7 @@
               'Das ist die Formel für eine beschleunigte Bewegung aus dem Stand. Hier rechnest du mit der mittleren Geschwindigkeit.'] },
           { art: 'einsetzen', optionen: ['s = 1,38 m/s · 3600 s', 's = 1,38 m/s · 1 h', 's = 1,38 m/s · 60 s'], richtig: 0,
             optErkl: ['Richtig: Die Sekunden kürzen sich weg, übrig bleibt m.',
-              'Stunden und m/s passen nicht zusammen. Erst umrechnen: 1 h = 3600 s.',
+              'Die Einheiten kürzen sich nicht. Erst 1 h = 3600 s umrechnen, sonst rechnest du 1,38 · 1.',
               'Das ist eine Minute, keine Stunde. Das ergäbe nur ' + f(S60) + ' m.'] }
         ],
         antwort: S3600, auch: [P.sGleich(VT, 3600)], einheit: 'm', formel: 's-gleich-h',
@@ -253,13 +254,13 @@
 
       /* ----- Vergleichsfahrt Transporter: Momentan und mittel ----- */
       { id: 'mittel-u10', typ: 'wahl',
-        frage: 'Welcher s(t)-Graph gehört zu einer Fahrt, bei der die Momentangeschwindigkeit die ganze Zeit gleich der mittleren Geschwindigkeit v̄ ist?',
+        frage: 'Welcher s(t)-Graph gehört zu einer Fahrt, bei der das Fahrzeug die ganze Zeit fährt und seine Momentangeschwindigkeit immer gleich der mittleren Geschwindigkeit v̄ ist?',
         optionen: ['s-gleich', 's-beschl', 's-brems', 's-ruhe'].map(function (a) { return D.mini(a); }),
         richtig: 0,
         optErkl: ['Richtig: Ist v immer gleich v̄, kommt in jeder Sekunde dieselbe Strecke dazu. Der s(t)-Graph ist eine Ursprungsgerade mit der Steigung v̄.',
           'Dieser Graph wird immer steiler: Das Fahrzeug wird schneller. Am Anfang ist es langsamer als v̄, am Ende schneller.',
           'Dieser Graph wird immer flacher: Das Fahrzeug bremst. Erst ist es schneller als v̄, dann langsamer.',
-          'Der Ort ändert sich nicht: Das Fahrzeug steht, v = 0.'] },
+          'Der Ort ändert sich nicht: Das Fahrzeug steht die ganze Zeit (v = 0). Gefragt ist eine Fahrt, bei der es die ganze Zeit fährt.'] },
 
       { id: 'mittel-u11', typ: 'wahl',
         frage: 'Fahrtenschreiber eines Transporters im Elbtunnel: Bei t₁ = ' + f(TR_T[1]) + ' s ist er s₁ = ' + f(TR_S[1]) + ' m, bei t₂ = ' + f(TR_T[2]) + ' s ist er s₂ = ' + f(TR_S[2]) + ' m hinter der Einfahrt (markierte Punkte). ' +
@@ -293,7 +294,7 @@
         ],
         antwort: TR_V[2], einheit: 'm/s', formel: 'v-mittel',
         loesung: '<p>v̄ = (s₂ − s₁)/(t₂ − t₁)<br>v̄ = (' + f(TR_S[3]) + ' m − ' + f(TR_S[2]) + ' m)/(' + f(TR_T[3]) + ' s − ' + f(TR_T[2]) + ' s) = ' +
-          f(TR_S[3] - TR_S[2]) + ' m / ' + f(TR_T[3] - TR_T[2]) + ' s = ' + f(TR_V[2]) + ' m/s</p><p>Das sind ' + f(P.kmh(TR_V[2])) + ' km/h: Am Ende stand der Transporter im Stau.</p>' },
+          f(TR_S[3] - TR_S[2]) + ' m / ' + f(TR_T[3] - TR_T[2]) + ' s = ' + f(TR_V[2]) + ' m/s</p><p>Am Ende fuhr der Transporter im zähen Verkehr nur noch ' + f(TR_V[2]) + ' m/s = ' + f(P.kmh(TR_V[2])) + ' km/h.</p>' },
 
       { id: 'mittel-u13', typ: 'mehrfach',
         frage: 'Der Transporter fuhr ' + f(TR_T[1]) + ' s lang mit ' + f(P.kmh(TR_V[0])) + ' km/h, dann ' + f(TR_T[2] - TR_T[1]) + ' s lang mit ' + f(P.kmh(TR_V[1])) + ' km/h und zuletzt ' + f(TR_T[3] - TR_T[2]) + ' s lang mit ' + f(P.kmh(TR_V[2])) + ' km/h, insgesamt ' + f(TR_S[3]) + ' m in ' + f(TR_T[3]) + ' s. Welche Aussagen stimmen?',
@@ -305,7 +306,7 @@
         richtig: [0, 1, 4],
         optErkl: ['Richtig: Gesamtstrecke durch Gesamtzeit.',
           'Richtig: ' + f(P.kmh(TR_V[1])) + ' km/h liegen über dem Limit, obwohl v̄ darunter liegt.',
-          'v̄ unter dem Limit beweist nichts: Zwischen ' + f(TR_T[1]) + ' s und ' + f(TR_T[2]) + ' s fuhr er ' + f(P.kmh(TR_V[1])) + ' km/h. Die langsame Fahrt im Stau drückt den Mittelwert.',
+          'v̄ unter dem Limit beweist nichts: Zwischen ' + f(TR_T[1]) + ' s und ' + f(TR_T[2]) + ' s fuhr er ' + f(P.kmh(TR_V[1])) + ' km/h. Die langsame Fahrt im stockenden Verkehr am Ende drückt den Mittelwert.',
           'Die drei Abschnitte dauern verschieden lange (' + f(TR_T[1]) + ' s, ' + f(TR_T[2] - TR_T[1]) + ' s, ' + f(TR_T[3] - TR_T[2]) + ' s). v̄ ist Gesamtstrecke durch Gesamtzeit, nicht der Mittelwert der Geschwindigkeiten.',
           'Richtig: ' + f(TR_V[2]) + ' m/s ist weniger als v̄ ≈ ' + f(TR_VM) + ' m/s.'] },
 
