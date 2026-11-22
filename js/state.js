@@ -15,6 +15,7 @@
   }
 
   function objekt(x) { return x !== null && typeof x === 'object' && !Array.isArray(x); }
+  function zahl(x) { return typeof x === 'number' && isFinite(x); }
 
   /** Gespeicherten Stand übernehmen; alles mit falschem Typ wird durch den Grundwert ersetzt. */
   function zusammen(d) {
@@ -24,10 +25,18 @@
       if (objekt(f[k]) ? objekt(d[k]) : typeof d[k] === typeof f[k]) f[k] = d[k];
     });
     var p = objekt(d.pruefung) ? d.pruefung : {};
+    var best = {};
+    if (objekt(p.best)) Object.keys(p.best).forEach(function (k) { if (zahl(p.best[k]) && p.best[k] >= 0 && p.best[k] <= 1) best[k] = p.best[k]; });
+    var laufend = objekt(p.laufend) && objekt(p.laufend.antworten) ? p.laufend : null;
+    if (laufend) {
+      // Ohne Uhr: Standard 45 Minuten ab jetzt.
+      if (!zahl(laufend.dauerMin) || laufend.dauerMin <= 0) laufend.dauerMin = 45;
+      if (!zahl(laufend.start)) laufend.start = Date.now();
+    }
     f.pruefung = {
-      laeufe: Array.isArray(p.laeufe) ? p.laeufe : [],
-      best: objekt(p.best) ? p.best : {},
-      laufend: objekt(p.laufend) && objekt(p.laufend.antworten) ? p.laufend : null
+      laeufe: Array.isArray(p.laeufe) ? p.laeufe.filter(function (x) { return objekt(x) && zahl(x.punkte) && zahl(x.max); }) : [],
+      best: best,
+      laufend: laufend
     };
     f.radar = { best: objekt(d.radar) && typeof d.radar.best === 'number' ? d.radar.best : 0 };
     return f;
@@ -110,11 +119,18 @@
       var l = S.data.pruefung.laufend;
       if (l) { l.abgegeben = true; S.save(); }
     },
-    /** ergebnisse: [{ teil, punkte, max }] – ein Eintrag je Prüfungsteil. */
+    /** ergebnisse: [{ teil, punkte, max, teile? }] – ein Eintrag je Prüfungsteil.
+        Seed und Antworten der laufenden Prüfung kommen mit, damit die letzte Auswertung nach dem Neuladen noch ansehbar ist. */
     pruefungBeenden: function (ergebnisse) {
       var datum = new Date().toISOString();
+      var l = S.data.pruefung.laufend;
+      // Antworten nur beim letzten Lauf behalten, damit der Speicher klein bleibt.
+      S.data.pruefung.laeufe.forEach(function (x) { delete x.antworten; });
       (ergebnisse || []).forEach(function (e) {
-        S.data.pruefung.laeufe.push({ teil: e.teil, punkte: e.punkte, max: e.max, datum: datum });
+        var x = { teil: e.teil, punkte: e.punkte, max: e.max, datum: datum };
+        if (Array.isArray(e.teile)) x.teile = e.teile;
+        if (l) { x.seed = l.seed; x.antworten = l.antworten; }
+        S.data.pruefung.laeufe.push(x);
         var q = e.max ? e.punkte / e.max : 0;
         S.data.pruefung.best[String(e.teil)] = Math.max(S.data.pruefung.best[String(e.teil)] || 0, q);
       });

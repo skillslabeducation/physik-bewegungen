@@ -164,6 +164,41 @@ test('Speicher: gültiges JSON mit falscher Struktur wird repariert', () => {
   ok(a.W.state.data.pruefung.best && typeof a.W.state.data.pruefung.best === 'object');
 });
 
+test('Speicher: kaputte Prüfungsdaten werden gefiltert (laeufe, best, laufend ohne Uhr)', () => {
+  const a = neu();
+  a.ctx.localStorage.setItem('bremsspur-v1', JSON.stringify({ v: 1, pruefung: {
+    laeufe: [null, 5, 'x', { teil: 1, punkte: 'viel', max: 40 }, { teil: 1, punkte: 30, max: 40, datum: 'd', teile: [{ nr: 1, b: 'a', punkte: 2, p: 2 }] }],
+    best: { '1': 'x', '2': NaN, '3': 7, '4': 0.5 },
+    laufend: { teil: 1, seed: 3, antworten: { '2b': { auto: 'abc' }, '1a': null } } } }));
+  const vorher = Date.now();
+  a.W.state.load();
+  const pr = a.W.state.data.pruefung;
+  eq(pr.laeufe.length, 1);
+  eq(pr.laeufe[0].punkte, 30);
+  eq(pr.laeufe[0].teile, [{ nr: 1, b: 'a', punkte: 2, p: 2 }], 'neues Feld teile bleibt erhalten');
+  eq(pr.best, { '4': 0.5 });
+  const l = a.W.state.pruefungLaufend();
+  eq(l.dauerMin, 45, 'Standarddauer');
+  ok(typeof l.start === 'number' && l.start >= vorher && l.start <= Date.now(), 'Start = jetzt');
+  eq(l.antworten['2b'], { auto: 'abc' }, 'Antworten bleiben, die Ansicht liest sie tolerant');
+  eq(a.W.logic.rang(a.W.state.data, []).titel, 'Praktikant');
+});
+
+test('Prüfung: letzte Auswertung wird mit Teilen, Seed und Antworten gespeichert', () => {
+  const a = neu();
+  a.W.state.load();
+  a.W.state.pruefungStarten(1, 77, 45);
+  a.W.state.pruefungAntwort('1a', { auto: '20' });
+  a.W.state.pruefungBeenden([{ teil: 1, punkte: 2, max: 40, teile: [{ nr: 1, b: 'a', punkte: 2, p: 2 }] }]);
+  const b = neu();
+  b.ctx.localStorage.setItem('bremsspur-v1', a.ctx.localStorage.getItem('bremsspur-v1'));
+  b.W.state.load();
+  const x = b.W.state.data.pruefung.laeufe[0];
+  eq([x.teil, x.punkte, x.max, x.seed], [1, 2, 40, 77]);
+  eq(x.teile, [{ nr: 1, b: 'a', punkte: 2, p: 2 }]);
+  eq(x.antworten, { '1a': { auto: '20' } });
+});
+
 test('Erklärung: Entwurf wird gespeichert, ohne die Bewertung zu ändern', () => {
   const a = neu();
   a.W.state.load();
