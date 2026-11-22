@@ -4,7 +4,7 @@
   var W = (window.W = window.W || {});
   var h = function () { return W.h.apply(null, arguments); };
 
-  var NAV = [['#/', 'Akten', 'akten'], ['#/nachermittlung', 'Nachermittlung', 'nachermittlung'], ['#/pruefung', 'Prüfung', 'pruefung'], ['#/formelkarte', 'Formelkarte', 'formelkarte']];
+  var NAV = [['#/', 'Akten', 'akten'], ['#/nachermittlung', 'Nachermittlung', 'nachermittlung'], ['#/radarfalle', 'Radarfalle', 'radarfalle'], ['#/pruefung', 'Prüfung', 'pruefung'], ['#/formelkarte', 'Formelkarte', 'formelkarte']];
 
   /** Zwei parallele Bremsspuren, die nach rechts kräftiger werden. */
   function spurSvg() {

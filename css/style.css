@@ -538,4 +538,7 @@ table.tab .eingabe--zelle { width: 100%; min-width: 72px; min-height: 44px; font
 .falle__btn--ja { border-color: var(--akzent); color: var(--akzent); }
 .falle__btn--nein { border-color: var(--rot); color: var(--rot); }
 .falle__stand { font-size: 1.3rem; }
+.falle__richtig { color: var(--akzent); }
+.falle__falsch { color: var(--rot); }
+.falle__karte:focus { outline: none; }
 .falle__fehler { margin: 0; }

@@ -332,4 +332,49 @@ test('Radarfalle: Fehler kommen als r:<i> in die Nachermittlung und lösen sich 
   eq(W.ansichten.nmAnzahl(), 0);
 });
 
+test('Radarfalle: Ids r:<i> bleiben stabil (54 Aussagen, abwechselnd wahr und falsch, nur hinten anhängen)', () => {
+  const { W } = alles();
+  const A = W.radar.aussagen;
+  ok(A.length >= 54, 'Aussagen gelöscht');
+  for (let i = 0; i < 54; i++) eq(A[i].stimmt, i % 2 === 0, 'stimmt bei r:' + i);
+});
+
+test('Radarfalle: eindeutige Aussagen aus dem Fachreview', () => {
+  const { W } = alles();
+  const A = W.radar.aussagen, P = W.physik;
+  eq(A[27].text, 'Ein waagerechter s(t)-Graph bedeutet: Das Fahrzeug fährt mit konstanter Geschwindigkeit.');
+  eq(A[48].text, 'Im freien Fall auf der Erde beträgt die Beschleunigung g = 9,81 m/s².');
+  eq(A[48].erkl, 'Ohne Luftwiderstand fallen auf der Erde alle Körper mit dieser Beschleunigung. Auf dem Mond ist g kleiner.');
+  ok(/alle ungefähr 9,8 m\/s², ist die Bewegung gleichförmig\.$/.test(A[35].text), 'r:35');
+  eq(A[33].text, 'Beim Sprung vom Turm erhältst du die Geschwindigkeit bei t = 0,4 s, indem du s(0,4 s) durch 0,4 s teilst.');
+  const s04 = P.sBeschl(P.G, 0.4);
+  eq(P.fmt(s04, 3), '0,785'); eq(P.fmt(s04 / 0.4), '1,96'); near(P.vBeschl(P.G, 0.4), 2 * s04 / 0.4, 1e-9);
+  eq(A[33].erkl, 'Das ist die mittlere Geschwindigkeit von 0 bis 0,4 s. Sie gehört zur Intervallmitte 0,2 s (' + P.fmt(s04, 3) + ' m : 0,4 s ≈ ' + P.fmt(s04 / 0.4) + ' m/s). Bei 0,4 s ist der Springer schon doppelt so schnell.');
+  eq(A[41].text, 'Ein Fahrzeug, das aus dem Stand immer weiter gleichmäßig beschleunigt, kann ein gleichförmig fahrendes nie einholen.');
+  ok(/muss die ganze Zeit genau 30 km\/h schnell gefahren sein\.$/.test(A[7].text), 'r:7');
+  ok(/gleichmäßig beschleunigt/.test(A[22].text) && /aus dem Stand/.test(A[22].text), 'r:22');
+  ok(/gleichmäßig beschleunigt/.test(A[26].text) && /aus dem Stand/.test(A[26].text), 'r:26');
+  ok(A[29].erkl.indexOf('(in v = v₀ − a·t steht nur der Betrag)') >= 0, 'r:29');
+  eq(P.fmt(P.kmh(84.7 / 61.5)), '4,96');
+  ok(A[8].erkl.indexOf('etwa 4,96 km/h') >= 0, 'r:8');
+});
+
+test('Radarfalle: Nachermittlung erklärt die falsche Option aus Sicht der Wahl', () => {
+  const { W } = alles();
+  const falsch = W.ansichten.itemNachId('r:27');   // stimmt nicht
+  eq(falsch.optErkl[0], 'Du hast ‚Stimmt‘ gewählt – die Aussage stimmt aber nicht.');
+  eq(falsch.optErkl[1], W.radar.aussagen[27].erkl);
+  const wahr = W.ansichten.itemNachId('r:48');     // stimmt
+  eq(wahr.optErkl[1], 'Du hast ‚Stimmt nicht‘ gewählt – die Aussage stimmt aber.');
+  eq(wahr.optErkl[0], W.radar.aussagen[48].erkl);
+});
+
+test('Radarfalle: Ergebnis mit Einheit, Sperre nach Fehler 3 s', () => {
+  const { W } = alles();
+  eq(W.radar.punkteText(0), '0 Punkte');
+  eq(W.radar.punkteText(1), '1 Punkt');
+  eq(W.radar.punkteText(7), '7 Punkte');
+  eq(W.radar.SPERRE_MS, 3000);
+});
+
 fertig('logic');

@@ -34,7 +34,7 @@
       seite.appendChild(kopf('Blitzrunde', 'Radarfalle'));
       seite.appendChild(W.ansichten.karte('',
         h('p', null, R.DAUER + ' Sekunden, eine Aussage nach der anderen, aus allen Akten: Stimmt sie oder stimmt sie nicht?'),
-        h('p', null, h('strong', null, 'Wertung: '), 'Richtig gibt einen Punkt, falsch kostet einen. Nach einem Fehler steht die Erklärung zwei Sekunden lang da, die Uhr läuft weiter. Die Hälfte der Aussagen stimmt, Raten bringt also nichts.'),
+        h('p', null, h('strong', null, 'Wertung: '), 'Richtig gibt einen Punkt, falsch kostet einen. Nach einem Fehler steht die Erklärung drei Sekunden lang da, die Uhr läuft weiter. Die Hälfte der Aussagen stimmt, Raten bringt also nichts.'),
         h('p', { class: 'hinweis-klein' }, 'Tastatur: Pfeil links = stimmt, Pfeil rechts = stimmt nicht. Fehler kommen in die Nachermittlung.'),
         h('p', { class: 'hinweis-klein' }, 'Bestwert: ', h('span', { class: 'mono' }, String(W.state.data.radar.best || 0)))));
       seite.appendChild(h('div', { class: 'aktionen' }, h('button', { type: 'button', class: 'btn btn--haupt', 'data-enter': '', onclick: runde }, 'Los')));
@@ -45,10 +45,12 @@
       var reihe = [], pos = 0, richtig = 0, fehler = [], gesperrt = false, aktuell = -1;
       var ende = Date.now() + R.DAUER * 1000;
       var zeit = h('span', { class: 'mono pruef-uhr' });
-      var stand = h('span', { class: 'mono falle__stand' }, '0');
+      var standOk = h('span', { class: 'mono falle__stand falle__richtig' }, '0');
+      var standFalsch = h('span', { class: 'mono falle__stand falle__falsch' }, '0');
       var aussage = h('p', { class: 'falle__aussage' });
       var erkl = h('p', { class: 'falle__erkl' });
-      var karte = h('div', { class: 'falle__karte', 'aria-live': 'polite' }, h('div', null, aussage, erkl));
+      // Die Karte hält den Fokus (nicht der Knopf „Stimmt“): Ein Enter aus Versehen beantwortet sonst die Aussage.
+      var karte = h('div', { class: 'falle__karte', tabindex: '-1', 'aria-live': 'polite' }, h('div', null, aussage, erkl));
       var ja = h('button', { type: 'button', class: 'btn falle__btn falle__btn--ja', onclick: function () { antwort(true); } }, 'Stimmt');
       var nein = h('button', { type: 'button', class: 'btn falle__btn falle__btn--nein', onclick: function () { antwort(false); } }, 'Stimmt nicht');
 
@@ -59,6 +61,7 @@
         erkl.textContent = '';
         karte.classList.remove('falle__karte--falsch');
         ja.disabled = nein.disabled = false;
+        karte.focus({ preventScroll: true });
       }
       function antwort(stimmt) {
         if (gesperrt || aktuell < 0) return;
@@ -67,10 +70,12 @@
         if (ok) richtig++; else fehler.push(i);
         W.state.itemErgebnis('r:' + i, ok);
         if (ok && W.ton) W.ton.piep();
-        stand.textContent = String(R.punkte(richtig, fehler.length));
+        standOk.textContent = String(richtig);
+        standFalsch.textContent = String(fehler.length);
         karte.classList.remove('falle__karte--ok');
         void karte.offsetWidth;
         gesperrt = true;
+        karte.focus({ preventScroll: true });
         if (ok) {
           karte.classList.add('falle__karte--ok');
           naechste();
@@ -95,18 +100,18 @@
       tasten = function (e) {
         if (!document.body.contains(karte)) { aufhoeren(); return; }
         if (e.altKey || e.ctrlKey || e.metaKey) return;
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); return; }   // nur Pfeiltasten oder Klick antworten
         if (e.key === 'ArrowLeft') { e.preventDefault(); antwort(true); }
         else if (e.key === 'ArrowRight') { e.preventDefault(); antwort(false); }
       };
       document.addEventListener('keydown', tasten);
 
       seite.innerHTML = '';
-      seite.appendChild(h('div', { class: 'pruef-leiste' }, h('span', { class: 'hinweis-klein' }, 'Zeit'), zeit, h('span', { class: 'hinweis-klein' }, 'Punkte'), stand));
+      seite.appendChild(h('div', { class: 'pruef-leiste' }, h('span', { class: 'hinweis-klein' }, 'Zeit'), zeit, h('span', { class: 'hinweis-klein' }, 'Richtig'), standOk, h('span', { class: 'hinweis-klein' }, 'Falsch'), standFalsch));
       seite.appendChild(karte);
       seite.appendChild(h('div', { class: 'falle__knoepfe' }, ja, nein));
       seite.appendChild(h('p', { class: 'hinweis-klein' }, 'Pfeil links = stimmt, Pfeil rechts = stimmt nicht.'));
       naechste();
-      ja.focus({ preventScroll: true });
       tick();
       uhr = setInterval(tick, 250);
     }
@@ -117,7 +122,7 @@
       var gesamt = richtig + fehler.length;
       seite.innerHTML = '';
       seite.appendChild(kopf('Blitzrunde', 'Radarfalle'));
-      seite.appendChild(W.ansichten.karte('falle-auswertung', h('p', { class: 'ergebnis mono' }, String(punkte)),
+      seite.appendChild(W.ansichten.karte('falle-auswertung', h('p', { class: 'ergebnis mono' }, R.punkteText(punkte)),
         h('p', null, richtig + ' von ' + gesamt + ' richtig, ' + fehler.length + ' falsch. Punkte = richtig minus falsch.' + (neu ? ' Neuer Bestwert.' : '')),
         h('p', { class: 'hinweis-klein' }, 'Bestwert: ', h('span', { class: 'mono' }, String(W.state.data.radar.best || 0)))));
       if (fehler.length) {
