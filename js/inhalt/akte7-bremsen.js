@@ -155,7 +155,7 @@
         richtig: 0,
         optErkl: [
           'Richtig: v₀ = ' + f(V0) + ' m/s und a/2 = ' + f(A) + ' m/s² / 2 = ' + f(A / 2) + ' m/s². Probe: s(2 s) = 18 m − 9 m = 9 m.',
-          F.halbVergessen.erkl + ' Mit 4,5 käme s(2 s) = 18 m − 18 m = 0 m heraus.',
+          'In s = v₀·t − a/2·t² steckt die Hälfte. Du hast sie vergessen. Mit 4,5 käme s(2 s) = 18 m − 18 m = 0 m heraus.',
           'Das ist die Form für das Anfahren aus dem Stand. Das E-Bike startet aber mit 9 m/s: s(1 s) wäre nur 2,25 m statt 6,75 m.',
           'Das wäre gleichförmige Bewegung mit v̄ = 9 m / 2 s. Sie passt nur zum Endpunkt, nicht zu s(1 s) = 6,75 m.'
         ]
@@ -189,7 +189,7 @@
             'Durch 0,25 s teilst du nicht: Das ist der Zeitpunkt, zu dem v̄ gehört. Die Zeitspanne ist Δt = 0,5 s.'
           ] }
         ],
-        antwort: MV.wert[0], einheit: 'm/s', formel: 'v-gleich',
+        antwort: MV.wert[0], einheit: 'm/s', formel: 'v-mittel',
         loesung: p('v̄ = Δs/Δt = (s₂ − s₁)/(t₂ − t₁)') +
           p('v̄(0,25 s) = (' + f4(SS[1]) + ' m − 0 m)/(0,5 s − 0 s) = ' + f4(SS[1]) + ' m / 0,5 s = ' + f4(MV.wert[0]) + ' m/s') +
           p('Der Wert gehört zur Mitte des Intervalls: (0 s + 0,5 s)/2 = 0,25 s.')
@@ -243,7 +243,7 @@
       },
       {
         id: 'bremsen-u9', typ: 'rechnung', quelle: 'Blatt 2, A2 f',
-        frage: 'Berechne aus den ersten beiden Werten von Tabelle 2 die mittlere (negative) Beschleunigung ā(t = 0,5 s). Auf dem Blatt steht hier versehentlich „v(t = 0,5 s)“, gemeint ist a.',
+        frage: 'Berechne aus den ersten beiden Werten von Tabelle 2 die mittlere (negative) Beschleunigung ā(t = 0,5 s). Auf dem Blatt steht „v(t = 0,5 s)“ und darunter „a(t = 1 s) =“, gemeint ist der erste Wert ā(t = 0,5 s).',
         gegeben: p('v̄(0,25 s) = ' + f4(MV.wert[0]) + ' m/s, v̄(0,75 s) = ' + f4(MV.wert[1]) + ' m/s'),
         schritte: [
           { art: 'gg', optionen: [
@@ -266,23 +266,23 @@
             'ā = 7,875 m/s / 0,25 s',
             'ā = (0,75 s − 0,25 s) / (5,625 m/s − 7,875 m/s)'
           ], richtig: 0, optErkl: [
-            'Richtig: Endwert minus Anfangswert, oben und unten in derselben Reihenfolge.',
-            'Du hast Anfangswert minus Endwert gerechnet. ' + F.vorzeichen.erkl,
+            'Richtig: Endwert minus Anfangswert, oben und unten in derselben Reihenfolge. Weil v abnimmt, ist Δv negativ und ā bekommt ein Minus.',
+            'Du hast Anfangswert minus Endwert gerechnet. ' + F.vorzeichen.erkl + ' Gefragt ist die (negative!) Beschleunigung: Δv = v₂ − v₁ ist negativ, also hat ā ein Minus.',
             F.messwertStattDifferenz.erkl,
             F.kehrwert.erkl
           ] }
         ],
-        antwort: MA.wert[0], auch: [-MA.wert[0]], einheit: 'm/s²', formel: 'brems-a',
+        antwort: MA.wert[0], einheit: 'm/s²', formel: 'brems-a',
         loesung: p('ā = Δv/Δt = (v₂ − v₁)/(t₂ − t₁)') +
           p('ā(0,5 s) = (' + f4(MV.wert[1]) + ' m/s − ' + f4(MV.wert[0]) + ' m/s)/(0,75 s − 0,25 s) = ' + f(MV.wert[1] - MV.wert[0]) + ' m/s / 0,5 s = ' + f(MA.wert[0]) + ' m/s²') +
-          p('Zeitpunkt: Mitte zwischen 0,25 s und 0,75 s, also 0,5 s. Das Minus zeigt: Das Rad wird langsamer. Der Betrag ' + f(A) + ' m/s² ist die Bremsverzögerung.')
+          p('Zeitpunkt: Mitte zwischen 0,25 s und 0,75 s, also 0,5 s. Das Minus gehört zum Ergebnis: Das Rad wird langsamer, gefragt ist die negative Beschleunigung. Ohne Minus (' + f(A) + ' m/s²) wäre es nur der Betrag.')
       },
       {
         id: 'bremsen-u10', typ: 'tabelle', quelle: 'Blatt 2, A2 f',
         frage: 'Bestimme aus aufeinanderfolgenden Werten von Tabelle 2 alle drei mittleren Beschleunigungen und trage sie in Tabelle 3 ein.' + '<div class="tab-wrap">' + TAB2 + '</div>',
         spalten: ['t in s'].concat(MA.t.map(function (t) { return f(t); })),
-        zeilen: [{ kopf: 'ā in m/s²', zellen: MA.wert.map(function (a) { return { zahl: a, auch: [-a] }; }) }],
-        erkl: WEG_A + p('Alle drei Werte sind gleich: Die Beschleunigung ist konstant, das Rad bremst gleichmäßig. Das Minus gehört dazu; den Betrag ' + f(A) + ' lässt die App auch gelten.')
+        zeilen: [{ kopf: 'ā in m/s²', zellen: MA.wert.map(function (a) { return { zahl: a }; }) }],
+        erkl: WEG_A + p('Alle drei Werte sind gleich: Die Beschleunigung ist konstant, das Rad bremst gleichmäßig. Das Minus gehört dazu: Gefragt ist die negative Beschleunigung, ' + f(A) + ' ohne Minus wäre nur der Betrag.')
       },
       {
         id: 'bremsen-u11', typ: 'rechnung', quelle: 'Blatt 2, A2 g',
@@ -314,7 +314,7 @@
             '1,75 s ist der letzte Zeitpunkt aus Tabelle 2. Das Rad steht aber erst bei t = 2 s.'
           ] }
         ],
-        antwort: V0, einheit: 'm/s', formel: 'v-at',
+        antwort: V0, einheit: 'm/s', formel: 'v0-brems',
         loesung: p('0 = v₀ − a·t | + a·t') +
           p('v₀ = a·t = ' + f(A) + ' m/s² · ' + f(T_STOP) + ' s = ' + f(V0) + ' m/s') +
           p('Zweiter Weg: v(t)-Gerade bis t = 0 verlängern. Von t = 0,25 s zurück bis t = 0: v₀ = ' + f4(MV.wert[0]) + ' m/s + ' + f(A) + ' m/s² · 0,25 s = ' + f4(MV.wert[0]) + ' m/s + ' + f4(A * 0.25) + ' m/s = ' + f(V0) + ' m/s') +
@@ -362,7 +362,7 @@
             F.kehrwert.erkl
           ] }
         ],
-        antwort: A5, auch: [-A5], einheit: 'm/s²', formel: 'brems-a',
+        antwort: A5, auch: [-A5], einheit: 'm/s²', formel: 'v0-brems',
         loesung: p('100 km/h = 100 : 3,6 m/s ≈ ' + f(V100) + ' m/s') +
           p('0 = v₀ − a·t | + a·t') + p('a·t = v₀ | : t') +
           p('a = v₀/t = 27,78 m/s / 5 s = 5,556 m/s² ≈ ' + f(A5) + ' m/s²') +
@@ -395,7 +395,7 @@
           ], richtig: 0, optErkl: [
             'Richtig: beide Teile des Wegs mit Einheiten.',
             F.quadratVergessen.erkl,
-            F.halbVergessen.erkl + ' Ohne die Hälfte käme beim Bremsen bis zum Stand immer 0 m heraus.'
+            'In s = v₀·t − a/2·t² steckt die Hälfte. Du hast sie vergessen. Ohne die Hälfte käme beim Bremsen bis zum Stand immer 0 m heraus.'
           ] }
         ],
         antwort: S5, auch: [69.45], einheit: 'm', formel: 'bremsweg',
@@ -446,7 +446,7 @@
           ], richtig: 0, optErkl: [
             'Richtig: Betrag der Beschleunigung, Hälfte und Quadrat.',
             'Das Minus steht schon in der Formel. Setzt du −12 ein, wird aus minus mal minus plus, und der Weg wird größer statt kleiner. Setz den Betrag 12 m/s² ein.',
-            F.halbVergessen.erkl + ' Ohne die Hälfte käme beim Bremsen bis zum Stand immer 0 m heraus.'
+            'In s = v₀·t − a/2·t² steckt die Hälfte. Du hast sie vergessen. Ohne die Hälfte käme beim Bremsen bis zum Stand immer 0 m heraus.'
           ] }
         ],
         antwort: S14, einheit: 'm', formel: 'bremsweg',
@@ -477,7 +477,7 @@
             'Mit konstant 9 m/s fährt das Rad nur in der Reaktionszeit. Beim Bremsen wird es langsamer.'
           ] }
         ],
-        antwort: SA, einheit: 'm', formel: 's-gleich',
+        antwort: SA, einheit: 'm', formel: 'anhalteweg',
         loesung: p('Reaktionsweg: s<sub>R</sub> = v₀·t<sub>R</sub> = ' + f(V0) + ' m/s · ' + f(TR) + ' s = ' + f(SR) + ' m') +
           p('Anhalteweg: s<sub>A</sub> = s<sub>R</sub> + s<sub>B</sub> = ' + f(SR) + ' m + ' + f(SB) + ' m = ' + f(SA) + ' m')
       },
@@ -533,12 +533,12 @@
           { name: 'Gerade', muster: ['gerade'] },
           { name: 'fallend', muster: ['faellt', 'fallend', 'sinkt', 'abnehm', 'nimmt ab'] },
           { name: 'gleichmäßig', muster: ['gleichmaessig', 'gleich viel', 'konstant'] },
-          { name: 'Zeitachse', muster: ['zeitachse', 't achse', 'stillstand', 'steht'] },
-          { name: 'negative Beschleunigung', muster: ['negativ', 'brems'] },
+          { name: 'Zeitachse', muster: ['zeitachse', 't achse'] },
+          { name: 'negativ', muster: ['negativ'] },
         ],
         punkte: [
           { text: 'Der Graph ist eine fallende Gerade.', p: 1 },
-          { text: 'Er beginnt bei v₀ = 9 m/s und erreicht bei t = 2 s die Zeitachse (v = 0).', p: 1 },
+          { text: 'Verlängert beginnt er bei v₀ = 9 m/s und erreicht bei t = 2 s die Zeitachse.', p: 1 },
           { text: 'Bedeutung: Die Geschwindigkeit nimmt gleichmäßig ab, um 4,5 m/s pro Sekunde. Das Rad bremst mit konstanter (negativer) Beschleunigung.', p: 1 },
           { text: 'Funktionsterm: v(t) = 9 m/s − 4,5 m/s² · t.', p: 1 }
         ],
@@ -572,7 +572,7 @@
             'Die 2,25 ist a/2 aus dem s(t)-Term. In v = v₀ − a·t steht die ganze Beschleunigung.'
           ] }
         ],
-        antwort: V0_KMH, einheit: 'km/h', formel: 'v-at',
+        antwort: V0_KMH, einheit: 'km/h', formel: 'v0-brems',
         loesung: p('0 = v₀ − a·t ⇒ v₀ = a·t') +
           p('v₀ = ' + f(A) + ' m/s² · ' + f(T_STOP) + ' s = ' + f(V0) + ' m/s') +
           p(f(V0) + ' m/s · 3,6 = ' + f(V0_KMH) + ' km/h'),
