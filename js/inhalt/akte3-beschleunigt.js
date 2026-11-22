@@ -125,12 +125,12 @@
           { art: 'formel', optionen: ['s = a/2·t²', 's = v·t', 'v = a·t'], richtig: 0,
             optErkl: ['Richtig: Aus dem Stand gilt s = a/2·t².', F.gleichfoermig.erkl, 'Eine Geschwindigkeit ist nicht gegeben. Du kennst den Weg s und die Beschleunigung a.'] },
           { art: 'umstellen', optionen: ['t = √(2s/a)', 't = 2s/a', 't = √(s/(2a))', 't = √(2a/s)'], richtig: 0,
-            optErkl: ['Richtig: s = a/2·t² | ·2 | :a | √ ergibt t = √(2s/a).', F.wurzelVergessen.erkl, 'Beim Umstellen nimmst du mal 2. Die 2 gehört in den Zähler: t = √(2s/a).', F.kehrwert.erkl] },
+            optErkl: ['Richtig: s = a/2·t² | ·2 | :a | √ ergibt t = √(2s/a).', F.wurzelVergessen.erkl, 'Beim Umstellen nimmst du mal 2. Die 2 gehört in den Zähler: t = √(2s/a).', 'Du hast den Bruch umgedreht. In t = √(2s/a) steht der Weg oben, a unten.'] },
           { art: 'einsetzen', optionen: ['t = √(2·1000 m / 0,5 m/s²)', 't = 2·1000 m / 0,5 m/s²', 't = √(1000 m / 0,5 m/s²)', 't = 1000 m / 0,5 m/s²'], richtig: 0,
             optErkl: ['Richtig: Unter der Wurzel bleiben s² übrig, die Wurzel daraus ergibt Sekunden.',
               F.wurzelVergessen.erkl + ' Das ergäbe ' + f(2 * 1000 / 0.5) + ' s².',
               'In t = √(2s/a) steht oben die 2. Du hast sie vergessen. Das ergäbe ' + f(Math.sqrt(1000 / 0.5)) + ' s.',
-              F.gleichfoermig.erkl + ' Wie bei t = s/v durch a zu teilen, passt nicht. Das ergäbe ' + f(1000 / 0.5) + ' s².'] }
+              'So rechnet man nur bei konstanter Geschwindigkeit (t = s/v), und a ist keine Geschwindigkeit. Das ergäbe ' + f(1000 / 0.5) + ' s².'] }
         ],
         antwort: tZug, auch: [63.25, tZugGenau], einheit: 's', formel: 't-beschl',
         loesung: '<p>s = a/2·t² | ·2 | :a | √<br>t = √(2s/a)</p>' +
@@ -194,7 +194,7 @@
           { art: 'einsetzen', optionen: ['a = 2·1000 m / (18 s)²', 'a = 1000 m / (18 s)²', 'a = 2·1000 m / 18 s'], richtig: 0,
             optErkl: ['Richtig: m durch s² ergibt m/s².',
               F.zweiVergessen.erkl + ' Das ergäbe ' + f(1000 / 324) + ' m/s².',
-              F.quadratVergessen.erkl + ' Das ergäbe ' + f(2000 / 18) + ' m/s, und das ist keine Beschleunigung.'] }
+              F.quadratVergessen.erkl + ' Das ergäbe ' + f(2000 / 18) + ' m/s. Das ist zufällig die Endgeschwindigkeit v_Ende (siehe nächste Aufgabe), gefragt ist aber a.'] }
         ],
         antwort: aA4, auch: [6.17], einheit: 'm/s²', formel: 'a-beschl',
         loesung: '<p>s = a/2·t² | ·2 | :t²<br>a = 2s/t²</p><p>a = 2·1000 m / (18 s)² = 2000 m / 324 s² ≈ ' + f(aA4) + ' m/s²</p>' },
@@ -236,12 +236,12 @@
           { art: 'formel', optionen: ['v = a·t', 's = a/2·t²', 'a = 2s/t²'], richtig: 0,
             optErkl: ['Richtig: v = a·t verbindet Geschwindigkeit, Beschleunigung und Zeit.', 'Den Weg kennst du nicht. Gegeben sind v und a.', 'Diese Formel braucht einen Weg. Gegeben sind v und a.'] },
           { art: 'umstellen', optionen: ['t = v/a', 't = v·a', 't = a/v'], richtig: 0,
-            optErkl: ['Richtig: v = a·t | :a ergibt t = v/a.', 'Um t allein zu bekommen, teilst du durch a. Du hast multipliziert.', F.kehrwert.erkl] },
+            optErkl: ['Richtig: v = a·t | :a ergibt t = v/a.', 'Um t allein zu bekommen, teilst du durch a. Du hast multipliziert.', 'Du hast den Bruch umgedreht. Aus v = a·t | :a folgt t = v/a, die Geschwindigkeit steht oben.'] },
           { art: 'einsetzen', optionen: ['t = 83,33 m/s / 0,625 m/s²', 't = 300 km/h / 0,625 m/s²', 't = 83,33 m/s · 0,625 m/s²', 't = 0,625 m/s² / 83,33 m/s'], richtig: 0,
             optErkl: ['Richtig: m/s durch m/s² ergibt s.',
               'Erst km/h in m/s umrechnen. Sonst kommt ' + f(300 / 0.625) + ' heraus, und die Einheiten kürzen sich nicht zu s.',
               'Du hast multipliziert statt geteilt. Das ergäbe ' + f(P.ms(300) * 0.625) + ' und keine Zeit.',
-              F.kehrwert.erkl + ' Das ergäbe ' + f(0.625 / P.ms(300), 4) + '.'] }
+              'Du hast den Bruch umgedreht. Aus v = a·t | :a folgt t = v/a, die Geschwindigkeit steht oben.' + ' Das ergäbe ' + f(0.625 / P.ms(300), 4) + '.'] }
         ],
         antwort: t10, auch: [133.33], einheit: 's', formel: 't-va',
         loesung: '<p>300 km/h = 300 : 3,6 m/s ≈ 83,33 m/s</p><p>v = a·t | :a<br>t = v/a</p><p>t = 83,33 m/s / 0,625 m/s² ≈ ' + f(t10) + ' s</p>' +
@@ -299,7 +299,7 @@
           { art: 'einsetzen', optionen: ['t = √(2·200 m / 8 m/s²)', 't = 2·200 m / 8 m/s²', 't = √(200 m / 8 m/s²)'], richtig: 0,
             optErkl: ['Richtig: Unter der Wurzel steht 50 s².',
               F.wurzelVergessen.erkl + ' Das ergäbe ' + f(400 / 8) + ' s².',
-              'In t = √(2s/a) steht oben die 2. Du hast sie vergessen. Das ergäbe ' + f(Math.sqrt(200 / 8)) + ' s, also genau die halbe Zeit, und das ist zu wenig.'] }
+              'In t = √(2s/a) steht oben die 2. Du hast sie vergessen. Das ergäbe ' + f(Math.sqrt(200 / 8)) + ' s, also die Hälfte der 10 s für 400 m. Halber Weg heißt aber nicht halbe Zeit.'] }
         ],
         antwort: t14b, auch: [7.07], einheit: 's', formel: 't-beschl',
         loesung: '<p>s = a/2·t² | ·2/a<br>2s/a = t² | √<br>t = √(2s/a)</p><p>t = √(2·200 m / 8 m/s²) = √(50 s²) ≈ ' + f(t14b) + ' s</p>' +
@@ -373,7 +373,7 @@
           { art: 'formel', optionen: ['v = a·t', 's = a/2·t²', 'v = s/t'], richtig: 0,
             optErkl: ['Richtig: v = a·t verbindet Geschwindigkeit, Beschleunigung und Zeit.', 'Den Weg bis 100 km/h kennst du nicht. Gegeben sind v und a.', 'v = s/t gilt bei konstanter Geschwindigkeit. Der Wagen beschleunigt.'] },
           { art: 'umstellen', optionen: ['t = v/a', 't = v·a', 't = a/v'], richtig: 0,
-            optErkl: ['Richtig: v = a·t | :a ergibt t = v/a.', 'Um t allein zu bekommen, teilst du durch a. Du hast multipliziert.', F.kehrwert.erkl] },
+            optErkl: ['Richtig: v = a·t | :a ergibt t = v/a.', 'Um t allein zu bekommen, teilst du durch a. Du hast multipliziert.', 'Du hast den Bruch umgedreht. Aus v = a·t | :a folgt t = v/a, die Geschwindigkeit steht oben.'] },
           { art: 'einsetzen', optionen: ['t = 27,78 m/s / 8 m/s²', 't = 100 km/h / 8 m/s²', 't = 27,78 m/s · 8 m/s²', 't = 360 m/s / 8 m/s²'], richtig: 0,
             optErkl: ['Richtig: m/s durch m/s² ergibt s.',
               'Erst km/h in m/s umrechnen. Sonst kommt ' + f(100 / 8) + ' heraus, und die Einheiten kürzen sich nicht zu s.',
