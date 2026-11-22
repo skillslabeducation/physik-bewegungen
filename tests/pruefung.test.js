@@ -37,7 +37,7 @@ test('für 500 Seeds: Summe aller p = 40 = max, je Aufgabe 20', () => {
   });
 });
 
-test('Teile: Buchstaben a, b, c … ohne Lücke; Auto-Teil oder Beschreibe-Teil; Rechenweg ≤ p − 1', () => {
+test('Teile: Buchstaben a, b, c … ohne Lücke; Auto-Teil oder Beschreibe-Teil; Rechenweg ≤ p − 0,5', () => {
   alle((pr, s) => {
     pr.aufgaben.forEach((a) => {
       eq(a.teile.map((t) => t.b).join(''), 'abcdefgh'.slice(0, a.teile.length), 'Seed ' + s + ' Buchstaben');
@@ -47,9 +47,11 @@ test('Teile: Buchstaben a, b, c … ohne Lücke; Auto-Teil oder Beschreibe-Teil;
         ok(t.p > 0 && Number.isInteger(t.p * 2), tag + ': p');
         if (t.item) {
           ok(t.item.typ !== 'rechnung', tag + ': kein rechnung-Typ in der Prüfung');
-          ok(['zahl', 'punkte', 'wahl', 'tabelle'].indexOf(t.item.typ) >= 0, tag + ': Typ ' + t.item.typ);
+          ok(['zahl', 'punkte', 'terme', 'tabelle'].indexOf(t.item.typ) >= 0, tag + ': Typ ' + t.item.typ);
           eq(t.item.id, 'p:' + a.nr + t.b, tag + ' id');
-          ok(summe(t.rechenweg) <= t.p - 1, tag + ': Rechenweg zu groß');
+          ok(summe(t.rechenweg) <= t.p - 0.5, tag + ': Rechenweg zu groß');
+          (t.rechenweg || []).forEach((r) => ok(Number.isInteger(r.p * 2), tag + ': Rechenweg-Punkt in halben Punkten'));
+          if (t.rechenweg && t.item.typ === 'zahl') ok(t.rechenweg.some((r) => /Einheit/.test(r.text) && /Ergebnis/.test(r.text)), tag + ': Haken für die Einheit fehlt');
           eq(W.pruefung.pAuto(t), t.p - summe(t.rechenweg), tag + ' pAuto');
           (t.rechenweg || []).forEach((r) => ok(r.text && r.p > 0, tag + ': Rechenweg-Punkt'));
           if (t.rechenweg) ok(t.item.loesung, tag + ': Rechenteil ohne Musterlösung');
@@ -86,14 +88,75 @@ test('jedes Auto-Item mit eigener Lösung voll, auch mit gerundeter Eingabe wie 
         ok(it.soll.every((y) => y >= (it.achsen.y.min || 0) && y <= it.achsen.y.max), tag + ': Punkt außerhalb der Achse');
         ok(it.xs.every((x) => x > (it.achsen.x.min || 0) && x <= it.achsen.x.max), tag + ': Zeitpunkt außerhalb der Achse');
       }
-      if (it.typ === 'wahl') {
-        ok(it.fest === true, tag + ': Reihenfolge muss fest sein (Neuladen)');
-        ok(Array.isArray(it.optErkl) && it.optErkl.length === it.optionen.length, tag + ': optErkl');
-        ok(new Set(it.optionen).size === it.optionen.length, tag + ': doppelte Option');
+      if (it.typ === 'terme') {
+        const gerundet = it.terme.map((z) => z.filter((x) => typeof x !== 'string').map((x) => P.fmt(x.zahl, 3)));
+        ok(A.score(it, gerundet) === 1, tag + ': auf drei Stellen gerundete Terme nicht voll');
+        ok(it.loesung, tag + ': Terme ohne Musterlösung');
       }
       ok(A.score(it, null) === 0 && A.leer(it, null), tag + ': leere Antwort');
     });
   });
+});
+
+test('Punkte: v = s/t 2 P., Funktionsterme 1 P. je Term mit Teilpunkten', () => {
+  alle((pr, s) => {
+    const t = {};
+    teile(pr).forEach((x) => { t[x.key] = x.t; });
+    eq(t['1a'].p, 2, 'Seed ' + s + ' 1a');
+    [['1d', 2], ['2e', 3]].forEach(([key, n]) => {
+      const tt = t[key], tag = 'Seed ' + s + ' ' + key;
+      eq(tt.item.typ, 'terme', tag);
+      eq([tt.p, tt.item.terme.length, W.pruefung.pAuto(tt)], [n, n, n], tag + ' Punkte');
+      const voll = A.loesung(tt.item);
+      for (let k = 0; k < n; k++) {
+        const ant = voll.map((z, i) => (i === k ? z : z.map(() => '0')));
+        eq(W.pruefung.auswerten(pr, { [key]: { auto: ant } }).punkte, 1, tag + ': ein richtiger Term');
+      }
+    });
+  });
+});
+
+test('Funktionsterme verraten keine Ergebnisse anderer Teile', () => {
+  alle((pr, s) => {
+    teile(pr).filter(({ t }) => t.item && t.item.typ === 'terme').forEach(({ t, key }) => {
+      const sichtbar = t.item.frage + t.item.terme.map((z) => z.filter((x) => typeof x === 'string').join(' ')).join(' ');
+      ok(zahlenIn(sichtbar.replace(/[₀-₉]|t²|m\/s²/g, '')).length === 0, 'Seed ' + s + ' ' + key + ': Zahl im Term-Text: ' + sichtbar);
+    });
+  });
+});
+
+test('neue Zahlen: keine Tabelle wie auf den Blättern (Δt = 0,2 s im Fall, v₀ = 9 m/s beim Bremsen), mehr Vielfalt im Fall', () => {
+  const dts = new Set(), varianten = new Set();
+  alle((pr, s) => {
+    const a = pr.aufgaben[1];
+    const tab = a.text.match(/<table[\s\S]*?<\/table>/)[0];
+    const ts = zahlenIn(tab.split('</tr>')[0]);
+    if (a.variante === 'fall') {
+      ok(Math.abs(ts[1] - 0.2) > 1e-9, 'Seed ' + s + ': Δt = 0,2 s wie Blatt 1 A3');
+      dts.add(ts[1]);
+      varianten.add(a.titel + '|' + a.text.replace(/<div class="tab-wrap">[\s\S]*$/, ''));
+      const zellen = tab.split('</tr>')[1].match(/<td>[^<]*<\/td>/g).slice(1);
+      zellen.forEach((z) => ok(/<td>\d+,\d{3}<\/td>/.test(z), 'Seed ' + s + ': Fallstrecke nicht dreistellig: ' + z));
+    } else {
+      ok(Math.abs(a.teile[5].item.antwort - 9) > 1e-9, 'Seed ' + s + ': v₀ = 9 m/s wie Blatt 2 A2');
+    }
+  });
+  ok(dts.size >= 4, 'nur ' + dts.size + ' verschiedene Δt');
+  ok(varianten.size >= 12, 'Fall nur ' + varianten.size + ' Varianten');
+});
+
+test('Realismus über 3000 Seeds: Geschwindigkeiten passen zum Ort', () => {
+  const GRENZE = { 'E-Bikes an der Ampel': 45, 'Güterzug und Personenzug': 160, 'Lkw und Auto': 100 };
+  for (let s = 1; s <= 3000; s++) {
+    const a = W.pruefung.erzeuge(s).aufgaben[0];
+    const v1 = a.teile[0].item.antwort, v2 = 2 * v1;
+    ok(GRENZE[a.titel], 'Seed ' + s + ': unbekannter Kontext ' + a.titel);
+    ok(v2 * 3.6 <= GRENZE[a.titel] + 1e-9, 'Seed ' + s + ' ' + a.titel + ': v₂ = ' + P.fmt(v2 * 3.6) + ' km/h');
+    if (a.titel === 'Lkw und Auto') {
+      ok(/Landstraße/.test(a.text), 'Seed ' + s + ': Lkw nicht auf der Landstraße');
+      ok(v1 * 3.6 <= 60 + 1e-9, 'Seed ' + s + ': Lkw schneller als 60 km/h');
+    }
+  }
 });
 
 test('zwei verschiedene Seeds liefern verschiedene Zahlen; viele verschiedene Prüfungen', () => {

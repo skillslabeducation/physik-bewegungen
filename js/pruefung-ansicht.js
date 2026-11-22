@@ -14,7 +14,7 @@
   function karte() { return W.ansichten.karte.apply(null, arguments); }
   function chefin(text) { return h('blockquote', { class: 'chefin' }, h('p', null, text), h('footer', { class: 'chefin__wer mono' }, CHEFIN)); }
   function seitenkopf(ort, titel) { return h('div', { class: 'seitenkopf' }, h('p', { class: 'seitenkopf__ort mono' }, ort), h('h1', null, titel)); }
-  function antwort(l, key) { return (l.antworten || {})[key] || {}; }
+  function antwort(l, key) { var a = (l.antworten || {})[key]; return a && typeof a === 'object' ? a : {}; }
   /** Ein Feld der Antwort eines Teils speichern ({ auto, haken, text }), die anderen bleiben. */
   function speichere(key, feld, wert) {
     var l = W.state.pruefungLaufend();
@@ -25,7 +25,27 @@
     W.state.pruefungAntwort(key, neu);
   }
   function loesungKurz(item) {
-    return item.typ === 'zahl' ? W.physik.fmt(item.antwort) + ' ' + item.einheit : W.aufgaben.loesungText(item);
+    return item.typ === 'zahl' ? W.aufgaben.fmtErgebnis(item.antwort) + ' ' + item.einheit : W.aufgaben.loesungText(item);
+  }
+  /** Eigene Eingabe als Text. Die Einheit kommt nur dazu, wenn keine dasteht. Kaputte Werte werden zu „?“. */
+  function eingabeText(item, auto) {
+    function wert(v) { return v == null || String(v).trim() === '' ? '?' : String(v).trim(); }
+    if (W.aufgaben.leer(item, auto)) return '(leer)';
+    if (item.typ === 'tabelle') {
+      return Array.isArray(auto) ? auto.map(function (z) { return Array.isArray(z) ? z.map(wert).join(' | ') : '?'; }).join('; ') : '?';
+    }
+    if (item.typ === 'terme') {
+      return item.terme.map(function (t, i) {
+        var w = Array.isArray(auto) && Array.isArray(auto[i]) ? auto[i] : [], k = 0;
+        return t.map(function (x) { return typeof x === 'string' ? x : wert(w[k++]); }).join('');
+      }).join('; ');
+    }
+    var s = String(auto).trim();
+    return /[a-zA-ZäöüÄÖÜ]/.test(s) ? s : s + ' ' + item.einheit;
+  }
+  function letzterLauf() {
+    var l = (W.state.data.pruefung.laeufe || []).filter(function (x) { return x.teil === TEIL; }).pop();
+    return l && Array.isArray(l.teile) && typeof l.seed === 'number' ? l : null;
   }
   function akteLink(id) {
     var a = W.ansichten.akteNachId(id);
@@ -52,13 +72,14 @@
           h('li', null, h('strong', null, 'Aufgabe 2: '), 'Messtabelle, freier Fall oder Bremsen. Graph beschreiben, v̄ und ā nach der Mittelpunkt-Regel, Funktionsterme, eine Endfrage.')),
         h('div', { class: 'aktionen' }, h('button', { type: 'button', class: 'btn btn--haupt', 'data-enter': '', onclick: starten }, 'Prüfung starten'))),
       karte('', h('h2', null, 'So läuft es'),
-        h('p', null, 'Ergebnisse tippst du ein, die App prüft sie. Den Rechenweg schreibst du auf Papier. Nach der Abgabe vergleichst du ihn mit der Musterlösung und hakst ab, was auf deinem Blatt steht: Formel, Umstellen, Einsetzen mit Einheiten. Beschreibungen bewertest du genauso.'),
+        h('p', null, 'Ergebnisse gibst du hier ein, die App prüft sie. Den Rechenweg schreibst du auf Papier. Nach der Abgabe vergleichst du ihn mit der Musterlösung und hakst ab, was auf deinem Blatt steht: Formel, Umstellen, Einsetzen mit Einheiten. Beschreibungen bewertest du genauso.'),
         h('p', { class: 'hinweis-klein' }, 'Die Note ist ein Richtwert. Die Schule kann anders werten. Sachverständiger wirst du mit fünf geschlossenen Akten und mindestens 80 % in der Prüfung.')),
       laeufe.length ? h('div', null, h('h2', { class: 'zwischen' }, 'Letzte Prüfungen'),
         h('ul', { class: 'pruef-laeufe' }, laeufe.map(function (x) {
           var pz = x.max ? 100 * x.punkte / x.max : 0;
           return h('li', { class: 'mono hinweis-klein' }, pText(x.punkte) + ' / ' + x.max + ' P. · ' + Math.round(pz) + ' % · Note ' + W.logic.note(pz));
-        }))) : null));
+        })),
+        letzterLauf() ? h('div', { class: 'aktionen aktionen--links' }, h('a', { href: '#/pruefung/letzte', class: 'btn' }, 'Letzte Auswertung ansehen')) : null) : null));
   }
 
   function fortsetzenFrage(host, l) {
@@ -112,7 +133,7 @@
           box.appendChild(h('div', { class: 'pruef-teilbox', 'data-teil': key }, teilKopf(t), r.el,
             t.rechenweg ? h('p', { class: 'hinweis-klein pruef-papier' }, 'Rechenweg auf Papier, Ergebnis hier eintragen.') : null));
         } else {
-          var ta = h('textarea', { class: 'erkl__text erkl__text--klein', rows: '4', placeholder: 'Antwort tippen oder auf Papier schreiben', 'aria-label': 'Antwort zu ' + key });
+          var ta = h('textarea', { class: 'erkl__text erkl__text--klein', rows: '4', placeholder: 'Antwort eingeben oder auf Papier schreiben', 'aria-label': 'Antwort zu ' + key });
           ta.value = alt.text || '';
           ta.addEventListener('input', function () { speichere(key, 'text', ta.value); });
           box.appendChild(h('div', { class: 'pruef-teilbox', 'data-teil': key }, teilKopf(t),
@@ -157,7 +178,8 @@
     var pr = W.pruefung.erzeuge(l.seed);
     var seite = h('div', { class: 'seite' }, seitenkopf('Prüfungsraum · abgegeben', 'Rechenweg bewerten'),
       chefin('Leg dein Blatt daneben. Hake nur ab, was wirklich auf dem Blatt steht.'),
-      h('p', { class: 'hinweis-klein' }, 'Die Ergebnisse hat die App schon geprüft. Hier bewertest du den Rechenweg an der Musterlösung und die Beschreibung am Erwartungshorizont.'));
+      h('p', { class: 'hinweis-klein' }, 'Die Ergebnisse hat die App schon geprüft. Hier bewertest du den Rechenweg an der Musterlösung und die Beschreibung am Erwartungshorizont.'),
+      h('p', { class: 'hinweis-klein' }, 'Hast du mit einem falschen Zwischenergebnis richtig weitergerechnet, gib dir die Rechenweg-Punkte.'));
     pr.aufgaben.forEach(function (a) {
       a.teile.filter(function (t) { return t.rechenweg || t.erkl; }).forEach(function (t) {
         var key = a.nr + t.b, alt = antwort(l, key);
@@ -177,9 +199,7 @@
         var kopf = h('p', { class: 'horizont__titel' }, 'Aufgabe ' + a.nr + ' ' + t.b + ') · ' + t.kurz, anzeige);
         var inhalt;
         if (t.item) {
-          var eingabe = W.aufgaben.leer(t.item, alt.auto) ? '(leer)'
-            : t.item.typ === 'tabelle' ? alt.auto.map(function (z) { return z.map(function (v) { return v == null || v === '' ? '?' : v; }).join(' | '); }).join('; ')
-              : String(alt.auto).trim() + ' ' + t.item.einheit;
+          var eingabe = eingabeText(t.item, alt.auto);
           inhalt = [
             h('div', { class: 'frage', html: t.item.frage }),
             h('p', { class: 'pruef-ergebnis' }, 'Dein Ergebnis: ', h('span', { class: 'mono' }, eingabe), ' ',
@@ -188,7 +208,7 @@
             h('p', { class: 'hinweis-klein' }, 'Was steht auf deinem Blatt?'),
             checkliste(liste, haken, function () { speichere(key, 'haken', haken.slice()); neu(); }),
             h('ul', { class: 'check' }, h('li', null, h('div', { class: 'check__punkt check__punkt--fest' + (ok ? ' an' : '') },
-              h('span', { class: 'check__box' }), h('span', { class: 'check__text' }, 'Ergebnis mit Einheit (prüft die App)'),
+              h('span', { class: 'check__box' }), h('span', { class: 'check__text' }, 'Ergebnis (prüft die App)'),
               h('span', { class: 'check__p mono' }, pText(auto) + ' / ' + pText(W.pruefung.pAuto(t)) + ' P.'))))];
         } else {
           inhalt = [
@@ -220,56 +240,77 @@
     var rangVorher = W.logic.rang(W.state.data, W.ansichten.akten()).titel;
     nm.trainer.forEach(function (id) { W.state.itemErgebnis(id, false); });
     nm.erkl.forEach(function (x) { W.state.erklSpeichern(x.id, { text: x.text, haken: x.haken, prozent: x.prozent, frage: x.frage }); });
-    W.state.pruefungBeenden([{ teil: TEIL, punkte: e.punkte, max: e.max }]);
+    W.state.pruefungBeenden([{ teil: TEIL, punkte: e.punkte, max: e.max,
+      teile: e.teile.map(function (x) { return { nr: x.nr, b: x.b, punkte: x.punkte, p: x.p }; }) }]);
     var rangNachher = W.logic.rang(W.state.data, W.ansichten.akten()).titel;
-    var prozent = e.max ? 100 * e.punkte / e.max : 0;
+    zeigeAuswertung(host, pr, e, antworten, nm, { rang: rangNachher !== rangVorher ? rangNachher : null });
+  }
 
-    var zeilen = [], i = 0;
+  /** Letzte Auswertung aus dem Speicher, ohne etwas neu zu werten. */
+  function letzteAuswertung(host) {
+    var x = letzterLauf();
+    if (!x) { startseite(host); return; }
+    var pr = W.pruefung.erzeuge(x.seed);
+    var antworten = x.antworten && typeof x.antworten === 'object' ? x.antworten : null;
+    var teile = x.teile.filter(function (t) { return t && typeof t.punkte === 'number' && typeof t.p === 'number'; });
+    var nm = antworten ? W.pruefung.nachermittlung(pr, antworten) : { trainer: [], erkl: [], akten: [] };
+    zeigeAuswertung(host, pr, { punkte: x.punkte, max: x.max, teile: teile }, antworten, nm, { alt: true });
+  }
+
+  /** opts: { rang: neuer Rang oder null, alt: gespeicherte Auswertung (keine neue Nachermittlung) } */
+  function zeigeAuswertung(host, pr, e, antworten, nm, opts) {
+    var prozent = e.max ? 100 * e.punkte / e.max : 0;
+    function teilVon(nr, b) { return e.teile.filter(function (x) { return x.nr === nr && x.b === b; })[0] || null; }
+
+    var zeilen = [];
     pr.aufgaben.forEach(function (a) {
-      var reihe = a.teile.map(function () { return e.teile[i++]; });
-      var sum = reihe.reduce(function (s, x) { return s + x.punkte; }, 0);
-      var max = reihe.reduce(function (s, x) { return s + x.p; }, 0);
+      var reihe = a.teile.map(function (t) { return teilVon(a.nr, t.b); });
+      var sum = reihe.reduce(function (s, x) { return s + (x ? x.punkte : 0); }, 0);
+      var max = a.teile.reduce(function (s, t) { return s + t.p; }, 0);
       zeilen.push(h('tr', { class: 'pruef-tab__aufgabe' }, h('th', { scope: 'row' }, 'Aufgabe ' + a.nr + ': ' + a.titel), h('td', { class: 'mono nowrap' }, pText(sum) + ' / ' + max), h('td')));
       a.teile.forEach(function (t, k) {
         var x = reihe[k];
         zeilen.push(h('tr', null, h('td', null, t.b + ') ' + t.kurz),
-          h('td', { class: 'mono nowrap' }, pText(x.punkte) + ' / ' + x.p),
-          h('td', { class: 'nowrap' }, x.punkte >= x.p ? h('span', { class: 'ok-text' }, '✓') : x.punkte > 0 ? 'Abzug' : h('span', { class: 'falsch-text' }, '0'))));
+          h('td', { class: 'mono nowrap' }, x ? pText(x.punkte) + ' / ' + x.p : '—'),
+          h('td', { class: 'nowrap' }, !x ? '' : x.punkte >= x.p ? h('span', { class: 'ok-text' }, '✓') : x.punkte > 0 ? 'Abzug' : h('span', { class: 'falsch-text' }, '0'))));
       });
     });
 
-    var loes = h('div', { class: 'pruef-loesungen' });
-    pr.aufgaben.forEach(function (a) {
-      a.teile.filter(function (t) { return t.item; }).forEach(function (t) {
-        var wert = (antworten[a.nr + t.b] || {}).auto;
-        var r = W.aufgaben.render(t.item, { wert: wert });
-        r.zeige();
-        var ok = W.aufgaben.richtig(t.item, wert);
-        loes.appendChild(h('div', { class: 'pruef-teilbox' },
-          h('p', { class: 'pruef-teil' }, h('strong', null, 'Aufgabe ' + a.nr + ' ' + t.b + ')'), ' ',
-            ok ? h('span', { class: 'ok-text' }, '✓') : h('span', { class: 'hinweis-klein' }, 'Richtig: ' + loesungKurz(t.item))),
-          r.el));
+    var loes = null;
+    if (antworten) {
+      loes = h('div', { class: 'pruef-loesungen' });
+      pr.aufgaben.forEach(function (a) {
+        a.teile.filter(function (t) { return t.item; }).forEach(function (t) {
+          var wert = antwort({ antworten: antworten }, a.nr + t.b).auto;
+          var r = W.aufgaben.render(t.item, { wert: wert });
+          r.zeige();
+          var ok = W.aufgaben.richtig(t.item, wert);
+          loes.appendChild(h('div', { class: 'pruef-teilbox' },
+            h('p', { class: 'pruef-teil' }, h('strong', null, 'Aufgabe ' + a.nr + ' ' + t.b + ')'), ' ',
+              ok ? h('span', { class: 'ok-text' }, '✓') : h('span', { class: 'hinweis-klein' }, 'Richtig: ' + loesungKurz(t.item))),
+            r.el));
+        });
       });
-    });
+    }
 
     var nrVon = function (id) { var a = W.ansichten.akteNachId(id); return a ? a.nr : 99; };
     var wiederholen = nm.akten.slice().sort(function (x, y) { return nrVon(x) - nrVon(y); }).map(akteLink).filter(Boolean);
     host.innerHTML = '';
     host.appendChild(h('div', { class: 'seite' },
-      seitenkopf('Prüfungsraum · Auswertung', 'Auswertung'),
+      seitenkopf(opts.alt ? 'Prüfungsraum · letzte Auswertung' : 'Prüfungsraum · Auswertung', 'Auswertung'),
       karte('auswertung',
         h('p', { class: 'ergebnis mono' }, pText(e.punkte) + ' / ' + e.max),
         h('p', { class: 'auswertung__note' }, Math.round(prozent) + ' % · Note ' + W.logic.note(prozent) + ' (Richtwert)'),
         h('p', { class: 'hinweis-klein' }, 'Schlüssel: ab 87,5 % Note 1, ab 72,5 % Note 2, ab 57,5 % Note 3, ab 45 % Note 4, ab 20 % Note 5. Die Schule kann anders werten.'),
-        rangNachher !== rangVorher ? h('p', { class: 'ok-text' }, 'Neuer Rang: ' + rangNachher + '.') : null),
+        opts.rang ? h('p', { class: 'ok-text' }, 'Neuer Rang: ' + opts.rang + '.') : null),
       chefin(urteil(prozent)),
       h('h2', { class: 'zwischen' }, 'Punkte je Teilaufgabe'),
       h('div', { class: 'tab-wrap' }, h('table', { class: 'tab pruef-tab' }, h('tbody', null, zeilen))),
       wiederholen.length ? karte('', h('h2', null, 'Akten zum Wiederholen'),
         h('ul', { class: 'pruef-akten' }, wiederholen.map(function (x) { return h('li', null, x); }))) : null,
-      nm.trainer.length || nm.erkl.length ? h('p', { class: 'hinweis-klein' }, 'Falsche Ergebnisse liegen jetzt in der Nachermittlung, mit neuen Zahlen.') : null,
-      h('details', { class: 'muster' }, h('summary', null, 'Ergebnisse und Lösungen ansehen'), loes),
-      h('div', { class: 'aktionen aktionen--zwei' }, h('a', { href: '#/', class: 'btn' }, 'Zum Aktenschrank'), h('a', { href: '#/pruefung', class: 'btn btn--haupt' }, 'Neue Prüfung'))));
+      !opts.alt && (nm.trainer.length || nm.erkl.length) ? h('p', { class: 'hinweis-klein' }, 'Falsche Ergebnisse liegen jetzt in der Nachermittlung, mit neuen Zahlen.') : null,
+      loes ? h('details', { class: 'muster' }, h('summary', null, 'Ergebnisse und Lösungen ansehen'), loes) : null,
+      h('div', { class: 'aktionen aktionen--zwei' }, h('a', { href: '#/', class: 'btn' }, 'Zum Aktenschrank'), h('a', { href: '#/pruefung', class: 'btn btn--haupt' }, opts.alt ? 'Zur Prüfung' : 'Neue Prüfung'))));
     window.scrollTo(0, 0);
   }
 
@@ -277,7 +318,12 @@
     stoppeTimer();
     var l = W.state.pruefungLaufend();
     var modus = args && args[0];
-    if (!l) { if (modus) { location.hash = '#/pruefung'; return; } startseite(host); return; }
+    if (!l) {
+      if (modus === 'letzte') { letzteAuswertung(host); return; }
+      if (modus) { location.hash = '#/pruefung'; return; }
+      startseite(host);
+      return;
+    }
     if (l.abgegeben) { bewerten(host, l); return; }
     if (rest(l) <= 0) { W.state.pruefungAbgeben(); bewerten(host, W.state.pruefungLaufend()); return; }
     if (modus === 'laeuft') pruefung(host, l); else fortsetzenFrage(host, l);

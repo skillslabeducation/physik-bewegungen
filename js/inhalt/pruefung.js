@@ -1,13 +1,13 @@
 /* Sachverständigenprüfung (Probearbeit): zwei große Aufgaben wie auf den Vorbereitungsblättern, 45 Minuten, 40 Punkte.
    Aufgabe 1: gleichförmig gegen beschleunigt aus dem Stand, Einholen. Aufgabe 2: Messtabelle, freier Fall oder Bremsen.
    Alle Zahlen kommen aus dem Seed (W.physik.rnd): gleicher Seed, gleiche Prüfung. Ohne DOM.
-   Rechenteile: Ergebnis als 'zahl'-Item (prüft die App) und `rechenweg` zur Selbstbewertung am Erwartungshorizont. */
+   Rechenteile: Ergebnis als 'zahl'-Item (prüft die App) und `rechenweg` zur Selbstbewertung am Erwartungshorizont.
+   Funktionsterme als 'terme'-Item: Zahlen in die Terme eintragen, ein Punkt je Term (keine Auswahl, die Ergebnisse verrät). */
 (function () {
   'use strict';
   var W = (window.W = window.W || {});
   var P = W.physik;
   var G = P.G;
-  var F = P.FEHLER;
 
   /* ---------- Hilfen ---------- */
   function f(x, st) { return P.fmt(x, st == null ? 4 : st); }
@@ -30,19 +30,19 @@
     return { schritt: S[S.length - 1], max: Math.ceil(max / 1000) * 1000 };
   }
 
-  /** wahl-Item: opts = [[text, erklärung] …], die erste ist richtig. Reihenfolge aus dem Seed, beim Anzeigen fest. */
-  function wahl(id, frage, opts, r) {
-    var idx = opts.map(function (o, i) { return i; });
-    for (var i = idx.length - 1; i > 0; i--) { var j = Math.floor(r() * (i + 1)); var t = idx[i]; idx[i] = idx[j]; idx[j] = t; }
-    return { id: id, typ: 'wahl', frage: frage, fest: true,
-      optionen: idx.map(function (k) { return opts[k][0]; }), richtig: idx.indexOf(0), optErkl: idx.map(function (k) { return opts[k][1]; }) };
-  }
   function zahl(id, frage, antwort, einheit, loesung, auch) {
     var it = { id: id, typ: 'zahl', frage: frage, antwort: antwort, tolRel: 0.01, einheit: einheit, loesung: loesung };
     if (auch) it.auch = auch;
     return it;
   }
-  function rw(liste) { return liste.map(function (x) { return { text: x[0], p: x[1] }; }); }
+  /** Rechenweg zum Abhaken; bei Zahl-Ergebnissen dazu die Einheit (die App prüft nur die Zahl). Tabellen haben die Einheit im Kopf. */
+  function rw(liste, ohneEinheit) {
+    return (ohneEinheit ? liste : liste.concat([['Ergebnis mit der richtigen Einheit auf dem Blatt', 0.5]])).map(function (x) { return { text: x[0], p: x[1] }; });
+  }
+  /** terme-Item: jede Zeile Text und Zahlfelder ({ zahl }). */
+  function terme(id, frage, zeilen, loesung) { return { id: id, typ: 'terme', frage: frage, tolRel: 0.01, terme: zeilen, loesung: loesung }; }
+  /** Term als Text, für die Musterlösung. */
+  function termText(zeile) { return zeile.map(function (x) { return typeof x === 'string' ? x : f(x.zahl); }).join(''); }
   function tabelle(kopfT, ts, kopfS, ss, unterschrift) {
     function zeile(k, werte) { return '<tr><th scope="row">' + k + '</th>' + werte.map(function (w) { return '<td>' + w + '</td>'; }).join('') + '</tr>'; }
     return '<div class="tab-wrap"><table><tbody>' + zeile(kopfT, ts) + zeile(kopfS, ss) + '</tbody></table></div>' +
@@ -54,7 +54,7 @@
     { titel: 'E-Bikes an der Ampel', a: [1, 1.25, 1.5], T: [6, 8], t0: [2, 3, 4, 5, 6], tA: [2, 3, 4], S: [30, 40, 50, 60], v2Max: 12, xSchritt: 1,
       nom1: 'E-Bike 1', nom2: 'E-Bike 2', akk1: 'E-Bike 1', gen1: 'von E-Bike 1', gen2: 'von E-Bike 2',
       text: function (z) {
-        return p('E-Bike 1 fährt mit konstanter Geschwindigkeit auf einem geraden Radweg. Für die ' + f(z.s0) + ' m zwischen zwei Laternen braucht es ' + f(z.t0) + ' s.') +
+        return p('E-Bike 1 fährt mit konstanter Geschwindigkeit auf einem geraden Radweg. Für die ' + f(z.s0) + ' m zwischen zwei Markierungen braucht es ' + f(z.t0) + ' s.') +
           p('E-Bike 2 wartet an einer Ampel, die gerade grün geworden ist. In dem Augenblick, in dem E-Bike 1 an ihm vorbeifährt (t = 0, s = 0 für beide), fährt E-Bike 2 aus dem Stand gleichmäßig beschleunigt los. In den ersten ' +
             f(z.tA) + ' s legt es ' + f(z.sA) + ' m zurück.');
       } },
@@ -68,7 +68,7 @@
     { titel: 'Lkw und Auto', a: [2, 2.5, 3], T: [6, 8, 10], t0: [2, 4, 5, 10], tA: [2, 3, 4], S: [50, 80, 100, 150], v2Max: 25, xSchritt: 1,
       nom1: 'der Lkw', nom2: 'das Auto', akk1: 'den Lkw', gen1: 'des Lkw', gen2: 'des Autos',
       text: function (z) {
-        return p('Ein Lkw fährt mit konstanter Geschwindigkeit durch ein Gewerbegebiet. Für einen ' + f(z.s0) + ' m langen Abschnitt braucht er ' + f(z.t0) + ' s.') +
+        return p('Ein Lkw fährt mit konstanter Geschwindigkeit auf einer Landstraße. Für einen ' + f(z.s0) + ' m langen Abschnitt braucht er ' + f(z.t0) + ' s.') +
           p('An einer Einmündung wartet ein Auto. In dem Augenblick, in dem der Lkw an ihm vorbeifährt (t = 0, s = 0 für beide), fährt das Auto aus dem Stand gleichmäßig beschleunigt los. In den ersten ' +
             f(z.tA) + ' s legt es ' + f(z.sA) + ' m zurück.');
       } }
@@ -95,12 +95,13 @@
     var xs = [T / 4, T / 2, 3 * T / 4, T].map(rund);
     var ay = achseY(z.sM, 8);
     function s2(t) { return a / 2 * t * t; }
+    var terme1 = [['s₁(t) = ', { zahl: v1 }, ' m/s · t'], ['s₂(t) = ', { zahl: a / 2 }, ' m/s² · t²']];
 
     var teile = [
-      { b: 'a', p: 3, kurz: 'v₁ in m/s', trainer: 'v-gleich', akte: 'gleichfoermig',
+      { b: 'a', p: 2, kurz: 'v₁ in m/s', trainer: 'v-gleich', akte: 'gleichfoermig',
         item: zahl('p:1a', '<strong>Berechne</strong> die Geschwindigkeit v₁ ' + k2.gen1 + ' in m/s.', v1, 'm/s',
           p('v₁ = s/t') + p('v₁ = ' + f(z.s0) + ' m / ' + f(z.t0) + ' s ' + erg(v1, 'm/s'))),
-        rechenweg: rw([['Formel: v₁ = s/t', 1], ['Eingesetzt mit Einheiten: v₁ = ' + f(z.s0) + ' m / ' + f(z.t0) + ' s', 1]]) },
+        rechenweg: rw([['Formel: v₁ = s/t', 0.5], ['Eingesetzt mit Einheiten: v₁ = ' + f(z.s0) + ' m / ' + f(z.t0) + ' s', 0.5]]) },
       { b: 'b', p: 1, kurz: 'v₁ in km/h', trainer: 'ms-kmh', akte: 'gleichfoermig',
         item: zahl('p:1b', '<strong>Rechne</strong> v₁ in km/h <strong>um</strong>.', kmh, 'km/h',
           p('m/s → km/h: mal 3,6') + p('v₁ = ' + v1T + ' = ' + f(v1) + ' · 3,6 km/h ' + erg(kmh, 'km/h'))) },
@@ -109,11 +110,8 @@
           p('s = a/2·t²  | ·2  | :t²  ⇒  a₂ = 2s/t²') + p('a₂ = 2 · ' + f(z.sA) + ' m / (' + f(z.tA) + ' s)² = ' + f(2 * z.sA) + ' m / ' + f(z.tA * z.tA) + ' s² ' + erg(a, 'm/s²'))),
         rechenweg: rw([['Formel s = a/2·t² nach a umgestellt: a₂ = 2s/t²', 1], ['Eingesetzt mit Einheiten: a₂ = 2 · ' + f(z.sA) + ' m / (' + f(z.tA) + ' s)²', 1]]) },
       { b: 'd', p: 2, kurz: 'Funktionsterme s₁(t), s₂(t)', trainer: 's-beschl', akte: 'einholen',
-        item: wahl('p:1d', '<strong>Gib</strong> die Funktionsterme s₁(t) und s₂(t) für die zurückgelegten Strecken <strong>an</strong>.', [
-          ['s₁(t) = ' + v1T + ' · t<br>s₂(t) = ' + haT + ' · t²', 'Richtig: ' + gross(k2.nom1) + ' fährt gleichförmig (s = v·t), ' + k2.nom2 + ' beschleunigt aus dem Stand (s = a/2·t²).'],
-          ['s₁(t) = ' + v1T + ' · t<br>s₂(t) = ' + aT + ' · t²', F.halbVergessen.erkl],
-          ['s₁(t) = ' + v1T + ' · t<br>s₂(t) = ' + haT + ' · t', F.quadratVergessen.erkl],
-          ['s₁(t) = ' + v1T + '<br>s₂(t) = ' + aT + ' · t', 'Das sind die Geschwindigkeiten v₁(t) und v₂(t). Gefragt sind die Wege s₁(t) und s₂(t).']], r) },
+        item: terme('p:1d', '<strong>Gib</strong> die Funktionsterme s₁(t) und s₂(t) für die zurückgelegten Strecken <strong>an</strong>. Trage die fehlenden Zahlen ein.', terme1,
+          p(gross(k2.nom1) + ' fährt gleichförmig: s₁(t) = v₁·t. ' + gross(k2.nom2) + ' beschleunigt aus dem Stand: s₂(t) = a₂/2·t².') + p(terme1.map(termText).join('<br>'))) },
       { b: 'e', p: 3, kurz: 'Graph s₂(t)', trainer: 's-beschl', akte: 'beschleunigt',
         item: { id: 'p:1e', typ: 'punkte',
           frage: '<strong>Zeichne</strong> den Graphen von s₂(t) für 0 ≤ t ≤ ' + TT + '. Setze dazu die Punkte für t = ' + aufzaehlen(xs.map(function (x) { return f(x) + ' s'; })) + '.',
@@ -129,30 +127,40 @@
           p('Einholen heißt: gleicher Ort, s₁(t) = s₂(t).') + p('v₁·t = a₂/2·t²  | :t  ⇒  v₁ = a₂/2·t  ⇒  t = 2·v₁/a₂') +
           p('t = 2 · ' + v1T + ' / ' + aT + ' ' + erg(T, 's'))),
         rechenweg: rw([['Ansatz gleicher Ort: v₁·t = a₂/2·t²', 1], ['Umgestellt t = 2·v₁/a₂ und eingesetzt mit Einheiten: t = 2 · ' + v1T + ' / ' + aT, 1]]) },
-      { b: 'h', p: 2, kurz: 'Treffpunkt', trainer: 's-gleich', akte: 'einholen',
+      { b: 'h', p: 3, kurz: 'Treffpunkt', trainer: 's-gleich', akte: 'einholen',
         item: zahl('p:1h', '<strong>Berechne</strong>: In welcher Entfernung vom Start (s = 0) holt ' + k2.nom2 + ' ' + k2.akk1 + ' ein?', z.sM, 'm',
           p('s = v₁·t = ' + v1T + ' · ' + TT + ' ' + erg(z.sM, 'm')) + p('Probe: s₂ = a₂/2·t² = ' + haT + ' · (' + TT + ')² ' + erg(s2(T), 'm'))),
-        rechenweg: rw([['Eingesetzt mit Einheiten: s = v₁·t = ' + v1T + ' · ' + TT + ' (oder s = a₂/2·t²)', 1]]) }
+        rechenweg: rw([['Ansatz: Treffpunkt ist der Ort zur Einholzeit, s = v₁·t (oder s = a₂/2·t²)', 1], ['Eingesetzt mit Einheiten: s = ' + v1T + ' · ' + TT, 1]]) }
     ];
     return { nr: 1, titel: k2.titel, text: k2.text(z), teile: teile };
   }
 
   /* ---------- Aufgabe 2: Messtabelle (freier Fall oder Bremsen) ---------- */
   var FALL = [
-    { titel: 'Sprungturm', H: [3, 5, 7.5, 10], d: [0.15, 0.2, 0.25], wer: 'die Springerin',
-      text: function (H) { return p('Eine Springerin springt aufrecht vom ' + f(H) + '-m-Brett. Die Tabelle gibt an, wie weit ihre Fußsohlen zur Zeit t unter dem Brett sind. Den Luftwiderstand lässt du weg.'); },
+    { titel: 'Sprungturm', H: [3, 5, 7.5, 10], d: [0.1, 0.15, 0.25], wer: 'die Springerin',
+      text: function (H) {
+        var platt = H >= 7.5;   // 7,5 m und 10 m sind Plattformen, 3 m und 5 m Bretter
+        return p('Eine Springerin springt aufrecht ' + (platt ? 'von der ' + f(H) + '-m-Plattform' : 'vom ' + f(H) + '-m-Brett') + '. Die Tabelle gibt an, wie weit ihre Fußsohlen zur Zeit t unter ' +
+          (platt ? 'der Plattform' : 'dem Brett') + ' sind. Den Luftwiderstand lässt du weg.');
+      },
       ende: '<strong>Berechne</strong>: Wann berühren ihre Fußsohlen das Wasser?' },
-    { titel: 'Stein von der Brücke', H: [10, 15, 20], d: [0.2, 0.25, 0.3], wer: 'der Stein',
+    { titel: 'Stein von der Brücke', H: [10, 15, 20], d: [0.15, 0.25, 0.3], wer: 'der Stein',
       text: function (H) { return p('Ein Stein fällt von einer ' + f(H) + ' m hohen Brücke ins Wasser. Eine Videoanalyse liefert, wie weit er zur Zeit t gefallen ist. Den Luftwiderstand lässt du weg.'); },
-      ende: '<strong>Berechne</strong>: Wann trifft der Stein auf das Wasser?' }
+      ende: '<strong>Berechne</strong>: Wann trifft der Stein auf das Wasser?' },
+    { titel: 'Fallturm', H: [20, 25, 30, 40], d: [0.25, 0.3], wer: 'die Gondel',
+      text: function (H) { return p('Im Freizeitpark fällt die Gondel eines Fallturms aus dem Stand ' + f(H) + ' m frei nach unten, dann setzt die Bremse ein. Ein Sensor misst, wie weit sie zur Zeit t gefallen ist. Reibung und Luftwiderstand lässt du weg.'); },
+      ende: '<strong>Berechne</strong>: Nach welcher Zeit setzt die Bremse ein?' },
+    { titel: 'Kugel im Physikraum', H: [1.5, 2, 2.5], d: [0.1, 0.15], wer: 'die Kugel',
+      text: function (H) { return p('Im Physikraum lässt du eine Stahlkugel aus ' + f(H) + ' m Höhe auf den Boden fallen. Eine Videoanalyse liefert, wie weit sie zur Zeit t gefallen ist. Den Luftwiderstand lässt du weg.'); },
+      ende: '<strong>Berechne</strong>: Wann schlägt die Kugel auf dem Boden auf?' }
   ];
   var BREMS = [
-    { titel: 'Beinahe-Unfall', v0: [6, 7, 8, 9, 10], tS: [2], aMax: 5, wer: 'das E-Bike', es: 'es',
+    { titel: 'Beinahe-Unfall', v0: [6, 7, 8, 10], tS: [2], aMax: 5, wer: 'das E-Bike', es: 'es',
       text: function (tS) { return p('Ein E-Bike fährt an parkenden Autos vorbei. Plötzlich läuft ein Kind auf den Radweg. Das E-Bike bremst gleichmäßig und steht nach ' + f(tS) + ' s, kurz vor dem Kind. Die Tabelle zeigt den Weg s seit Beginn des Bremsens.'); } },
     { titel: 'Wildwechsel', v0: [12, 14, 15, 16, 18, 20], tS: [2, 3, 4], aMax: 8, wer: 'das Auto', es: 'es',
-      text: function (tS) { return p('Ein Auto fährt auf einer Landstraße. Ein Reh springt auf die Fahrbahn. Das Auto bremst gleichmäßig und steht nach ' + f(tS) + ' s. Die Tabelle zeigt den Weg s seit Beginn des Bremsens.'); } },
-    { titel: 'Rote Ampel', v0: [4, 5, 6, 8], tS: [2, 4], aMax: 4, wer: 'die Radfahrerin', es: 'sie',
-      text: function (tS) { return p('Eine Radfahrerin sieht eine Ampel auf Rot springen. Sie bremst gleichmäßig und steht nach ' + f(tS) + ' s an der Haltelinie. Die Tabelle zeigt den Weg s seit Beginn des Bremsens.'); } }
+      text: function (tS) { return p('Ein Auto fährt auf einer Landstraße. Ein Reh springt auf die Fahrbahn. Das Auto bremst gleichmäßig und steht nach ' + f(tS) + ' s, rechtzeitig vor dem Reh. Die Tabelle zeigt den Weg s seit Beginn des Bremsens.'); } },
+    { titel: 'Gelbe Ampel', v0: [4, 5, 6, 8], tS: [2, 4], aMax: 4, wer: 'die Radfahrerin', es: 'sie',
+      text: function (tS) { return p('Eine Radfahrerin sieht eine Ampel auf Gelb springen. Sie bremst gleichmäßig und steht nach ' + f(tS) + ' s an der Haltelinie. Die Tabelle zeigt den Weg s seit Beginn des Bremsens.'); } }
   ];
 
   function zahlenFall(r) {
@@ -160,14 +168,14 @@
       var k = zufall(r, FALL), H = zufall(r, k.H), d = zufall(r, k.d);
       if (G / 2 * 16 * d * d < H - 0.5) return { k: k, H: H, d: d };
     }
-    return { k: FALL[0], H: 5, d: 0.2 };
+    return { k: FALL[0], H: 5, d: 0.15 };
   }
   function zahlenBrems(r) {
     for (var i = 0; i < 60; i++) {
       var k = zufall(r, BREMS), v0 = zufall(r, k.v0), tS = zufall(r, k.tS), a = v0 / tS;
       if (a <= k.aMax + 1e-9 && exakt(a, 2) && exakt(a / 2, 4) && exakt(v0 * tS / 32, 4)) return { k: k, v0: v0, tS: tS, a: a };
     }
-    return { k: BREMS[0], v0: 9, tS: 2, a: 4.5 };
+    return { k: BREMS[0], v0: 8, tS: 2, a: 4 };
   }
 
   /** Beschreibe-Teil (Erwartungshorizont zum Abhaken). */
@@ -207,8 +215,10 @@
     v = { t: v.t.map(rund), wert: v.wert.map(rund) };
     acc = { t: acc.t.map(rund), wert: acc.wert.map(rund) };
     var dT = f(d) + ' s';
+    /** Weg aus Tabelle 1: im freien Fall immer dreistellig wie auf Blatt 1 (0,110). */
+    function sT(s) { return fall && s ? s.toFixed(3).replace('.', ',') : f(s); }
     var text = (fall ? k.text(z.H) : k.text(z.tS)) +
-      tabelle('t in s', ts.map(function (t) { return f(t); }), 's in m', ss.map(function (s) { return f(s); }),
+      tabelle('t in s', ts.map(function (t) { return f(t); }), 's in m', ss.map(sT),
         fall ? 'Tabelle 1: Fallstrecke s als Funktion der Zeit t' : 'Tabelle 1: Weg s seit Beginn des Bremsens als Funktion der Zeit t');
 
     var sy = achseY(ss[4], 8);
@@ -221,22 +231,15 @@
 
     var vListe = v.t.map(function (t, i) { return 'v̄(' + f(t, 3) + ' s) ' + erg(v.wert[i], 'm/s'); }).join('; ');
     var aListe = acc.t.map(function (t, i) { return 'ā(' + f(t, 3) + ' s) ' + erg(acc.wert[i], 'm/s²'); }).join('; ');
-    var ersteV = 'v̄(t = ' + f(v.t[0], 3) + ' s) = (' + f(ss[1]) + ' m − 0 m) / (' + dT + ' − 0 s)';
+    var ersteV = 'v̄(t = ' + f(v.t[0], 3) + ' s) = (' + sT(ss[1]) + ' m − 0 m) / (' + dT + ' − 0 s)';
     var ersteA = 'ā(t = ' + f(acc.t[0], 3) + ' s) = (' + f(v.wert[1]) + ' m/s − ' + f(v.wert[0]) + ' m/s) / (' + f(v.t[1], 3) + ' s − ' + f(v.t[0], 3) + ' s)';
 
     var aT = fall ? '' : f(z.a) + ' m/s²';
-    var terme = fall ? [
-      ['a(t) = 9,81 m/s²<br>v(t) = 9,81 m/s² · t<br>s(t) = 4,905 m/s² · t²', 'Richtig: Die Werte in Tabelle 3 liegen bei g = 9,81 m/s². Freier Fall aus dem Stand: v = g·t und s = g/2·t².'],
-      ['a(t) = 9,81 m/s²<br>v(t) = 9,81 m/s² · t<br>s(t) = 9,81 m/s² · t²', F.halbVergessen.erkl],
-      ['a(t) = 9,81 m/s²<br>v(t) = 9,81 m/s² · t<br>s(t) = 4,905 m/s² · t', F.quadratVergessen.erkl],
-      ['a(t) = 0 m/s²<br>v(t) = 9,81 m/s<br>s(t) = 9,81 m/s · t', 'Das wäre eine gleichförmige Bewegung. Tabelle 2 zeigt aber, dass v̄ gleichmäßig zunimmt.']
-    ] : [
-      ['a(t) = −' + aT + '<br>v(t) = ' + f(z.v0) + ' m/s − ' + aT + ' · t<br>s(t) = ' + f(z.v0) + ' m/s · t − ' + f(z.a / 2) + ' m/s² · t²',
-        'Richtig: ā ist konstant und negativ. Beim Bremsen gilt v = v₀ − a·t und s = v₀·t − a/2·t², dabei ist a der Betrag.'],
-      ['a(t) = ' + aT + '<br>v(t) = ' + f(z.v0) + ' m/s + ' + aT + ' · t<br>s(t) = ' + f(z.v0) + ' m/s · t + ' + f(z.a / 2) + ' m/s² · t²', F.vorzeichen.erkl + ' Deshalb stehen in v(t) und s(t) Minuszeichen.'],
-      ['a(t) = −' + aT + '<br>v(t) = ' + f(z.v0) + ' m/s − ' + aT + ' · t<br>s(t) = ' + f(z.v0) + ' m/s · t − ' + aT + ' · t²', F.halbVergessen.erkl],
-      ['a(t) = 0 m/s²<br>v(t) = ' + f(z.v0) + ' m/s<br>s(t) = ' + f(z.v0) + ' m/s · t', 'Das wäre eine gleichförmige Bewegung ohne Bremsen. Tabelle 2 zeigt aber, dass v̄ gleichmäßig abnimmt.']
-    ];
+    var zeilen2 = fall ? [['a(t) = ', { zahl: G }, ' m/s²'], ['v(t) = ', { zahl: G }, ' m/s² · t'], ['s(t) = ', { zahl: G / 2 }, ' m/s² · t²']]
+      : [['a(t) = ', { zahl: -z.a }, ' m/s²'], ['v(t) = ', { zahl: z.v0 }, ' m/s − ', { zahl: z.a }, ' m/s² · t'], ['s(t) = ', { zahl: z.v0 }, ' m/s · t − ', { zahl: z.a / 2 }, ' m/s² · t²']];
+    var termeLoesung = (fall ? p('Die Werte in Tabelle 3 liegen bei g = 9,81 m/s². Freier Fall aus dem Stand: a = g, v = g·t und s = g/2·t².')
+      : p('ā ist konstant und negativ: a = −' + aT + '. Beim Bremsen gilt v = v₀ − a·t und s = v₀·t − a/2·t², dabei ist a der Betrag. v₀ = a·t = ' + aT + ' · ' + f(z.tS) + ' s = ' + f(z.v0) + ' m/s.')) +
+      p(zeilen2.map(termText).join('<br>'));
 
     var ende;
     if (fall) {
@@ -255,13 +258,13 @@
 
     var teile = [
       { b: 'a', p: 3, kurz: 'Graph s(t) beschreiben', akte: fall ? 'fall' : 'bremsen', erkl: beschreibe(variante, z, abb) },
-      { b: 'b', p: 5, kurz: 'Tabelle v̄', trainer: 'v-gleich', akte: 'messdaten',
+      { b: 'b', p: 4, kurz: 'Tabelle v̄', trainer: 'v-gleich', akte: 'messdaten',
         item: { id: 'p:2b', typ: 'tabelle',
           frage: '<strong>Bestimme</strong> aus aufeinanderfolgenden Werten der Tabelle 1 jeweils die mittlere Geschwindigkeit v̄ und <strong>trage</strong> alle vier Werte in Tabelle 2 <strong>ein</strong>. Den Rechenweg für den ersten Wert v̄(t = ' + f(v.t[0], 3) + ' s) schreibst du auf Papier.',
           spalten: ['t in s'].concat(v.t.map(function (t) { return f(t, 3); })),
           zeilen: [{ kopf: 'v̄ in m/s', zellen: v.wert.map(function (x) { return { zahl: x }; }) }],
           loesung: p(ersteV + ' ' + erg(v.wert[0], 'm/s')) + p('Die anderen Werte genauso, jeweils zur Mitte des Zeitintervalls: ' + vListe + '.') },
-        rechenweg: rw([['Rechenweg für den ersten Wert mit Differenzen und Einheiten: ' + ersteV, 1]]) },
+        rechenweg: rw([['Rechenweg für den ersten Wert mit Differenzen und Einheiten: ' + ersteV, 1]], true) },
       { b: 'c', p: 3, kurz: 'Graph v(t)', trainer: fall ? 'fall-v' : 'brems-a', akte: 'messdaten',
         item: { id: 'p:2c', typ: 'punkte',
           frage: '<strong>Zeichne</strong> den Graphen von v(t) mit den Werten aus Tabelle 2: Setze die vier Punkte jeweils zur Mitte ihres Zeitintervalls.',
@@ -275,9 +278,10 @@
           zeilen: [{ kopf: 'ā in m/s²', zellen: acc.wert.map(function (x) { return fall ? { zahl: x, auch: [G] } : { zahl: x }; }) }],
           loesung: p(ersteA + ' ' + erg(acc.wert[0], 'm/s²')) + p('Die anderen Werte genauso: ' + aListe + '.') +
             p(fall ? 'Alle Werte liegen bei g = 9,81 m/s² (Rundung der Messwerte).' : 'ā ist konstant und negativ: Das Fahrzeug wird gleichmäßig langsamer.') },
-        rechenweg: rw([['Rechenweg für den ersten Wert mit Differenzen und Einheiten: ' + ersteA, 1]]) },
-      { b: 'e', p: 2, kurz: 'Funktionsterme', trainer: fall ? 'fall-v' : 'bremsweg', akte: fall ? 'fall' : 'bremsen',
-        item: wahl('p:2e', '<strong>Gib</strong> passend zu den berechneten Werten die Funktionsterme für a(t), v(t) und s(t) <strong>an</strong>.', terme, r) },
+        rechenweg: rw([['Rechenweg für den ersten Wert mit Differenzen und Einheiten: ' + ersteA, 1]], true) },
+      { b: 'e', p: 3, kurz: 'Funktionsterme', trainer: fall ? 'fall-v' : 'bremsweg', akte: fall ? 'fall' : 'bremsen',
+        item: terme('p:2e', '<strong>Gib</strong> passend zu den berechneten Werten die Funktionsterme für a(t), v(t) und s(t) <strong>an</strong>. Trage die fehlenden Zahlen ein' +
+          (fall ? '.' : ', bei a(t) mit Vorzeichen.'), zeilen2, termeLoesung) },
       ende
     ];
     return { nr: 2, titel: k.titel, variante: fall ? 'fall' : 'bremsen', text: text, teile: teile };
@@ -336,7 +340,7 @@
         if (t.item && x.anteil < 1 - 1e-9 && trainer.indexOf('t:' + t.trainer) < 0) trainer.push('t:' + t.trainer);
         if (t.erkl) {
           var prozent = t.p ? x.punkte / t.p : 0;
-          if (prozent < W.logic.ERKL_OK) erkl.push({ id: t.erkl.id, prozent: prozent, haken: (ant.haken || []).slice(), text: ant.text || '', frage: t.erkl.frage });
+          if (prozent < W.logic.ERKL_OK) erkl.push({ id: t.erkl.id, prozent: prozent, haken: Array.isArray(ant.haken) ? ant.haken.slice() : [], text: ant.text || '', frage: t.erkl.frage });
         }
         if (x.punkte < 0.75 * t.p - 1e-9 && akten.indexOf(t.akte) < 0) akten.push(t.akte);
       });
