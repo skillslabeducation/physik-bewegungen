@@ -362,7 +362,7 @@
             F.kehrwert.erkl
           ] }
         ],
-        antwort: A5, auch: [-A5], einheit: 'm/s²', formel: 'v0-brems',
+        antwort: A5, auch: [-A5], einheit: 'm/s²', formel: 'a-brems',
         loesung: p('100 km/h = 100 : 3,6 m/s ≈ ' + f(V100) + ' m/s') +
           p('0 = v₀ − a·t | + a·t') + p('a·t = v₀ | : t') +
           p('a = v₀/t = 27,78 m/s / 5 s = 5,556 m/s² ≈ ' + f(A5) + ' m/s²') +
@@ -398,7 +398,7 @@
             'In s = v₀·t − a/2·t² steckt die Hälfte. Du hast sie vergessen. Ohne die Hälfte käme beim Bremsen bis zum Stand immer 0 m heraus.'
           ] }
         ],
-        antwort: S5, auch: [69.45], einheit: 'm', formel: 'bremsweg',
+        antwort: S5, auch: [69.45], einheit: 'm', formel: 'bremsweg-t',
         loesung: p('s = v₀·t − a/2·t²') +
           p('s = 27,78 m/s · 5 s − 5,556 m/s² / 2 · (5 s)² = 138,9 m − 69,45 m = 69,45 m') +
           p('Mit ungerundeten Werten: s ≈ ' + f(S5) + ' m. Beides zählt.')

@@ -421,7 +421,7 @@
         loesung: '<p>v = g·t</p><p>v = 1,84 m/s² · 3,3 s ≈ ' + f(P.vBeschl(1.84, 3.3)) + ' m/s</p>' +
           '<p>Mit dem ungerundeten g ≈ ' + f(gMond, 4) + ' m/s² ergibt sich ' + f(vMond) + ' m/s. Beides zählt.</p>' },
 
-      { id: 'fall-u15', typ: 'rechnung', plus: true, quelle: 'Tafel S. 4–6', formel: 'a-dv',
+      { id: 'fall-u15', typ: 'rechnung', plus: true, quelle: 'Tafel S. 4–6', formel: 'g-fahrbahn',
         frage: 'Versuch aus dem Unterricht, Tisch 6: Ein Wagen rollt aus dem Stand eine um α = 9° geneigte Fahrbahn hinunter. Gemessen: Δt = 1,08 s und v<sub>Ende</sub> = 1,677 m/s. Welchen Wert für g liefert der Versuch?',
         gegeben: '<p>Δt = 1,08 s, v<sub>Ende</sub> = 1,677 m/s, α = 9° (sin 9° ≈ ' + f(sin9, 4) + ')</p>',
         schritte: [
@@ -449,7 +449,7 @@
           '<p>g = a/sin α ≈ ' + f(aTisch, 3) + ' m/s² / sin 9° ≈ ' + f(aTisch, 3) + ' m/s² / ' + f(sin9, 4) + ' ≈ ' + f(gTisch) + ' m/s²</p>' +
           '<p>Das liegt nahe an 9,81 m/s². Die Abweichung kommt von der Messung (Zeit, Winkel).</p>' },
 
-      { id: 'fall-u16', typ: 'rechnung', plus: true, quelle: 'Tafel S. 15', formel: 't-va',
+      { id: 'fall-u16', typ: 'rechnung', plus: true, quelle: 'Tafel S. 15', formel: 'rakete',
         frage: 'Eine Rakete beschleunigt 30 s lang mit a = 5,5 m/s² nach oben, danach wirkt nur noch die Erdanziehung. Wann, vom Start an gerechnet, erreicht sie den höchsten Punkt?',
         gegeben: '<p>Bei Brennschluss: v = 5,5 m/s² · 30 s = ' + f(vRak) + ' m/s. Danach wird sie mit g = 9,81 m/s² langsamer.</p>',
         schritte: [

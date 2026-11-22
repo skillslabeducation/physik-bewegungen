@@ -224,7 +224,7 @@
               F.mal36.erkl + ' Das ergäbe ' + f(486 / 60) + ' m/s².'] }
         ],
         antwort: a10, einheit: 'm/s²', formel: 'a-dv',
-        loesung: '<p>135 km/h = 135 : 3,6 m/s = 37,5 m/s</p><p>v = a·t | :t<br>a = v/t</p><p>a = 37,5 m/s / 60 s = ' + f(a10, 3) + ' m/s²</p>' },
+        loesung: '<p>135 km/h = 135 : 3,6 m/s = 37,5 m/s</p><p>a = Δv/Δt (aus dem Stand ist Δv = v)</p><p>a = Δv/Δt = 37,5 m/s / 60 s = ' + f(a10, 3) + ' m/s²</p>' },
 
       { id: 'beschleunigt-u12', typ: 'rechnung', quelle: 'Tafel S. 10, (1) a',
         frage: 'Tafel S. 10, (1) a: Wie lange dauert es, bis dasselbe Fahrzeug (aus dem Stand, a = 0,625 m/s²) die Geschwindigkeit 300 km/h hat?',

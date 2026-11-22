@@ -265,7 +265,7 @@
               'Das ist nur die Strecke seit dem Start der Uhr (' + f(P.sGleich(V, T_U)) + ' m). Der Startwert s₀ fehlt.',
               'Punkt vor Strich: Nur v wird mit t malgenommen. Außerdem kannst du m und m/s nicht addieren.'] }
         ],
-        antwort: S_U, einheit: 'm', formel: 's-gleich',
+        antwort: S_U, einheit: 'm', formel: 's-gleich-s0',
         loesung: '<p>Gegeben: s₀ = ' + f(S0_U) + ' m, v = ' + f(V) + ' m/s, t = ' + f(T_U) + ' s<br>Gesucht: s<br>s = s₀ + v·t<br>s = ' + f(S0_U) + ' m + ' + f(V) + ' m/s · ' + f(T_U) + ' s<br>s = ' + f(S0_U) + ' m + ' + f(P.sGleich(V, T_U)) + ' m = ' + f(S_U) + ' m</p>' },
 
       { id: 'gleichfoermig-u11', typ: 'wahl', quelle: 'Tafel 17.11.',
@@ -343,7 +343,7 @@
               F.durch36.erkl + ' Das ergäbe ' + f(P.ms(V_G1)) + ' km/h.',
               F.kehrwert.erkl + ' Das ergäbe ' + f(T_G1 / S_G1 * 3.6, 3) + ' km/h.'] }
         ],
-        antwort: P.kmh(V_G1), einheit: 'km/h', formel: 'v-gleich',
+        antwort: P.kmh(V_G1), einheit: 'km/h', formel: 'v-gleich-kmh',
         loesung: '<p>Gegeben: s = ' + f(S_G1) + ' m, t = ' + f(T_G1) + ' s<br>Gesucht: v in km/h<br>v = s/t<br>v = ' + f(S_G1) + ' m / ' + f(T_G1) + ' s = ' + f(V_G1) + ' m/s<br>' +
           f(V_G1) + ' m/s = ' + f(V_G1) + ' · 3,6 km/h = ' + f(P.kmh(V_G1)) + ' km/h</p>',
         satz: {
@@ -389,7 +389,7 @@
               'Das ist die Zeit ab Lichtschranke A (' + f(T_AB_A) + ' s). Die Uhr startet aber an B, s₀ fehlt.',
               'Vorzeichen: s₀ wird abgezogen. Das ergäbe ' + f(P.tGleich(S_BUE + S0_B, V)) + ' s.'] }
         ],
-        antwort: T_G2, einheit: 's', formel: 't-gleich',
+        antwort: T_G2, einheit: 's', formel: 't-gleich-s0',
         loesung: '<p>Gegeben: s₀ = ' + f(S0_B) + ' m, s = 3 km = 3000 m, v = ' + f(V) + ' m/s<br>Gesucht: t<br>s = s₀ + v·t &nbsp;| − s₀<br>s − s₀ = v·t &nbsp;| :v<br>t = (s − s₀)/v<br>' +
           't = (3000 m − ' + f(S0_B) + ' m) / ' + f(V) + ' m/s = ' + f(S_BUE - S0_B) + ' m / ' + f(V) + ' m/s = ' + f(T_G2) + ' s</p>',
         satz: {

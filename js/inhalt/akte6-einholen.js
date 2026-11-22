@@ -282,7 +282,7 @@
           { art: 'einsetzen', optionen: ['a = 2·' + f(s5) + ' m / (5 s)²', 'a = ' + f(s5) + ' m / (5 s)²', 'a = 2·' + f(s5) + ' m / 5 s'], richtig: 0,
             optErkl: ['Richtig: doppelter Weg geteilt durch die Zeit zum Quadrat.', FE.zweiVergessen.erkl + ' Das ergäbe ' + f(s5 / 25) + ' m/s².', FE.quadratVergessen.erkl + ' Das ergäbe ' + f(2 * s5 / 5) + ' m/s.'] }
         ],
-        antwort: aG, auch: [1.87], einheit: 'm/s²', formel: 'a-beschl',
+        antwort: aG, auch: [1.87], einheit: 'm/s²', formel: 'a-einholen',
         loesung: '<p>Ort von E-Bike 1 nach 5 s: s₁(5 s) = 28 m / 6 s · 5 s ≈ ' + f(s5) + ' m<br>' +
           's = a/2·t² ⇒ a = 2s/t²<br>a = 2·' + f(s5) + ' m / (5 s)² ≈ ' + f(aG) + ' m/s²</p>' +
           '<p>Kürzer: a = 2·v₁/t = 2 · ' + V1 + ' m/s : 5 s ≈ ' + f(2 * 4.67 / 5) + ' m/s² (Abkürzung; in der Arbeit über Gleichsetzen herleiten)</p>'
@@ -392,7 +392,7 @@
           { art: 'einsetzen', optionen: ['Δs = ' + V1 + ' m/s · 3 s − ' + H2 + ' m/s² · (3 s)²', 'Δs = ' + V1 + ' m/s · 3 s − ' + H2 + ' m/s² · 3 s', 'Δs = ' + V1 + ' m/s · 3 s + ' + H2 + ' m/s² · (3 s)²'], richtig: 0,
             optErkl: ['Richtig: 14 m minus 7 m.', FE.quadratVergessen.erkl, 'Den Abstand bekommst du als Differenz, nicht als Summe. Das ergäbe 21 m.'] }
         ],
-        antwort: P.sGleich(v1, 3) - P.sBeschl(a2, 3), einheit: 'm', formel: 's-beschl',
+        antwort: P.sGleich(v1, 3) - P.sBeschl(a2, 3), einheit: 'm', formel: 'abstand',
         loesung: '<p>s₁(3 s) = 28 m / 6 s · 3 s = 14 m<br>s₂(3 s) = 56/36 m/s² / 2 · (3 s)² = 7 m (mit ' + H2 + ' m/s² · 9 s² ≈ 7 m)<br>Δs = 14 m − 7 m = 7 m</p>' +
           '<p>Bis 3 s ist der Kurier schneller, der Abstand wächst. Danach ist E-Bike 2 schneller und holt auf. Bei 6 s ist der Abstand null.</p>'
       },
