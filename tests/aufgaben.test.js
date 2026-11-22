@@ -116,11 +116,15 @@ test('rechnung: Ergebnis mit relativer Toleranz, Einheit im Lösungstext', () =>
   ok(A.loesungText(it).indexOf('63,25 s') >= 0, A.loesungText(it));
 });
 
-test('punkte: Anteil der Zeitpunkte innerhalb der Toleranz (Standard y.schritt/2)', () => {
+test('punkte: Anteil der Zeitpunkte innerhalb der Toleranz (Standard y.schritt/4: nur der nächste Rasterpunkt)', () => {
   const it = BEISPIELE.punkte;
   eq(A.score(it, [0, 375, 750, 1125]), 1);
   eq(A.score(it, [0, 375, 750, null]), 0.75);
-  eq(A.score(it, [0, 500, 750, 1125]), 1);
+  eq(A.score(it, [0, 500, 750, 1125]), 0.75);   // Nachbar-Rasterpunkt (125 daneben) zählt nicht mehr
+  const schief = { id: 'pk2', typ: 'punkte', frage: 'q', achsen: { x: { g: 't', e: 's', max: 6, schritt: 1 }, y: { g: 's', e: 'm', max: 10, schritt: 1 } }, xs: [3], soll: [4.67] };
+  eq(A.score(schief, [W.diagramm.einrasten(4.67, 0.5)]), 1);   // nächster Rasterpunkt 4,5
+  eq(A.score(schief, [4.5]), 1);
+  eq(A.score(schief, [5]), 0);
   eq(A.score(it, [0, 510, 750, 1125]), 0.75);
   ok(A.leer(it, [null, null, null, null]));
   ok(!A.leer(it, [null, 375, null, null]));

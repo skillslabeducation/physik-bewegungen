@@ -42,7 +42,8 @@
     return v === c.richtig;
   }
 
-  function punkteTol(item) { return item.tol == null ? item.achsen.y.schritt / 2 : item.tol; }
+  /** Standard: y.schritt/4, also nur der nächste Rasterpunkt (Raster y.schritt/2), nicht der Nachbar. */
+  function punkteTol(item) { return item.tol == null ? item.achsen.y.schritt / 4 : item.tol; }
   function punktOk(item, i, v) { return v != null && v !== '' && Math.abs(v - item.soll[i]) <= punkteTol(item) + 1e-9; }
 
   function zahlPasst(item, wert) {

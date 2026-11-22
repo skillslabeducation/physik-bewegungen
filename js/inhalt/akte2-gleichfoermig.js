@@ -40,8 +40,8 @@
 
     karten: [
       { titel: 'Gleichförmig heißt: v bleibt gleich',
-        text: '<p>Der Güterzug wird weder schneller noch langsamer. In jeder Sekunde legt er dieselbe Strecke zurück: ' +
-          'in 20 s ' + f(P.sGleich(V, 20)) + ' m, in 40 s ' + f(S) + ' m. Darum ist der v(t)-Graph eine waagerechte Linie.</p>' +
+        text: '<p>Der Güterzug wird weder schneller noch langsamer. In jeder Sekunde legt er dieselbe Strecke zurück: ' + f(V) + ' m. ' +
+          'In 20 s sind es ' + f(P.sGleich(V, 20)) + ' m, in 40 s ' + f(S) + ' m. Darum ist der v(t)-Graph eine waagerechte Linie.</p>' +
           '<p>An der Tafel (17.11.): <strong>a = 0</strong> und <strong>v = v₀ = konst</strong>.</p>',
         abb: { achsen: { x: { g: 't', e: 's', max: 60, schritt: 10 }, y: { g: 'v', e: 'm/s', max: 25, schritt: 5 } },
           kurven: [{ punkte: [[0, V], [60, V]], farbe: 'v', label: 'v(t) = ' + f(V) + ' m/s' }] },
@@ -54,7 +54,7 @@
         abb: { achsen: { x: { g: 't', e: 's', max: 60, schritt: 10 }, y: { g: 's', e: 'm', max: 1250, schritt: 250 } },
           kurven: [{ punkte: D.kurve(function (t) { return P.sGleich(V, t); }, 0, 60, 2), farbe: 's', label: 's(t) = ' + f(V) + ' m/s · t' }],
           marken: [[T, S]] },
-        merk: 'v = s/t &nbsp;|&nbsp; s = v·t &nbsp;|&nbsp; t = s/v',
+        merk: 'v = s/t<br>s = v·t<br>t = s/v',
         achtung: '<p>Erst Einheiten angleichen, dann einsetzen: 2,4 km = 2400 m. Mit „2,4“ statt „2400“ kommt 0,128 s heraus, also Unsinn.</p>' },
 
       { titel: 'Start nicht bei null: s = s₀ + v·t',
@@ -82,8 +82,9 @@
         abb: { achsen: { x: { g: 't', e: 's', max: 60, schritt: 10 }, y: { g: 'v', e: 'km/h', max: 80, schritt: 20 } },
           kurven: [
             { punkte: [[0, VKMH], [60, VKMH]], farbe: 'v', label: 'gemessen ' + f(VKMH) + ' km/h' },
-            { punkte: [[0, ANGABE], [30, ANGABE]], farbe: 'v', label: 'Angabe ' + f(ANGABE) + ' km/h' }] },
-        merk: 'm/s → km/h: · 3,6 &nbsp;|&nbsp; km/h → m/s: : 3,6' }
+            // Linie bis 60 s, letzter Punkt bei 30 s: Die Beschriftung steht dann seitlich versetzt zur oberen.
+            { punkte: [[0, ANGABE], [60, ANGABE], [30, ANGABE]], farbe: 'v', label: 'Angabe ' + f(ANGABE) + ' km/h' }] },
+        merk: 'm/s → km/h: mal 3,6<br>km/h → m/s: geteilt durch 3,6' }
     ],
 
     ueben: [
@@ -148,7 +149,7 @@
             optionen: ['v = ' + f(V) + ' · 3,6 km/h', 'v = ' + f(V) + ' : 3,6 km/h', 'v = 3,6 : ' + f(V) + ' km/h'],
             richtig: 0,
             optErkl: ['Richtig: die Zahl in m/s mal 3,6.',
-              F.durch36.erkl + ' Das ergäbe nur ' + f(P.ms(V)) + ' km/h, langsamer als ein Fußgänger.',
+              'Das ergäbe nur ' + f(P.ms(V)) + ' km/h, Schritttempo, kein Güterzug. Von m/s nach km/h rechnest du mal 3,6.',
               'Du hast 3,6 durch die Geschwindigkeit geteilt. Richtig ist Geschwindigkeit mal 3,6. Das ergäbe ' + f(3.6 / V, 3) + ' km/h.'] }
         ],
         antwort: VKMH, einheit: 'km/h', formel: 'ms-kmh',
@@ -161,7 +162,7 @@
         optErkl: [
           'Richtig: s = v·t mit v = ' + f(S) + ' m / ' + f(T) + ' s = ' + f(V) + ' m/s. Für t = 0 ist auch s = 0.',
           'Du hast den Messwert ' + f(S) + ' m statt der Geschwindigkeit eingesetzt. Vor das t gehört v = s/t. Die Einheit m·s ist auch kein Weg.',
-          'Das ist die Form s = a/2·t² der beschleunigten Bewegung. Der Güterzug fährt konstant, s wächst proportional zu t, nicht zu t².',
+          'Hier wurde v halbiert in s = a/2·t² eingesetzt (' + f(V) + ' : 2 = ' + f(V / 2, 4) + '). Das ist die Formel der beschleunigten Bewegung, der Zug fährt aber gleichförmig: s = v·t.',
           'Das ist v(t), die Geschwindigkeit. s(t) muss von t abhängen: s(t) = v·t.'] },
 
       { id: 'gleichfoermig-u5', typ: 'punkte', quelle: 'Blatt 1, A1 b',
@@ -421,7 +422,7 @@
         optErkl: ['Richtig: Bei t = 0 ist der Zug schon bei s₀ = ' + f(S0_B) + ' m, danach kommen ' + f(V) + ' m pro Sekunde dazu.',
           's₀ fehlt. Dieser Term gilt nur, wenn die Uhr an A startet.',
           f(S0_B) + ' m ist der Startwert, keine Geschwindigkeit. Er wird addiert, nicht mit t malgenommen.',
-          'Das t² gehört zur beschleunigten Bewegung. Der Zug fährt konstant, s wächst linear mit t.'] }
+          'Hier wurde v halbiert in s = a/2·t² eingesetzt (' + f(V) + ' : 2 = ' + f(V / 2, 4) + '). Das ist die Formel der beschleunigten Bewegung, der Zug fährt aber gleichförmig: s = s₀ + v·t.'] }
     ],
 
     ergebnis: '<p><strong>Ergebnis:</strong> Der Güterzug fuhr konstant ' + f(V) + ' m/s = ' + f(VKMH) + ' km/h, nicht ' + f(ANGABE) + ' km/h. Die Angabe des Lokführers ist widerlegt. ' +
