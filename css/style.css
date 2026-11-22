@@ -404,8 +404,24 @@ table.tab .eingabe--zelle { width: 100%; min-width: 72px; min-height: 44px; font
 .pruef-wahl strong { font-weight: 600; }
 .pruef-bewertung { margin: 14px 0; }
 .pruef-loesungen { padding-bottom: 8px; }
-.plan-ziele { margin: 6px 0 0; padding-left: 0; list-style: none; display: grid; gap: 4px; }
+.pruef-laeufe { margin: 6px 0 0; padding-left: 0; list-style: none; display: grid; gap: 4px; }
+.pruef-aufbau { margin: 0 0 8px; padding-left: 18px; display: grid; gap: 6px; }
+.pruef-sachtext h2 { margin: 2px 0 8px; font-size: 1.2rem; }
+.sachtext p { margin: 0 0 8px; }
+.sachtext table { border-collapse: collapse; font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: .9rem; margin: 8px 0 2px; background: var(--blatt); }
+.sachtext th, .sachtext td { border: 1px solid var(--linie-stark); padding: 5px 10px; text-align: right; }
+.sachtext th { background: var(--blatt2); font-weight: 500; text-align: left; white-space: nowrap; }
+.pruef-teil strong { font-size: 1.05rem; }
+.pruef-papier { margin: 4px 0 0; }
+.pruef-ergebnis { margin: 8px 0; }
+.falsch-text { color: var(--rot); font-weight: 600; }
+.muster__inhalt p { margin: 6px 0; line-height: 1.6; }
+.check__punkt--fest { cursor: default; }
+.pruef-tab td:first-child { padding-left: 18px; }
+.pruef-tab__aufgabe th, .pruef-tab__aufgabe td { background: var(--blatt2); font-weight: 600; }
+.pruef-akten { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 6px; }
 .auswertung { text-align: center; }
+.auswertung__note { font-size: 1.1rem; margin: 4px 0; }
 .nowrap { white-space: nowrap; }
 
 /* ---------- Rechner: breitere Spalte, mehr Luft ---------- */

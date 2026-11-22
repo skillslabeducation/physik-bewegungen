@@ -47,6 +47,8 @@
   function punktOk(item, i, v) { return v != null && v !== '' && Math.abs(v - item.soll[i]) <= punkteTol(item) + 1e-9; }
 
   function zahlPasst(item, wert) {
+    // Mit tolRel (Prüfung): relative Toleranz wie bei rechnung, „1.125“ gilt in beiden Lesarten.
+    if (item.tolRel != null) return W.physik.passt(wert, item.antwort, item.auch, item.tolRel);
     var z = W.text.parseZahl(wert);
     if (isNaN(z)) return false;
     var tol = item.tol == null ? 0.01 : item.tol;
