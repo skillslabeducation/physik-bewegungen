@@ -167,6 +167,12 @@ test('diagramm.markup: negative Hochachse mit nur einer 0 am Ursprung, Kurve ohn
   eq((m.match(/class="dia-kurve /g) || []).length, 2, 'Kurven');
 });
 
+test('diagramm.markup: Kurve gestrichelt (Sprünge in a(t))', () => {
+  const m = W.diagramm.markup({ achsen: { x: { g: 't', e: 's', max: 3, schritt: 1 }, y: { g: 'a', e: 'm/s²', max: 1, schritt: 1 } },
+    kurven: [{ punkte: [[0, 1], [1, 1]], farbe: 'a' }, { punkte: [[1, 1], [1, 0]], farbe: 'a', gestrichelt: true, label: false }] }).svg;
+  eq((m.match(/dia-kurve--gestrichelt/g) || []).length, 1);
+});
+
 test('diagramm.mini: alle Arten liefern beschriftetes SVG in der richtigen Farbe', () => {
   ['s-gleich', 'v-gleich', 'a-gleich', 's-beschl', 'v-beschl', 'a-beschl', 's-brems', 'v-brems', 'a-brems', 's-ruhe', 'v-ruhe'].forEach((art) => {
     const m = W.diagramm.mini(art);

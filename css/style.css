@@ -250,6 +250,7 @@ a.akte-zeile:hover { background: var(--blatt2); }
 .dia-kurve--s { stroke: var(--g-s); }
 .dia-kurve--v { stroke: var(--g-v); }
 .dia-kurve--a { stroke: var(--g-a); }
+.dia-kurve--gestrichelt { stroke-width: 1.5; stroke-dasharray: 4 4; }
 .dia-label { font-size: 13px; font-weight: 700; paint-order: stroke; stroke: var(--blatt); stroke-width: 4px; stroke-linejoin: round; }
 .dia-label--s { fill: var(--g-s); }
 .dia-label--v { fill: var(--g-v); }

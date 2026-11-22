@@ -62,7 +62,7 @@
     return L;
   }
 
-  /** opts = { achsen, kurven: [{ punkte, farbe: 's'|'v'|'a', label (false: ohne Beschriftung) }], marken?: [[x,y]…], klein? } → { svg: Markup, L } */
+  /** opts = { achsen, kurven: [{ punkte, farbe: 's'|'v'|'a', label (false: ohne Beschriftung), gestrichelt? }], marken?: [[x,y]…], klein? } → { svg: Markup, L } */
   function markup(opts) {
     var A = opts.achsen, ax = A.x, ay = A.y;
     var L = layout(A, opts.klein);
@@ -97,7 +97,7 @@
     (opts.kurven || []).forEach(function (k) {
       if (!k.punkte || !k.punkte.length) return;
       var f = farbe(k.farbe), label = k.label || f + '(t)', last = k.punkte[k.punkte.length - 1];
-      t.push('<path class="dia-kurve dia-kurve--' + f + '" d="' + L.pfad(k.punkte) + '"/>');
+      t.push('<path class="dia-kurve dia-kurve--' + f + (k.gestrichelt ? ' dia-kurve--gestrichelt' : '') + '" d="' + L.pfad(k.punkte) + '"/>');
       if (k.label === false) return;
       namen.push(label);
       t.push('<text class="dia-label dia-label--' + f + '" x="' + r1(L.px(last[0]) - 4) + '" y="' + r1(L.py(last[1]) - 8) + '" text-anchor="end">' + esc(label) + '</text>');

@@ -41,7 +41,10 @@
   var ABB_S = { achsen: { x: X_ICE, y: { g: 's', e: 'm', max: 8000, schritt: 1000 } },
     kurven: [{ punkte: D.kurve(sICE, 0, TE, 120), farbe: 's', label: 's(t)' }], marken: [[T1, S1], [T2, S2], [T3, SE]] };
   var ABB_A = { achsen: { x: X_ICE, y: { g: 'a', e: 'm/s²', min: -1, max: 0.6, schritt: 0.2 } },
-    kurven: [{ punkte: [[0, A1], [T1, A1], [T1, 0], [T2, 0], [T2, -AB], [T3, -AB], [T3, 0], [TE, 0]], farbe: 'a', label: 'a(t)' }] };
+    // Waagerechte Stücke durchgezogen, die Sprünge (a ändert sich schlagartig) dünn gestrichelt.
+    kurven: [[0, T1, A1], [T1, T2, 0], [T2, T3, -AB]].map(function (k) { return { punkte: [[k[0], k[2]], [k[1], k[2]]], farbe: 'a', label: false }; })
+      .concat([[T1, A1, 0], [T2, 0, -AB], [T3, -AB, 0]].map(function (k) { return { punkte: [[k[0], k[1]], [k[0], k[2]]], farbe: 'a', label: false, gestrichelt: true }; }))
+      .concat([{ punkte: [[T3, 0], [TE, 0]], farbe: 'a', label: 'a(t)' }]) };
 
   /* ---------- Tafel S. 3: a = 2 m/s² aus dem Stand ---------- */
   var A3 = 2;

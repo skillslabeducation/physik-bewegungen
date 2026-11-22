@@ -360,6 +360,15 @@ test('Labor in den Akten: je Akte eine Demo an der passenden Verstehen-Karte', (
   });
 });
 
+test('Akte 4, Karte „Achsen beschriften“: a(t)-Sprünge gestrichelt, eine Beschriftung', () => {
+  const { W } = alles();
+  const k = W.ansichten.akteNachId('diagramme').karten.find((x) => /Achsen beschriften/.test(x.titel));
+  const sprung = k.abb.kurven.filter((x) => x.gestrichelt);
+  ok(sprung.length === 3 && sprung.every((x) => x.punkte.length === 2 && x.punkte[0][0] === x.punkte[1][0]), 'drei senkrechte Sprünge');
+  eq(k.abb.kurven.filter((x) => x.label !== false).length, 1, 'eine Beschriftung');
+  ok(W.diagramm.markup(k.abb).svg.indexOf('dia-kurve--gestrichelt') >= 0, 'Markup');
+});
+
 test('Radarfalle: mindestens 40 Aussagen, jede mit Erklärung und Akte, alle neun Akten, halb wahr', () => {
   const { W } = alles();
   const A = W.radar.aussagen;
