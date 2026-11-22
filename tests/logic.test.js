@@ -1,4 +1,4 @@
-/* Spiellogik und Fortschritt: Akten-Status, Rang, Note, Wiedervorlage, Prüfung, Speicher. */
+/* Spiellogik und Fortschritt: Akten-Status, Rang, Note, Nachermittlung, Prüfung, Speicher. */
 const laden = require('./laden');
 const { test, ok, eq, fertig } = require('./mini');
 const DATEIEN = ['js/util.js', 'js/text.js', 'js/logic.js', 'js/state.js'];
@@ -80,7 +80,7 @@ test('note und punkteRunden', () => {
   eq(L.punkteRunden(0.49, 1), 0);
 });
 
-test('Wiedervorlage: zweimal hintereinander richtig behebt', () => {
+test('Nachermittlung: zweimal hintereinander richtig behebt', () => {
   const { W } = neu();
   const S = W.state;
   S.load();
@@ -94,7 +94,7 @@ test('Wiedervorlage: zweimal hintereinander richtig behebt', () => {
   ok(S.data.items.a.ok, 'einmal richtig bleibt richtig');
 });
 
-test('Wiedervorlage: Erklärung unter 60 % rein, ab 80 % raus', () => {
+test('Nachermittlung: Erklärung unter 60 % rein, ab 80 % raus', () => {
   const { W } = neu();
   const S = W.state;
   S.load();

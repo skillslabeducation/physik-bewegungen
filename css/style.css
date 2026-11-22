@@ -429,3 +429,33 @@ table.tab .eingabe--zelle { width: 100%; min-width: 72px; min-height: 44px; font
   .kopf, .nav, #toast, .nicht-drucken, .dialog { display: none !important; }
   #inhalt { max-width: none; padding: 0; }
 }
+
+/* ---------- Formelkarte und Druck (Task 9) ---------- */
+.formelkarte { background: var(--blatt); border: 1px solid var(--linie); border-radius: var(--r); padding: 18px 20px; margin: 12px 0; }
+.fk-kopf h1 { margin: 0 0 2px; }
+.fk-unter { margin: 0 0 12px; color: var(--grau); font-size: .9rem; }
+.fk-spalten { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.fk-spalte, .fk-kasten { border: 1px solid var(--linie); border-radius: var(--r); padding: 10px 12px; background: var(--blatt); }
+.fk-titel { font-size: 1rem; margin: 0 0 4px; }
+.fk-kern { margin: 0 0 6px; color: var(--grau); font-size: .8rem; }
+.fk-formeln { list-style: none; margin: 0 0 8px; padding: 0; font-size: .95rem; display: grid; gap: 2px; }
+.fk-hinweis { font-size: .8rem; margin: 0 0 8px; padding: 4px 8px; border-left: 3px solid var(--rot); background: var(--rot-hell); }
+.fk-graphen { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.fk-graph { margin: 0; }
+.fk-graph figcaption { font-size: .65rem; line-height: 1.2; color: var(--grau); text-align: center; }
+.fk-unten { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px; }
+.fk-kasten p { margin: 0; font-size: .85rem; }
+.fk-schema { margin: 0; padding-left: 1.2em; font-size: .85rem; columns: 2; }
+@media (max-width: 799px) {
+  .fk-spalten, .fk-unten { grid-template-columns: 1fr; }
+}
+@page { size: A4; margin: 10mm; }
+@media print {
+  .formelkarte { border: 0; padding: 0; margin: 0; font-size: 10.5px; line-height: 1.3; }
+  .formelkarte h1 { font-size: 20px; }
+  .fk-spalten, .fk-unten { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .fk-unten { margin-top: 8px; }
+  .fk-spalte, .fk-kasten { padding: 6px 8px; break-inside: avoid; }
+  .fk-formeln { font-size: 11px; }
+  .fk-graph figcaption { font-size: 8px; }
+}

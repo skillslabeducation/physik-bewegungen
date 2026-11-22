@@ -1,4 +1,4 @@
-/* Nebenseiten: Formelkarte (Inhalt folgt), Radarfalle und Labor (Etappe 2). */
+/* Nebenseiten: Formelkarte, Radarfalle und Labor (Etappe 2). */
 (function () {
   'use strict';
   var W = (window.W = window.W || {});
@@ -15,7 +15,7 @@
   W.extras = {
     folgt: folgt,
     formelkarte: function (host) {
-      folgt(host, 'Formelkarte', 'Die Formelkarte folgt: alle Formeln mit Umstellungen, km/h und m/s, die drei Bewegungsarten mit ihren Graphen und das Rechenweg-Schema auf einer A4-Seite zum Drucken.');
+      host.appendChild(W.formelkarte.erzeuge());
     },
     radarfalle: function (host) {
       folgt(host, 'Radarfalle', 'Die Radarfalle folgt: 60 Sekunden „stimmt“ oder „stimmt nicht“ zu allen Themen, mit Bestwert.');

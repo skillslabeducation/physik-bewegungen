@@ -51,7 +51,7 @@
     setName: function (n) { S.data.name = String(n || '').trim().slice(0, 30); S.save(); },
     set: function (feld, wert) { S.data[feld] = wert; S.save(); },
 
-    /** Ergebnis einer automatisch geprüften Aufgabe. Fehler kommen in die Wiedervorlage. */
+    /** Ergebnis einer automatisch geprüften Aufgabe. Fehler kommen in die Nachermittlung. */
     itemErgebnis: function (itemId, richtig) {
       var prev = S.data.items[itemId] || { ok: false, n: 0 };
       S.data.items[itemId] = { ok: prev.ok || !!richtig, n: prev.n + 1 };
@@ -65,7 +65,7 @@
       return { behoben: behoben };
     },
 
-    /** Selbst bewertete Erklärung. Unter 60 % in die Wiedervorlage, ab 80 % wieder raus. */
+    /** Selbst bewertete Erklärung. Unter 60 % in die Nachermittlung, ab 80 % wieder raus. */
     erklSpeichern: function (id, r) {
       var prev = S.data.erkl[id] || { best: 0 };
       var p = Math.max(0, Math.min(1, +r.prozent || 0));
