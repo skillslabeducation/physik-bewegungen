@@ -1,13 +1,13 @@
 {
-  "name": "Bremsspur – Physik Bewegungen",
+  "name": "Bremsspur – Gutachterbüro für Bewegungen",
   "short_name": "Bremsspur",
   "description": "Lern- und Übungsseite Physik: Bewegungen, Geschwindigkeit, Beschleunigung und freier Fall.",
   "lang": "de",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#0b1220",
-  "theme_color": "#0b1220",
+  "background_color": "#f6f4ee",
+  "theme_color": "#f6f4ee",
   "icons": [
     { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" },
     { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },

@@ -104,7 +104,7 @@
             ta.addEventListener('input', function () { W.state.pruefungAntwort(t.key, ta.value); });
             box.appendChild(h('div', { class: 'pruef-teilbox' }, kopf,
               h('div', { class: 'aufgabe' }, h('div', { class: 'frage', html: t.erkl.frage }),
-                t.erkl.abb ? h('figure', { class: 'abb' }, W.abb.zeichne(t.erkl.abb, t.erkl.abbOpts || {})) : null,
+                t.erkl.abb && W.diagramm ? h('figure', { class: 'abb' }, W.diagramm.zeichne(t.erkl.abb)) : null,
                 t.erkl.tipp ? h('details', { class: 'tipp' }, h('summary', null, 'Schreibgerüst'), h('p', null, t.erkl.tipp)) : null, ta)));
           }
         });
@@ -180,7 +180,7 @@
       e.bloecke = b.aufgaben;
       return e;
     });
-    var rangVorher = W.logic.rang(W.state.data, W.ansichten.faelle()).titel;
+    var rangVorher = W.logic.rang(W.state.data, W.ansichten.akten()).titel;
     // Fehler in die Wiedervorlage
     ergebnisse.forEach(function (e) {
       e.falsch.forEach(function (key) { W.state.itemErgebnis(key, false); });
@@ -193,7 +193,7 @@
       });
     });
     W.state.pruefungBeenden(ergebnisse.map(function (e) { return { teil: e.teil, punkte: e.punkte, max: e.max }; }));
-    var rangNachher = W.logic.rang(W.state.data, W.ansichten.faelle()).titel;
+    var rangNachher = W.logic.rang(W.state.data, W.ansichten.akten()).titel;
     var gesamt = ergebnisse.reduce(function (s, e) { return s + e.punkte; }, 0);
     var max = ergebnisse.reduce(function (s, e) { return s + e.max; }, 0);
     var prozent = max ? 100 * gesamt / max : 0;

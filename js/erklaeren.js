@@ -19,7 +19,7 @@
       return h('div', { class: 'erkl__kopf' },
         erkl.plus ? h('span', { class: 'tag tag--plus' }, 'Plus') : null,
         h('div', { class: 'frage', html: erkl.frage }),
-        erkl.abb && W.abb ? h('figure', { class: 'abb' }, W.abb.zeichne(erkl.abb, erkl.abbOpts || {})) : null,
+        erkl.abb && W.diagramm ? h('figure', { class: 'abb' }, W.diagramm.zeichne(erkl.abb)) : null,
         h('p', { class: 'hinweis-klein' }, 'Erwartet: ' + pText(summe(erkl.punkte)) + '. Schreib in ganzen Sätzen und benutze Fachbegriffe.'));
     }
 
@@ -94,7 +94,7 @@
       host.appendChild(h('div', { class: 'erkl erkl--ende' },
         h('p', { class: 'ergebnis mono' }, String(s).replace('.', ',') + ' / ' + String(max).replace('.', ',')),
         h('p', null, gut ? (prozent >= 0.99 ? 'Vollständig. So sieht eine Antwort für volle Punkte aus.' : 'Reicht für den Fall. Für volle Punkte schau dir an, was gefehlt hat.')
-          : 'Noch zu dünn. Die Aufgabe kommt in die Wiedervorlage. Lies die Musterantwort und schreib sie später noch einmal mit eigenen Worten.'),
+          : 'Noch zu dünn. Die Aufgabe kommt in die Nachermittlung. Lies die Musterantwort und schreib sie später noch einmal mit eigenen Worten.'),
         h('div', { class: 'aktionen aktionen--zwei' },
           h('button', { type: 'button', class: 'btn', onclick: start }, 'Nochmal schreiben'),
           h('button', { type: 'button', class: 'btn btn--haupt', onclick: function () { if (opts.onFertig) opts.onFertig(prozent); } }, 'Fertig'))));

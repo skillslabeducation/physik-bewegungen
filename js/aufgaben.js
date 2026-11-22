@@ -445,7 +445,7 @@
     var liste = h('div', { class: 'rechnung__schritte' });
     var nach = h('div');
     function schritt(k) {
-      if (k >= schritte.length) { ergebnis.hidden = false; return; }
+      if (k >= schritte.length) { ergebnis.hidden = false; if (k > 0) inp.focus(); return; }
       var st = stufe(SCHRITT[schritte[k].art] || schritte[k].art, schritte[k], item.fest, function () { schritt(k + 1); });
       stufen.push(st);
       liste.appendChild(st.el);
@@ -583,6 +583,41 @@
     });
   }
 
+  /** Erstes sichtbares Zahl- oder Textfeld einer neuen Aufgabe fokussieren (nur mit Maus oder Trackpad, damit am Handy keine Tastatur aufspringt). */
+  function zahlFokus(el) {
+    var fein = false;
+    try { fein = window.matchMedia('(pointer: fine)').matches; } catch (e) { /* ohne matchMedia kein Fokus */ }
+    if (!fein) return;
+    var felder = el.querySelectorAll('input.eingabe');
+    for (var k = 0; k < felder.length; k++) {
+      if (!felder[k].disabled && felder[k].offsetParent !== null) { felder[k].focus({ preventScroll: true }); return; }
+    }
+  }
+
+  /** Enter löst den sichtbaren Hauptknopf aus (Prüfen, Weiter, Auswertung …), außer beim Schreiben in einem mehrzeiligen Textfeld.
+      Hauptknöpfe tragen das Attribut data-enter. Steht der Fokus auf einem anderen Knopf der Aufgabe (etwa nach dem Klick auf eine Option), zählt trotzdem der Hauptknopf. */
+  function enterZiel() {
+    var dlg = document.querySelector('.dialog');
+    var kand = (dlg || document).querySelectorAll('[data-enter]');
+    for (var k = kand.length - 1; k >= 0; k--) {
+      if (!kand[k].disabled && kand[k].offsetParent !== null) return kand[k];
+    }
+    return null;
+  }
+  function enterTaste(e) {
+    if (e.key !== 'Enter' || e.repeat || e.defaultPrevented || e.isComposing || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+    var t = e.target || {};
+    var tag = t.tagName;
+    if (tag === 'TEXTAREA' || t.isContentEditable) return;
+    var ziel = enterZiel();
+    if (!ziel || t === ziel) return;   // auf dem Hauptknopf selbst löst der Browser aus
+    var inAufgabe = t.closest && t.closest('.spiel');
+    if ((tag === 'A' || tag === 'BUTTON' || tag === 'SUMMARY' || (tag === 'INPUT' && t.type === 'checkbox')) && !inAufgabe) return;
+    e.preventDefault();
+    ziel.click();
+  }
+  if (typeof document !== 'undefined' && document.addEventListener) document.addEventListener('keydown', enterTaste);
+
   /** Spielt eine Folge von Aufgaben ab. opts: { titel, mischen, melden (default true), gutachten, onFertig(erg), nochmal } */
   function spiele(host, items, opts) {
     opts = opts || {};
@@ -593,7 +628,7 @@
       var item = folge[i];
       var r = render(item, { kurz: item.typ === 'rechnung' && kurzform(item), gutachten: !!opts.gutachten });
       var fb = h('div', { class: 'feedback', 'aria-live': 'polite' });
-      var weiter = h('button', { type: 'button', class: 'btn btn--haupt' }, 'Prüfen');
+      var weiter = h('button', { type: 'button', class: 'btn btn--haupt', 'data-enter': '' }, 'Prüfen');
       var geprueft = false;
       weiter.addEventListener('click', function () {
         if (!geprueft) {
@@ -614,7 +649,7 @@
             if (item.loesung) fb.appendChild(h('div', { class: 'loesung', html: item.loesung }));
           }
           if (item.erkl) fb.appendChild(h('p', { html: item.erkl }));
-          if (beh.behoben) W.toast('Wiedervorlage erledigt', 'ok');
+          if (beh.behoben) W.toast('Nachermittlung erledigt', 'ok');
           if (W.ton && ok) W.ton.piep();
           weiter.textContent = i + 1 < folge.length ? 'Weiter' : 'Auswertung';
           weiter.scrollIntoView({ block: 'nearest', behavior: W.reducedMotion() ? 'auto' : 'smooth' });
@@ -628,16 +663,17 @@
         h('div', { class: 'fortschritt' }, h('span', { style: { width: Math.round(100 * i / folge.length) + '%' } })),
         r.el, fb, h('div', { class: 'aktionen' }, weiter)));
       if (opts.scrollen !== false && host.lastChild) host.lastChild.scrollIntoView({ block: 'start', behavior: 'auto' });
+      zahlFokus(r.el);
     }
     function ende() {
       host.innerHTML = '';
       var erg = { richtig: richtigN, gesamt: folge.length, falsch: falsch.map(function (x) { return x.id; }) };
       host.appendChild(h('div', { class: 'spiel spiel--ende' },
         h('p', { class: 'ergebnis mono' }, richtigN + ' / ' + folge.length),
-        h('p', null, richtigN === folge.length ? 'Alles richtig.' : opts.melden === false ? falsch.length + (falsch.length === 1 ? ' Fehler.' : ' Fehler.') + ' Übung macht den Meister: gleich nochmal.' : falsch.length + (falsch.length === 1 ? ' Aufgabe ist' : ' Aufgaben sind') + ' in der Wiedervorlage.'),
+        h('p', null, richtigN === folge.length ? 'Alles richtig.' : opts.melden === false ? falsch.length + (falsch.length === 1 ? ' Fehler.' : ' Fehler.') + ' Übung macht den Meister: gleich nochmal.' : falsch.length + (falsch.length === 1 ? ' Aufgabe ist' : ' Aufgaben sind') + ' in der Nachermittlung.'),
         h('div', { class: 'aktionen' },
           falsch.length && opts.nochmal !== false ? h('button', { type: 'button', class: 'btn', onclick: function () { spiele(host, falsch, opts); } }, 'Fehler gleich wiederholen') : null,
-          h('button', { type: 'button', class: 'btn btn--haupt', onclick: function () { if (opts.onFertig) opts.onFertig(erg); } }, opts.fertigText || 'Fertig'))));
+          h('button', { type: 'button', class: 'btn btn--haupt', 'data-enter': '', onclick: function () { if (opts.onFertig) opts.onFertig(erg); } }, opts.fertigText || 'Fertig'))));
       if (opts.onEnde) opts.onEnde(erg);
     }
     if (!folge.length) { host.innerHTML = ''; host.appendChild(h('p', null, 'Keine Aufgaben.')); return; }
