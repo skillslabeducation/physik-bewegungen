@@ -6,10 +6,10 @@
   W.akten = W.akten || [];
 
   W.AKTEN_LISTE = [
-    { id: 'einheiten', nr: 0, titel: 'Größen, Einheiten und Formeln umstellen', fall: 'Erster Tag im Büro: Wie lange zu Fuß nach Wladiwostok?' },
+    { id: 'einheiten', nr: 0, titel: 'Größen, Einheiten und Formeln umstellen', fall: 'Erster Tag im Büro: „Wie lange zu Fuß nach Wladiwostok?“' },
     { id: 'mittel', nr: 1, titel: 'Mittlere Geschwindigkeit', fall: 'Lkw im Elbtunnel: „Ich war nicht zu schnell.“' },
     { id: 'gleichfoermig', nr: 2, titel: 'Gleichförmige Bewegung', fall: 'Güterzug auf der Hafenbahn' },
-    { id: 'beschleunigt', nr: 3, titel: 'Gleichmäßig beschleunigte Bewegung', fall: 'Anfahrender Personenzug' },
+    { id: 'beschleunigt', nr: 3, titel: 'Gleichmäßig beschleunigte Bewegung', fall: 'Anfahrender Personenzug und ein Auto beim Beschleunigungsrennen' },
     { id: 'diagramme', nr: 4, titel: 'Diagramme: s(t), v(t) und a(t)', fall: 'Fahrtenschreiber eines ICE' },
     { id: 'messdaten', nr: 5, titel: 'Messtabellen auswerten', fall: 'Alibi per Lauf-App' },
     { id: 'einholen', nr: 6, titel: 'Einholen und Treffpunkt', fall: 'Zwei E-Bikes an der Ampel' },

@@ -285,7 +285,7 @@
           host.innerHTML = '';
           if (erg.richtig === erg.gesamt) {
             W.state.abschlussSetzen(a.id);
-            host.appendChild(ergebnis());
+            W.app.zeige();   // neu zeichnen: Stempel im Kopf der Akte und Ergebnis
           } else {
             host.appendChild(h('div', null,
               karte('', h('p', null, 'Noch nicht alles richtig. Für das Gutachten müssen alle Fragen sitzen. Versuche sind unbegrenzt.')),

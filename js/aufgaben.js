@@ -445,7 +445,7 @@
     var liste = h('div', { class: 'rechnung__schritte' });
     var nach = h('div');
     function schritt(k) {
-      if (k >= schritte.length) { ergebnis.hidden = false; if (k > 0) inp.focus(); return; }
+      if (k >= schritte.length) { ergebnis.hidden = false; if (k > 0 && feinerZeiger()) inp.focus(); return; }
       var st = stufe(SCHRITT[schritte[k].art] || schritte[k].art, schritte[k], item.fest, function () { schritt(k + 1); });
       stufen.push(st);
       liste.appendChild(st.el);
@@ -583,11 +583,14 @@
     });
   }
 
+  /** Maus oder Trackpad? Nur dann Felder automatisch fokussieren (am Handy springt sonst die Tastatur auf). */
+  function feinerZeiger() {
+    try { return window.matchMedia('(pointer: fine)').matches; } catch (e) { return false; }
+  }
+
   /** Erstes sichtbares Zahl- oder Textfeld einer neuen Aufgabe fokussieren (nur mit Maus oder Trackpad, damit am Handy keine Tastatur aufspringt). */
   function zahlFokus(el) {
-    var fein = false;
-    try { fein = window.matchMedia('(pointer: fine)').matches; } catch (e) { /* ohne matchMedia kein Fokus */ }
-    if (!fein) return;
+    if (!feinerZeiger()) return;
     var felder = el.querySelectorAll('input.eingabe');
     for (var k = 0; k < felder.length; k++) {
       if (!felder[k].disabled && felder[k].offsetParent !== null) { felder[k].focus({ preventScroll: true }); return; }
@@ -595,7 +598,8 @@
   }
 
   /** Enter löst den sichtbaren Hauptknopf aus (Prüfen, Weiter, Auswertung …), außer beim Schreiben in einem mehrzeiligen Textfeld.
-      Hauptknöpfe tragen das Attribut data-enter. Steht der Fokus auf einem anderen Knopf der Aufgabe (etwa nach dem Klick auf eine Option), zählt trotzdem der Hauptknopf. */
+      Hauptknöpfe tragen das Attribut data-enter. Steht der Fokus auf einer noch nicht gewählten Option, wählt Enter diese Option (Browser).
+      Auf einem anderen Knopf der Aufgabe (etwa der schon gewählten Option nach einem Klick) zählt der Hauptknopf. */
   function enterZiel() {
     var dlg = document.querySelector('.dialog');
     var kand = (dlg || document).querySelectorAll('[data-enter]');
@@ -612,6 +616,7 @@
     var ziel = enterZiel();
     if (!ziel || t === ziel) return;   // auf dem Hauptknopf selbst löst der Browser aus
     var inAufgabe = t.closest && t.closest('.spiel');
+    if (inAufgabe && t.classList && (t.classList.contains('opt') || t.classList.contains('chip')) && !t.classList.contains('gewaehlt')) return;
     if ((tag === 'A' || tag === 'BUTTON' || tag === 'SUMMARY' || (tag === 'INPUT' && t.type === 'checkbox')) && !inAufgabe) return;
     e.preventDefault();
     ziel.click();
