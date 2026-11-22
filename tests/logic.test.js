@@ -369,6 +369,18 @@ test('Akte 4, Karte „Achsen beschriften“: a(t)-Sprünge gestrichelt, eine Be
   ok(W.diagramm.markup(k.abb).svg.indexOf('dia-kurve--gestrichelt') >= 0, 'Markup');
 });
 
+test('Akte 3 u11 rechnet wie die Tafel S. 10 (1) a: v = a·t | :t → a = v/t', () => {
+  const { W } = alles();
+  const it = W.ansichten.akteNachId('beschleunigt').ueben.concat(W.ansichten.akteNachId('beschleunigt').gutachten || []).find((x) => x.id === 'beschleunigt-u11');
+  eq(it.formel, 'a-va');
+  const art = (a) => it.schritte.find((x) => x.art === a);
+  eq(art('formel').optionen[art('formel').richtig], 'v = a·t');
+  eq(art('umstellen').optionen[art('umstellen').richtig], 'a = v/t');
+  ok(it.loesung.indexOf('v = a·t &nbsp;| :t<br>a = v/t') >= 0, 'Lösung ohne Tafelweg');
+  near(it.antwort, W.physik.ms(135) / 60, 1e-12); eq(W.physik.fmt(it.antwort, 3), '0,625');
+  ok(W.aufgaben.optErklOk(it), 'optErkl');
+});
+
 test('Radarfalle: mindestens 40 Aussagen, jede mit Erklärung und Akte, alle neun Akten, halb wahr', () => {
   const { W } = alles();
   const A = W.radar.aussagen;
