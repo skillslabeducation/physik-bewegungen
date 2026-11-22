@@ -87,6 +87,20 @@ test('parseZahl: nimmt die letzte Zahl (ca., Rechenweg)', () => {
   eq(T.parseZahl('-3'), -3);
 });
 
+test('parseZahl: Einheit, Leerzeichen, Tausenderpunkt, Minus', () => {
+  eq(T.parseZahl('18,75'), 18.75);
+  eq(T.parseZahl('18.75'), 18.75);
+  eq(T.parseZahl(' 18,75 '), 18.75);
+  eq(T.parseZahl('18,75 m/s'), 18.75);
+  eq(T.parseZahl('67,5 km/h'), 67.5);
+  eq(T.parseZahl('128 s'), 128);
+  eq(T.parseZahl('1.125'), 1125);
+  eq(T.parseZahl('1 125'), 1125);
+  eq(T.parseZahl('0.125'), 0.125);
+  eq(T.parseZahl('1.5'), 1.5);
+  eq(T.parseZahl('−4,5'), -4.5);
+});
+
 test('passt: Sperrliste geht vor der Tippfehler-Toleranz', () => {
   ok(!T.passt('Bronchien', ['Bronchiolen', 'Bronchiole'], ['Bronchien', 'Bronchie']));
   ok(!T.passt('Bronchie', ['Bronchiolen', 'Bronchiole'], ['Bronchien', 'Bronchie']));

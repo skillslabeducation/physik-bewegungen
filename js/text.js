@@ -88,11 +88,15 @@
     });
   }
 
-  /** Die letzte Zahl im Text: „ca. 192“, „25*4+8*9+5*4=192“, „197,4 kcal“. */
+  /** Die letzte Zahl im Text: „ca. 192“, „197,4 kcal“, „1.125“ (Tausenderpunkt), „1 125“, „67,5 km/h“. */
   function parseZahl(s) {
-    var m = String(s == null ? '' : s).match(/-?\d+(?:[.,]\d+)?/g);
+    var t = String(s == null ? '' : s).replace(/[−–]/g, '-').replace(/(\d)[ \u00a0](?=\d{3}(?!\d))/g, '$1');
+    var m = t.match(/-?\d+(?:[.,]\d+)?/g);
     if (!m) return NaN;
-    var n = parseFloat(m[m.length - 1].replace(',', '.'));
+    var z = m[m.length - 1];
+    // Genau ein Punkt, genau drei Ziffern danach, kein Komma: deutscher Tausenderpunkt (1.125 = 1125).
+    if (/^-?[1-9]\d{0,2}\.\d{3}$/.test(z)) z = z.replace('.', '');
+    var n = parseFloat(z.replace(',', '.'));
     return isNaN(n) ? NaN : n;
   }
 
