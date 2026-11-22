@@ -490,11 +490,12 @@ table.tab .eingabe--zelle { width: 100%; min-width: 72px; min-height: 44px; font
 .regler__kopf { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: .9rem; color: var(--grau); }
 .regler__wert { color: var(--tinte); white-space: nowrap; }
 .regler input[type=range] { width: 100%; min-height: 44px; margin: 0; accent-color: var(--akzent); cursor: pointer; }
+.regler__hinweis { font-size: .8rem; color: var(--grau); }
 .labor__steuer { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .labor__steuer .btn { min-width: 120px; }
 .labor__bahn { background: var(--blatt); border: 1px solid var(--linie); border-radius: var(--r); padding: 6px; }
 .labor__strecke { display: block; width: 100%; height: auto; font-family: var(--sans); }
-.labor__strecke--fall { max-width: 230px; margin: 0 auto; }
+.labor__strecke--fall { max-width: 200px; margin: 0 auto; }
 .labor-strasse { stroke: var(--linie-stark); stroke-width: 2; }
 .labor-skala { stroke: var(--tinte); stroke-width: 1.5; }
 .labor-zahl { fill: var(--grau); font: 500 12px var(--mono); }
@@ -514,16 +515,35 @@ table.tab .eingabe--zelle { width: 100%; min-width: 72px; min-height: 44px; font
 .labor__werte { display: grid; gap: 2px; font-size: .92rem; }
 .labor__zeile { display: flex; flex-wrap: wrap; gap: 2px 18px; }
 .labor__name { min-width: 72px; color: var(--grau); }
+.labor__anzeige { display: grid; gap: 6px; align-content: start; }
 .labor__ergebnis { margin: 0; min-height: 1.55em; font-weight: 600; color: var(--akzent); }
 .labor__graphen { display: grid; gap: 8px; grid-template-columns: 1fr; }
 .labor__graph { margin: 0; padding: 6px; }
-.labor__graph .dia--klein { max-width: 420px; margin: 0 auto; }
+.labor__graph .dia--klein { max-width: 100%; margin: 0 auto; }
 .labor-kurve--2 { stroke-dasharray: 8 5; }
 .labor-wahl { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 14px; }
 .labor-demo { margin: 14px 0; padding-top: 12px; border-top: 1px dashed var(--linie-stark); }
 .labor__mehr { margin: 0; }
 @media (min-width: 700px) {
-  .labor__graphen { grid-template-columns: repeat(3, 1fr); }
+  .labor__graphen { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+/* Am Rechner: Regler neben Start, Strecke neben den Werten, darunter die drei Graphen; beim Fall die schmale Strecke neben den Graphen. */
+@media (min-width: 1000px) {
+  .labor { grid-template-columns: minmax(0, 1fr) minmax(0, 280px); column-gap: 12px; align-items: start;
+    grid-template-areas: "text text" "regler steuer" "bahn anzeige" "graphen graphen"; }
+  .labor--fall { grid-template-columns: 170px minmax(0, 1fr) minmax(0, 280px);
+    grid-template-areas: "text text text" "regler regler steuer" "anzeige anzeige anzeige" "bahn graphen graphen"; }
+  .labor__text { grid-area: text; }
+  .labor__regler { grid-area: regler; }
+  .labor__steuer, .labor__zeit { grid-area: steuer; }
+  .labor__bahn { grid-area: bahn; }
+  .labor__anzeige { grid-area: anzeige; }
+  .labor__graphen { grid-area: graphen; }
+  .labor > .hinweis-klein { grid-column: 1 / -1; }
+  /* Platz fürs Ergebnis von Anfang an: Die Graphen springen nicht, wenn es erscheint. */
+  .labor__werte { line-height: 1.35; font-size: .88rem; }
+  .labor__ergebnis { line-height: 1.4; min-height: 2.8em; }
+  .labor--fall .labor__ergebnis { min-height: 1.4em; }
 }
 
 .falle__karte { min-height: 180px; display: grid; place-items: center; padding: 20px; margin: 12px 0; text-align: center; background: var(--blatt); border: 1px solid var(--linie-stark); border-radius: var(--r); }

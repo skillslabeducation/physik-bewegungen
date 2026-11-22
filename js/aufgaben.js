@@ -720,6 +720,7 @@
     var t = e.target || {};
     var tag = t.tagName;
     if (tag === 'TEXTAREA' || t.isContentEditable) return;
+    if (tag === 'INPUT' && t.type === 'range') return;   // Regler im Labor: Enter blättert nicht weiter
     var ziel = enterZiel();
     if (!ziel || t === ziel) return;   // auf dem Hauptknopf selbst löst der Browser aus
     var inAufgabe = t.closest && t.closest('.spiel');

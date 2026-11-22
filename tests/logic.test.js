@@ -291,6 +291,61 @@ test('Labor: fünf Voreinstellungen mit Reglern und Grundwerten im Reglerbereich
   });
 });
 
+test('Labor: Zahlen mit 2 Nachkommastellen, kleine Werte mit gültigen Ziffern', () => {
+  const { W } = alles();
+  const P = W.physik;
+  eq(W.labor.zahl(P.tAusS(20, P.G)), '2,02');
+  eq(W.labor.zahl(0.05), '0,05');
+  eq(W.labor.zahl(P.bremsWeg(1, 7)), '0,071');
+  eq(W.labor.zahl(9), '9');
+  eq(W.labor.zahl(0), '0');
+  // Werte-Zeile: t mit 2 Nachkommastellen, kleiner Bremsweg nicht auf 0,1 gerundet
+  eq(W.labor.zeilen('fall', { h: 20, g: P.G }, P.tAusS(20, P.G))[0], ['t = 2,02 s']);
+  eq(W.labor.zeilen('bremsen', { v0: 1, a: 10 }, 1)[1], ['s = 0,05 m', 'v = 0 m/s', 'a = 0 m/s²']);
+  eq(W.labor.zeilen('einholen', {}, 0).length, 3);
+});
+
+test('Labor: Ergebnistext gerundet wie in der Werte-Zeile', () => {
+  const { W } = alles();
+  const P = W.physik;
+  const t5 = P.tAusS(5, P.G);
+  eq(W.labor.ereignis('fall', { h: 5, g: P.G }).text, 'Aufprall nach t ≈ ' + P.fmt(t5) + ' s mit v ≈ ' + P.fmt(P.vBeschl(P.G, t5)) + ' m/s.');
+  ok(/Aufprall nach t ≈ 1,01 s/.test(W.labor.ereignis('fall', { h: 5, g: P.G }).text), 'Fall 5 m');
+  eq(W.labor.ereignis('bremsen', { v0: 9, a: 4.5 }).text, 'Stillstand nach t = 2 s. Bremsweg s = 9 m.');
+  eq(W.labor.ereignis('bremsen', { v0: 1, a: 10 }).text, 'Stillstand nach t = 0,1 s. Bremsweg s = ' + P.fmt(P.bremsWeg(1, 10)) + ' m.');
+  ok(/Bremsweg s = 0,05 m/.test(W.labor.ereignis('bremsen', { v0: 1, a: 10 }).text), 'kleiner Bremsweg');
+  const e = P.einholen(4.67, 1.56);
+  eq(W.labor.ereignis('einholen', {}).text, 'Treffpunkt nach t ≈ ' + P.fmt(e.t) + ' s bei s ≈ ' + P.fmt(e.s) + ' m.');
+});
+
+test('Labor: realistische Reglerbereiche, Grundwerte wie auf den Blättern', () => {
+  const { W } = alles();
+  const r = (p, k) => W.labor.preset(p).regler.find((x) => x.key === k);
+  const bereich = (p, k) => [r(p, k).min, r(p, k).max, r(p, k).wert];
+  eq(bereich('anfahren', 'a'), [0.1, 1.5, 0.5]);
+  eq(bereich('bremsen', 'v0'), [1, 12.5, 9]);
+  eq(bereich('bremsen', 'a'), [0.5, 7, 4.5]);
+  ok(r('einholen', 'v1').max <= 7 && r('einholen', 'v1').wert === 4.67, 'v₁');
+  ok(r('einholen', 'a2').max <= 2 && r('einholen', 'a2').wert === 1.56, 'a₂');
+  ok(/1,84/.test(r('fall', 'g').hinweis || r('fall', 'g').label), 'g-Regler: Hinweis auf die Tafelaufgabe Mond 1,84');
+});
+
+test('Labor: Zeitraffer ganzzahlig, Echtzeit bis 10 s, Zeitlupe unter 2 s', () => {
+  const { W } = alles();
+  [0.14, 0.5, 1.01, 1.99].forEach((T) => {
+    const k = W.labor.tempo(T);
+    ok(k < 1 && T / k >= 2 - 1e-9 && Number.isInteger(1 / k), 'Zeitlupe bei T = ' + T + ': ' + k);
+  });
+  [2, 5, 10].forEach((T) => eq(W.labor.tempo(T), 1, 'Echtzeit bei T = ' + T));
+  [10.5, 20, 87.5].forEach((T) => {
+    const k = W.labor.tempo(T);
+    ok(Number.isInteger(k) && k >= 2 && T / k <= 10 + 1e-9, 'Zeitraffer bei T = ' + T + ': ' + k);
+  });
+  eq(W.labor.tempoText(2), 'Zeitraffer: 2-fach');
+  eq(W.labor.tempoText(1), '');
+  eq(W.labor.tempoText(0.5), 'Zeitlupe: 2-fach verlangsamt');
+});
+
 test('Radarfalle: mindestens 40 Aussagen, jede mit Erklärung und Akte, alle neun Akten, halb wahr', () => {
   const { W } = alles();
   const A = W.radar.aussagen;

@@ -9,8 +9,8 @@
   function fmt(x, st) { return W.physik.fmt(x, st); }
   function rund(x) { return Math.round(x * 1e6) / 1e6; }
 
-  function R(key, label, einheit, min, max, schritt, wert) {
-    return { key: key, label: label, einheit: einheit, min: min, max: max, schritt: schritt, wert: wert };
+  function R(key, label, einheit, min, max, schritt, wert, hinweis) {
+    return { key: key, label: label, einheit: einheit, min: min, max: max, schritt: schritt, wert: wert, hinweis: hinweis || '' };
   }
 
   var PRESETS = ['gleichfoermig', 'anfahren', 'bremsen', 'fall', 'einholen'];
@@ -23,22 +23,22 @@
     anfahren: {
       titel: 'Anfahren', fahrzeuge: ['zug'], namen: ['Zug'],
       text: 'Ein Zug fährt aus dem Stand gleichmäßig beschleunigt an: v = a·t, s = a/2·t².',
-      regler: [R('a', 'Beschleunigung a', 'm/s²', 0.1, 3, 0.1, 0.5)]
+      regler: [R('a', 'Beschleunigung a', 'm/s²', 0.1, 1.5, 0.1, 0.5)]
     },
     bremsen: {
       titel: 'Bremsen', fahrzeuge: ['ebike'], namen: ['E-Bike'],
       text: 'Ein E-Bike bremst gleichmäßig bis zum Stillstand: v = v₀ − a·t, s = v₀·t − a/2·t². Der Regler stellt den Betrag a ein, die Beschleunigung selbst ist negativ.',
-      regler: [R('v0', 'Anfangsgeschwindigkeit v₀', 'm/s', 1, 20, 0.5, 9), R('a', 'Bremsbeschleunigung a (Betrag)', 'm/s²', 0.5, 10, 0.5, 4.5)]
+      regler: [R('v0', 'Anfangsgeschwindigkeit v₀', 'm/s', 1, 12.5, 0.5, 9), R('a', 'Bremsbeschleunigung a (Betrag)', 'm/s²', 0.5, 7, 0.5, 4.5)]
     },
     fall: {
       titel: 'Freier Fall', fahrzeuge: ['stein'], namen: ['Stein'],
       text: 'Ein Stein fällt aus der Ruhe, ohne Luftwiderstand: a = g, v = g·t, s = g/2·t².',
-      regler: [R('h', 'Fallhöhe h', 'm', 1, 100, 1, 20), R('g', 'Fallbeschleunigung g (Mond 1,62, Erde 9,81)', 'm/s²', 1.62, 9.81, 0.01, 9.81)]
+      regler: [R('h', 'Fallhöhe h', 'm', 1, 100, 1, 20), R('g', 'Fallbeschleunigung g', 'm/s²', 1.62, 9.81, 0.01, 9.81, 'Mond 1,62 (Aufgabe Tafel: 1,84)')]
     },
     einholen: {
       titel: 'Einholen', fahrzeuge: ['ebike', 'ebike'], namen: ['E-Bike 1', 'E-Bike 2'],
       text: 'E-Bike 1 fährt gleichförmig. E-Bike 2 startet im selben Moment daneben aus dem Stand und beschleunigt. Eingeholt ist es, wenn s₁(t) = s₂(t).',
-      regler: [R('v1', 'Geschwindigkeit E-Bike 1 v₁', 'm/s', 1, 10, 0.01, 4.67), R('a2', 'Beschleunigung E-Bike 2 a₂', 'm/s²', 0.2, 3, 0.01, 1.56)]
+      regler: [R('v1', 'Geschwindigkeit v₁', 'm/s', 1, 7, 0.01, 4.67), R('a2', 'Beschleunigung a₂', 'm/s²', 0.2, 2, 0.01, 1.56)]
     }
   };
 
@@ -96,8 +96,30 @@
     return 10;
   }
 
+  /** Nachkommastellen der Anzeige: 2, unter 0,1 drei (Bremsweg 0,071 m statt 0,07 m). */
+  function stellen(x) { return x !== 0 && Math.abs(x) < 0.1 ? 3 : 2; }
+  function zahl(x) { return fmt(x, stellen(x)); }
+
   /** „= 2“ oder „≈ 5,99“ */
-  function gleich(x) { return (Math.abs(Math.round(x * 10) / 10 - x) > 1e-9 ? '≈ ' : '= ') + fmt(x, 1); }
+  function gleich(x) { var m = Math.pow(10, stellen(x)); return (Math.abs(Math.round(x * m) / m - x) > 1e-9 ? '≈ ' : '= ') + zahl(x); }
+
+  /** Werte-Zeilen zur Zeit t: [['t = … s'], [Name:, 's = … m', 'v = … m/s', 'a = … m/s²'] …], Name nur bei zwei Fahrzeugen. */
+  function zeilen(p, regler, t) {
+    var zwei = DEF[p].fahrzeuge.length === 2;
+    return [['t = ' + zahl(t) + ' s']].concat(zustand(p, regler, t).map(function (z, k) {
+      return (zwei ? [DEF[p].namen[k] + ':'] : []).concat(['s = ' + zahl(z.s) + ' m', 'v = ' + zahl(z.v) + ' m/s', 'a = ' + zahl(z.a) + ' m/s²']);
+    }));
+  }
+
+  /** Abspieltempo: Echtzeit bis 10 s, darüber ganzzahliger Zeitraffer (höchstens 10 s), unter 2 s Zeitlupe (mindestens 2 s). */
+  function tempo(T) {
+    if (T < 2) return 1 / Math.ceil(2 / T);
+    return T <= 10 ? 1 : Math.ceil(T / 10);
+  }
+  function tempoText(k) {
+    if (k > 1) return 'Zeitraffer: ' + k + '-fach';
+    return k < 1 ? 'Zeitlupe: ' + Math.round(1 / k) + '-fach verlangsamt' : '';
+  }
 
   /** Besonderer Moment (Stillstand, Aufprall, Treffpunkt) mit Text. */
   function ereignis(p, regler) {
@@ -112,7 +134,7 @@
     }
     if (p === 'einholen') {
       var tp = treffpunkt(w);
-      return { t: tp.t, s: tp.s, text: 'Treffpunkt: E-Bike 2 holt E-Bike 1 nach t ' + gleich(tp.t) + ' s bei s ' + gleich(tp.s) + ' m ein.' };
+      return { t: tp.t, s: tp.s, text: 'Treffpunkt nach t ' + gleich(tp.t) + ' s bei s ' + gleich(tp.s) + ' m.' };
     }
     return null;
   }
@@ -200,7 +222,8 @@
     }
     svg.appendChild(s('text', { class: 'labor-zahl', x: x(sk.max) + 18, y: yS - 8, 'text-anchor': 'end' }, 's in m'));
     svg.appendChild(s('line', { class: 'labor-start', x1: x(0), y1: spuren[0] - 62, x2: x(0), y2: spuren[spuren.length - 1] + 8 }));
-    svg.appendChild(s('text', { class: 'labor-zahl', x: x(0) + 6, y: spuren[0] - 50, 'text-anchor': 'start' }, p === 'bremsen' ? 'Bremsbeginn' : 'Start'));
+    // Bei zwei Fahrzeugen links der Startlinie, sonst läge die Nummer von Fahrzeug 1 darauf.
+    svg.appendChild(s('text', { class: 'labor-zahl', x: zwei ? x(0) - 6 : x(0) + 6, y: spuren[0] - 50, 'text-anchor': zwei ? 'end' : 'start' }, p === 'bremsen' ? 'Bremsbeginn' : 'Start'));
     var spur = p === 'bremsen' ? s('line', { class: 'labor-spur', x1: x(0), y1: spuren[0], x2: x(0), y2: spuren[0] }) : null;
     if (spur) svg.appendChild(spur);
     var treff = null;
@@ -229,24 +252,24 @@
   function fallStrecke(regler, ev) {
     var w = werte('fall', regler);
     var sk = skala(w.h);
-    var oben = 34, unten = 292, H = 330;
+    var oben = 30, unten = 222, H = 260;
     function y(sv) { return rund(oben + sv / w.h * (unten - oben)); }
-    var svg = s('svg', { class: 'labor__strecke labor__strecke--fall', viewBox: '0 0 220 ' + H, role: 'img', 'aria-label': 'Fallstrecke des Steins, Höhe ' + fmt(w.h) + ' m' });
-    svg.appendChild(s('line', { class: 'labor-skala', x1: 64, y1: y(0), x2: 64, y2: y(w.h) }));
+    var svg = s('svg', { class: 'labor__strecke labor__strecke--fall', viewBox: '0 0 170 ' + H, role: 'img', 'aria-label': 'Fallstrecke des Steins, Höhe ' + fmt(w.h) + ' m' });
+    svg.appendChild(s('line', { class: 'labor-skala', x1: 44, y1: y(0), x2: 44, y2: y(w.h) }));
     for (var v = 0; v <= w.h + 1e-9; v = rund(v + sk.schritt)) {
-      svg.appendChild(s('line', { class: 'labor-skala', x1: 60, y1: y(v), x2: 68, y2: y(v) }));
-      svg.appendChild(s('text', { class: 'labor-zahl', x: 54, y: y(v) + 4, 'text-anchor': 'end' }, fmt(v)));
+      svg.appendChild(s('line', { class: 'labor-skala', x1: 40, y1: y(v), x2: 48, y2: y(v) }));
+      svg.appendChild(s('text', { class: 'labor-zahl', x: 36, y: y(v) + 4, 'text-anchor': 'end' }, fmt(v)));
     }
-    svg.appendChild(s('text', { class: 'labor-zahl', x: 54, y: 16, 'text-anchor': 'end' }, 's in m'));
-    svg.appendChild(s('line', { class: 'labor-start', x1: 96, y1: oben, x2: 160, y2: oben }));
-    svg.appendChild(s('text', { class: 'labor-zahl', x: 166, y: oben + 4 }, 'Start'));
-    svg.appendChild(s('rect', { class: 'labor-boden', x: 80, y: unten, width: 132, height: 12 }));
-    svg.appendChild(s('text', { class: 'labor-zahl', x: 146, y: unten + 30, 'text-anchor': 'middle' }, 'Boden'));
+    svg.appendChild(s('text', { class: 'labor-zahl', x: 4, y: 16 }, 's in m'));
+    svg.appendChild(s('line', { class: 'labor-start', x1: 66, y1: oben, x2: 118, y2: oben }));
+    svg.appendChild(s('text', { class: 'labor-zahl', x: 122, y: oben + 4 }, 'Start'));
+    svg.appendChild(s('rect', { class: 'labor-boden', x: 56, y: unten, width: 108, height: 12 }));
+    svg.appendChild(s('text', { class: 'labor-zahl', x: 110, y: unten + 30, 'text-anchor': 'middle' }, 'Boden'));
     var stein = s('g', { class: 'labor-fz' }, s('path', { class: 'labor-fz__koerper', d: 'M-9 -2 L-6 -8 L1 -10 L8 -6 L9 1 L5 8 L-3 9 L-8 5 Z' }));
     svg.appendChild(stein);
     return {
       svg: svg,
-      setze: function (zst) { stein.setAttribute('transform', 'translate(128 ' + rund(y(zst[0].s) - 10) + ')'); }
+      setze: function (zst) { stein.setAttribute('transform', 'translate(92 ' + rund(y(zst[0].s) - 10) + ')'); }
     };
   }
 
@@ -267,7 +290,8 @@
       function text() { var x = +inp.value; wert.textContent = fmt(x) + ' ' + r.einheit; inp.setAttribute('aria-valuetext', fmt(x) + ' ' + r.einheit); }
       inp.addEventListener('input', function () { regler[r.key] = +inp.value; text(); neu(); });
       text();
-      return h('label', { class: 'regler' }, h('span', { class: 'regler__kopf' }, h('span', null, r.label), wert), inp);
+      return h('label', { class: 'regler' }, h('span', { class: 'regler__kopf' }, h('span', null, r.label), wert), inp,
+        r.hinweis ? h('span', { class: 'regler__hinweis' }, r.hinweis) : null);
     }
 
     var knopf = h('button', { type: 'button', class: 'btn btn--haupt labor__start', onclick: startPause }, 'Start');
@@ -282,13 +306,13 @@
     var figuren = { s: h('figure', { class: 'abb labor__graph' }), v: h('figure', { class: 'abb labor__graph' }), a: h('figure', { class: 'abb labor__graph' }) };
 
     el.innerHTML = '';
-    el.appendChild(h('div', { class: 'labor', 'data-preset': p },
+    el.appendChild(h('div', { class: 'labor' + (p === 'fall' ? ' labor--fall' : ''), 'data-preset': p },
       h('p', { class: 'labor__text' }, def.text),
       h('div', { class: 'labor__regler' }, def.regler.map(reglerEl)),
       ruhig
         ? h('label', { class: 'regler labor__zeit' }, h('span', { class: 'regler__kopf' }, h('span', null, 'Zeitpunkt t'), tWert), tRegler)
         : h('div', { class: 'labor__steuer' }, knopf, zurueck, raffer),
-      bahnHost, werteEl, ergebnisEl,
+      bahnHost, h('div', { class: 'labor__anzeige' }, werteEl, ergebnisEl),
       h('div', { class: 'labor__graphen' }, figuren.s, figuren.v, figuren.a),
       zwei ? h('p', { class: 'hinweis-klein' }, 'In den Graphen: durchgezogen ' + def.namen[0] + ', gestrichelt ' + def.namen[1] + ' (auf der Strecke grün).') : null,
       ruhig ? h('p', { class: 'hinweis-klein' }, 'Ohne Animation, weil „Bewegung reduzieren“ eingestellt ist: Die Graphen sind ganz gezeichnet, den Zeitpunkt wählst du mit dem Regler t.') : null,
@@ -306,13 +330,13 @@
       T = dauer(p, regler);
       ev = ereignis(p, regler);
       ax = achsen(p, regler, T);
-      tempo = Math.max(1, T / 8);
+      tempo = W.labor.tempo(T);
       t = ruhig ? T : 0;
       bahn = strecke(p, regler, T, ev);
       bahnHost.innerHTML = '';
       bahnHost.appendChild(bahn.svg);
       knopf.textContent = 'Start';
-      raffer.textContent = tempo > 1 ? 'Zeitraffer: ' + fmt(tempo, 1) + '-fach' : '';
+      raffer.textContent = tempoText(tempo);
       if (tRegler) { tRegler.max = String(T); tRegler.step = String(T / 100); tRegler.value = String(T); }
       zeichne(true);
     }
@@ -320,12 +344,14 @@
     function graph(g, zst) {
       var tBis = ruhig ? T : t;
       var kurven = [];
+      // Beschriftung erst, wenn die Kurve weit genug rechts ist: sonst läge sie auf den Zahlen der Hochachse.
+      var mitLabel = tBis >= 0.22 * ax.t.max;
       def.fahrzeuge.forEach(function (f, k) {
-        var pts = punkte(p, regler, k, g, tBis, ev), label = g + (zwei ? INDEX[k] : '') + '(t)';
+        var pts = punkte(p, regler, k, g, tBis, ev), label = mitLabel ? g + (zwei ? INDEX[k] : '') + '(t)' : false;
         if (p === 'bremsen' && g === 'a' && tBis > ev.t) {
           // Kein senkrechter Strich beim Stillstand: Bremsphase und Stehen als zwei Stücke.
           kurven.push({ punkte: pts.filter(function (q) { return q[0] <= ev.t; }), farbe: g, label: label });
-          kurven.push({ punkte: pts.filter(function (q) { return q[0] > ev.t; }), farbe: g, label: ' ' });
+          kurven.push({ punkte: pts.filter(function (q) { return q[0] > ev.t; }), farbe: g, label: false });
         } else kurven.push({ punkte: pts, farbe: g, label: label });
       });
       var marken = zst.map(function (z) { return [t, z[g]]; });
@@ -348,21 +374,26 @@
       figuren[g].appendChild(svg);
     }
 
-    function zeile(z, name) {
-      return h('div', { class: 'labor__zeile' }, name ? h('span', { class: 'labor__name' }, name) : null,
-        h('span', null, 's = ' + fmt(z.s, 1) + ' m'), h('span', null, 'v = ' + fmt(z.v, 2) + ' m/s'), h('span', null, 'a = ' + fmt(z.a, 2) + ' m/s²'));
+    /** Alle drei Graphen im selben Maßstab (gleiche Schriftgröße), höchstens in Originalgröße. */
+    function gleichGross() {
+      var svgs = ['s', 'v', 'a'].map(function (g) { return figuren[g].querySelector('svg'); });
+      var breiten = svgs.map(function (sv) { return +sv.getAttribute('viewBox').split(' ')[2]; });
+      var platz = figuren.s.clientWidth - 14;
+      var k = platz > 0 ? Math.min(1, platz / Math.max.apply(null, breiten)) : 1;
+      svgs.forEach(function (sv, i) { sv.style.width = Math.floor(breiten[i] * k) + 'px'; });
     }
 
     function zeichne(mitGraphen) {
       var zst = zustand(p, regler, t);
       bahn.setze(zst, t);
       werteEl.innerHTML = '';
-      werteEl.appendChild(h('div', { class: 'labor__zeile' }, h('span', null, 't = ' + fmt(t, 1) + ' s')));
-      zst.forEach(function (z, k) { werteEl.appendChild(zeile(z, zwei ? def.namen[k] + ':' : '')); });
+      zeilen(p, regler, t).forEach(function (z, k) {
+        werteEl.appendChild(h('div', { class: 'labor__zeile' }, z.map(function (x, i) { return h('span', { class: k && zwei && !i ? 'labor__name' : null }, x); })));
+      });
       var text = ev && t >= ev.t - 1e-9 ? ev.text : '';
       if (text !== ergebnisText) { ergebnisText = text; ergebnisEl.textContent = text; }
-      if (tRegler) tWert.textContent = fmt(t, 1) + ' s';
-      if (mitGraphen) ['s', 'v', 'a'].forEach(function (g) { graph(g, zst); });
+      if (tRegler) tWert.textContent = zahl(t) + ' s';
+      if (mitGraphen) { ['s', 'v', 'a'].forEach(function (g) { graph(g, zst); }); gleichGross(); }
     }
 
     function schritt(jetzt) {
@@ -401,6 +432,6 @@
 
   W.labor = {
     PRESETS: PRESETS, preset: preset, zustand: zustand, dauer: dauer, treffpunkt: treffpunkt,
-    ereignis: ereignis, skala: skala, mount: mount
+    ereignis: ereignis, skala: skala, zahl: zahl, zeilen: zeilen, tempo: tempo, tempoText: tempoText, mount: mount
   };
 })();

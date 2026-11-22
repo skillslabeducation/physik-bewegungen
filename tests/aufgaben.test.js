@@ -159,6 +159,14 @@ test('diagramm.markup: Karo, Achsentitel, Farben je Größe', () => {
   ok(m.indexOf('1250') >= 0, 'Skala');
 });
 
+test('diagramm.markup: negative Hochachse mit nur einer 0 am Ursprung, Kurve ohne Beschriftung', () => {
+  const m = W.diagramm.markup({ achsen: { x: { g: 't', e: 's', max: 3, schritt: 1 }, y: { g: 'a', e: 'm/s²', min: -5, max: 1, schritt: 1 } },
+    kurven: [{ punkte: [[0, -4.5], [2, -4.5]], farbe: 'a', label: 'a(t)' }, { punkte: [[2, 0], [3, 0]], farbe: 'a', label: false }] }).svg;
+  eq((m.match(/>0<\/text>/g) || []).length, 1, 'Nullen am Ursprung');
+  eq((m.match(/class="dia-label/g) || []).length, 1, 'Beschriftungen');
+  eq((m.match(/class="dia-kurve /g) || []).length, 2, 'Kurven');
+});
+
 test('diagramm.mini: alle Arten liefern beschriftetes SVG in der richtigen Farbe', () => {
   ['s-gleich', 'v-gleich', 'a-gleich', 's-beschl', 'v-beschl', 'a-beschl', 's-brems', 'v-brems', 'a-brems', 's-ruhe', 'v-ruhe'].forEach((art) => {
     const m = W.diagramm.mini(art);

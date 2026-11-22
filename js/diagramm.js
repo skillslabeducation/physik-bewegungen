@@ -62,7 +62,7 @@
     return L;
   }
 
-  /** opts = { achsen, kurven: [{ punkte, farbe: 's'|'v'|'a', label }], marken?: [[x,y]…], klein? } → { svg: Markup, L } */
+  /** opts = { achsen, kurven: [{ punkte, farbe: 's'|'v'|'a', label (false: ohne Beschriftung) }], marken?: [[x,y]…], klein? } → { svg: Markup, L } */
   function markup(opts) {
     var A = opts.achsen, ax = A.x, ay = A.y;
     var L = layout(A, opts.klein);
@@ -80,6 +80,7 @@
     ticks(ax.min || 0, ax.max, ax.schritt).forEach(function (v) {
       var p = L.px(v);
       t.push('<line class="dia-strich" x1="' + p + '" y1="' + (ya - 3) + '" x2="' + p + '" y2="' + (ya + 3) + '"/>');
+      if (v === 0 && ay.min < 0) return;   // mit negativer Hochachse steht die 0 schon links an der Hochachse
       t.push('<text class="dia-zahl" x="' + p + '" y="' + r1(ya + 16) + '" text-anchor="middle">' + esc(zahl(v)) + '</text>');
     });
     ticks(ay.min || 0, ay.max, ay.schritt).forEach(function (v) {
@@ -96,8 +97,9 @@
     (opts.kurven || []).forEach(function (k) {
       if (!k.punkte || !k.punkte.length) return;
       var f = farbe(k.farbe), label = k.label || f + '(t)', last = k.punkte[k.punkte.length - 1];
-      namen.push(label);
       t.push('<path class="dia-kurve dia-kurve--' + f + '" d="' + L.pfad(k.punkte) + '"/>');
+      if (k.label === false) return;
+      namen.push(label);
       t.push('<text class="dia-label dia-label--' + f + '" x="' + r1(L.px(last[0]) - 4) + '" y="' + r1(L.py(last[1]) - 8) + '" text-anchor="end">' + esc(label) + '</text>');
     });
     (opts.marken || []).forEach(function (m) {
