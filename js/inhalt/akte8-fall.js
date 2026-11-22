@@ -92,7 +92,7 @@
         achtung: '<p>Wurzel nicht vergessen. Und s = v·t gilt hier nicht, denn die Geschwindigkeit ist nicht konstant. ' +
           'Wer 5 m durch 9,81 m/s² teilt, bekommt ' + f(5 / G) + ' s², und das ist nicht einmal eine Zeit.</p>' },
 
-      { titel: 'Die Graphen des freien Falls',
+      { titel: 'Die Graphen des freien Falls', demo: 'labor:fall',
         text: '<p>Der freie Fall hat die Graphen der beschleunigten Bewegung aus dem Stand:</p>' +
           '<p><strong>s(t)</strong>: Halbparabel, nach oben offen, wird immer steiler.<br>' +
           '<strong>v(t)</strong>: Ursprungsgerade mit der Steigung g = 9,81 m/s².<br>' +

@@ -82,7 +82,7 @@
         achtung: p('Setzt du −' + f(A) + ' in v = v₀ − a·t ein, wird aus minus mal minus plus: Das Rad würde rechnerisch schneller. Ein Minus reicht.')
       },
       {
-        titel: 'Die drei Graphen beim Bremsen',
+        titel: 'Die drei Graphen beim Bremsen', demo: 'labor:bremsen',
         text: p('<strong>s(t):</strong> Der Graph steigt und wird immer flacher, bis er waagerecht ist. Er ist ein Stück einer nach unten offenen Parabel bis zum Scheitel. Am Scheitel steht das Fahrzeug, beim E-Bike bei t = ' + f(T_STOP) + ' s und s = ' + f(SS[4]) + ' m.') +
           p('<strong>v(t):</strong> fallende Gerade, sie beginnt bei v₀ und erreicht beim Stillstand die Zeitachse.') +
           p('<strong>a(t):</strong> waagerechte Linie unterhalb der Zeitachse, weil a konstant und negativ ist.'),

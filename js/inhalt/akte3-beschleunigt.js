@@ -55,7 +55,7 @@
           kurven: [{ punkte: D.kurve(function (t) { return 0.5 * t; }, 0, 60, 6), farbe: 'v', label: 'v(t)' }] },
         merk: 'v = a·t (aus dem Stand). Umgestellt: a = v/t und t = v/a.',
         achtung: '<p>Zeit in Sekunden einsetzen: eine Minute sind 60 s. Und km/h erst durch 3,6 teilen, dann rechnen.</p>' },
-      { titel: 'Weg aus dem Stand: s = a/2·t²',
+      { titel: 'Weg aus dem Stand: s = a/2·t²', demo: 'labor:anfahren',
         text: '<p>Weil das Fahrzeug ständig schneller wird, legt es in jeder Sekunde mehr Weg zurück als in der Sekunde davor. Aus dem Stand gilt s = a/2·t². ' +
           'Der s(t)-Graph ist eine nach oben offene Halbparabel.</p>' +
           '<p>Tafel: a = 2 m/s², Δt = 5 s: s = 2 m/s² / 2 · (5 s)² = 1 m/s² · 25 s² = 25 m. Nach 1 s, 2 s und 3 s sind es 1 m, 4 m und 9 m.</p>',

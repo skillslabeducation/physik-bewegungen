@@ -346,6 +346,20 @@ test('Labor: Zeitraffer ganzzahlig, Echtzeit bis 10 s, Zeitlupe unter 2 s', () =
   eq(W.labor.tempoText(0.5), 'Zeitlupe: 2-fach verlangsamt');
 });
 
+test('Labor in den Akten: je Akte eine Demo an der passenden Verstehen-Karte', () => {
+  const { W } = alles();
+  const soll = { gleichfoermig: [3, 'labor:gleichfoermig'], beschleunigt: [2, 'labor:anfahren'], diagramme: [1, 'labor:anfahren'],
+    einholen: [0, 'labor:einholen'], bremsen: [1, 'labor:bremsen'], fall: [3, 'labor:fall'] };
+  const mitKarten = W.akten.filter((a) => (a.karten || []).length);
+  Object.keys(soll).forEach((id) => ok(mitKarten.some((a) => a.id === id), 'Akte fehlt: ' + id));
+  mitKarten.forEach((a) => {
+    const demos = (a.karten || []).map((k, i) => [i, k.demo]).filter((x) => x[1]);
+    demos.forEach((d) => ok(W.labor.PRESETS.indexOf(d[1].replace(/^labor:/, '')) >= 0, a.id + ': unbekannte Demo ' + d[1]));
+    if (soll[a.id]) eq(demos, [soll[a.id]], a.id);
+    else eq(demos, [], a.id);
+  });
+});
+
 test('Radarfalle: mindestens 40 Aussagen, jede mit Erklärung und Akte, alle neun Akten, halb wahr', () => {
   const { W } = alles();
   const A = W.radar.aussagen;

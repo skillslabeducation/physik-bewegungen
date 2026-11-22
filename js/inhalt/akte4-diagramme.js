@@ -109,7 +109,7 @@
         merk: 'Erst die Achsen lesen (Größe und Einheit), dann die Form des Graphen, dann die Werte.',
         achtung: '<p>Eine Ursprungsgerade bedeutet in s(t) etwas anderes als in v(t). Schau immer zuerst, was an der Hochachse steht.</p>' },
 
-      { titel: 'Drei Bewegungsarten, neun Graphen',
+      { titel: 'Drei Bewegungsarten, neun Graphen', demo: 'labor:anfahren',
         text: '<p>Tafel 17.11.: Gleichförmige Bewegung: a = 0, v = v₀ = konst, s(t) = v₀·t ist eine Gerade. ' +
           'Gleichmäßig beschleunigte Bewegung aus dem Stand: a = a₀ = konst, v(t) = a₀·t ist eine Ursprungsgerade, s(t) = a₀/2·t² eine Parabel. ' +
           'Tafel S. 12: Beim gleichmäßigen Abbremsen fällt v(t) als Gerade bis zur t-Achse, s(t) ist eine nach unten offene Parabel.</p>' + MINI_TAB,

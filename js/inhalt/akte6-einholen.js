@@ -48,7 +48,7 @@
 
     karten: [
       {
-        titel: 'Zwei Bewegungen in einem Diagramm',
+        titel: 'Zwei Bewegungen in einem Diagramm', demo: 'labor:einholen',
         text: '<p>Beide starten bei t = 0 an derselben Stelle (s = 0).</p>' +
           '<p><strong>E-Bike 1</strong> fährt gleichförmig: v₁ = konst, also s₁(t) = v₁·t. Der s(t)-Graph ist eine Ursprungsgerade.</p>' +
           '<p><strong>E-Bike 2</strong> fährt aus dem Stand gleichmäßig beschleunigt: v₂(t) = a₂·t und s₂(t) = a₂/2·t². Der s(t)-Graph ist eine Parabel.</p>' +

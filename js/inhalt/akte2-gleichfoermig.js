@@ -68,7 +68,7 @@
         merk: 's = v·t (wenn für t = 0 auch s = 0), sonst s = s₀ + v·t.',
         achtung: '<p>s₀ ist ein Weg, keine Geschwindigkeit. Er wird addiert, nicht mit t malgenommen.</p>' },
 
-      { titel: 'Die drei Graphen der gleichförmigen Bewegung',
+      { titel: 'Die drei Graphen der gleichförmigen Bewegung', demo: 'labor:gleichfoermig',
         text: '<p>Diese drei Bilder musst du sofort erkennen:</p>' +
           '<p>' + minis(['s-gleich', 'v-gleich', 'a-gleich']).join(' ') + '</p>' +
           '<p>s(t): Ursprungsgerade, die Steigung ist v. &nbsp;v(t): waagerechte Linie in Höhe v₀. &nbsp;a(t) = 0: Linie auf der t-Achse.</p>',
