@@ -508,10 +508,15 @@
     }
     svg.addEventListener('click', function (ev) {
       if (fertig) return;
-      var r = svg.getBoundingClientRect();
-      if (!r.width || !r.height) return;
-      var x = L.xAus((ev.clientX - r.left) / r.width * L.breite);
-      var y = L.yAus((ev.clientY - r.top) / r.height * L.hoehe);
+      // Bildschirm → SVG-Koordinaten über die CTM: stimmt auch bei max-height, Zentrierung und jeder CSS-Größe.
+      var ctm = svg.getScreenCTM();
+      if (!ctm) return;
+      var pt = svg.createSVGPoint();
+      pt.x = ev.clientX;
+      pt.y = ev.clientY;
+      pt = pt.matrixTransform(ctm.inverse());
+      var x = L.xAus(pt.x);
+      var y = L.yAus(pt.y);
       var i = 0;
       item.xs.forEach(function (xx, k) { if (Math.abs(xx - x) < Math.abs(item.xs[i] - x)) i = k; });
       werte[i] = Math.min(ay.max, Math.max(ymin, W.diagramm.einrasten(y, ay.schritt / 2)));
