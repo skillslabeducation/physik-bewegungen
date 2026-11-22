@@ -42,6 +42,7 @@
       var tid = id.slice(2);
       return trainerBekannt(tid) ? W.trainer.erzeuge(tid, W.physik.rnd(Date.now() + (wurf++))) : null;
     }
+    if (id.indexOf('r:') === 0) return W.radar && W.radar.itemNachId ? W.radar.itemNachId(id) : null;
     var gefunden = null;
     akten().forEach(function (a) {
       (a.ueben || []).concat(a.gutachten || []).forEach(function (it) { if (it.id === id) gefunden = it; });
@@ -108,7 +109,8 @@
         h('a', { href: '#/nachermittlung', class: 'kachel' + (nm ? ' kachel--amber' : '') }, h('span', { class: 'kachel__zahl mono' }, String(nm)), h('span', null, 'Nachermittlung')),
         h('a', { href: '#/pruefung', class: 'kachel' }, h('span', { class: 'kachel__zahl mono' }, best['1'] ? prozent(best['1']) : '—'), h('span', null, 'Prüfung')),
         h('a', { href: '#/formelkarte', class: 'kachel' }, h('span', { class: 'kachel__zahl mono' }, 'A4'), h('span', null, 'Formelkarte')),
-        h('a', { href: '#/radarfalle', class: 'kachel' }, h('span', { class: 'kachel__zahl mono' }, W.radar ? String(W.state.data.radar.best || 0) : 'folgt'), h('span', null, 'Radarfalle')))));
+        h('a', { href: '#/radarfalle', class: 'kachel' }, h('span', { class: 'kachel__zahl mono' }, W.radar ? String(W.state.data.radar.best || 0) : 'folgt'), h('span', null, 'Radarfalle')),
+        W.labor ? h('a', { href: '#/labor', class: 'kachel' }, h('span', { class: 'kachel__zahl mono' }, 's(t)'), h('span', null, 'Labor')) : null)));
   }
 
   /* ---------- Akte ---------- */
@@ -174,6 +176,15 @@
     }));
   }
 
+  /** Bewegungs-Simulator in einer Verstehen-Karte: demo = 'labor:<preset>'. */
+  function laborDemo(demo) {
+    var m = /^labor:(\w+)$/.exec(String(demo));
+    if (!m || !W.labor || W.labor.PRESETS.indexOf(m[1]) < 0) return null;
+    var el = h('div', { class: 'labor-demo' });
+    W.labor.mount(el, m[1], { eingebettet: true });
+    return el;
+  }
+
   function verstehen(host, a) {
     var karten = a.karten || [];
     if (!karten.length) { host.appendChild(karte('', h('p', null, 'Keine Karten.'))); return; }
@@ -190,6 +201,7 @@
         h('h2', null, k.titel),
         h('div', { class: 'wissen__text', html: k.text || '' }),
         k.abb && W.diagramm ? h('figure', { class: 'abb' }, W.diagramm.zeichne(k.abb)) : null,
+        k.demo ? laborDemo(k.demo) : null,
         k.merk ? h('div', { class: 'merk' }, h('strong', null, 'Merke'), h('p', { html: k.merk })) : null,
         k.achtung ? h('div', { class: 'achtung' }, h('strong', null, 'Achtung, Falle'), h('div', { html: k.achtung })) : null),
         h('div', { class: 'aktionen aktionen--zwei' },

@@ -63,7 +63,7 @@
           break;
         case 'formelkarte': W.extras.formelkarte(main); break;
         case 'radarfalle': W.extras.radarfalle(main); break;
-        case 'labor': W.extras.labor(main); break;
+        case 'labor': W.extras.labor(main, r.args); break;
         default: W.ansichten.aktenschrank(main);
       }
     } catch (e) {

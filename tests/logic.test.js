@@ -236,4 +236,100 @@ test('formelRichtig zählt je Schlüssel hoch', () => {
   eq(W.state.data.formeln['a=v/t'], undefined);
 });
 
+/* ---------- Labor (Bewegungs-Simulator) und Radarfalle ---------- */
+const { near } = require('./mini');
+const AKTEN_IDS = ['einheiten', 'mittel', 'gleichfoermig', 'beschleunigt', 'diagramme', 'messdaten', 'einholen', 'bremsen', 'fall'];
+function alles() { const W = laden(); return { W, ctx: laden.kontext }; }
+
+test('Labor: anfahren mit a = 2 m/s² nach 5 s: s = 25 m, v = 10 m/s', () => {
+  const { W } = alles();
+  const z = W.labor.zustand('anfahren', { a: 2 }, 5);
+  eq(z.length, 1);
+  near(z[0].s, 25); near(z[0].v, 10); near(z[0].a, 2);
+});
+
+test('Labor: bremsen von 9 m/s mit 4,5 m/s² steht ab 2 s bei s = 9 m, ohne rückwärts zu fahren', () => {
+  const { W } = alles();
+  const z = W.labor.zustand('bremsen', { v0: 9, a: 4.5 }, 3)[0];
+  near(z.v, 0); near(z.s, 9); near(z.a, 0);
+  const z1 = W.labor.zustand('bremsen', { v0: 9, a: 4.5 }, 1)[0];
+  near(z1.v, 4.5); near(z1.s, 6.75); near(z1.a, -4.5);
+  near(W.labor.zustand('bremsen', { v0: 9, a: 4.5 }, 10)[0].s, 9);
+});
+
+test('Labor: einholen (Blatt 2 A1): beide Fahrzeuge nach 6 s bei 28 m', () => {
+  const { W } = alles();
+  const z = W.labor.zustand('einholen', { v1: 28 / 6, a2: 14 / 9 }, 6);
+  eq(z.length, 2);
+  near(z[0].s, 28, 1e-6); near(z[1].s, 28, 1e-6);
+  near(z[0].a, 0); near(z[1].a, 14 / 9);
+  const tp = W.labor.treffpunkt({ v1: 28 / 6, a2: 14 / 9 });
+  near(tp.t, 6, 1e-9); near(tp.s, 28, 1e-9);
+});
+
+test('Labor: gleichförmig und freier Fall', () => {
+  const { W } = alles();
+  const g = W.labor.zustand('gleichfoermig', { v: 10 }, 3)[0];
+  near(g.s, 30); near(g.v, 10); near(g.a, 0);
+  const f = W.labor.zustand('fall', { g: 9.81, h: 20 }, 1)[0];
+  near(f.s, 4.905); near(f.v, 9.81); near(f.a, 9.81);
+  const unten = W.labor.zustand('fall', { g: 9.81, h: 20 }, 5)[0];
+  near(unten.s, 20); near(unten.v, 0);
+  near(W.labor.dauer('fall', { g: 9.81, h: 20 }), Math.sqrt(40 / 9.81), 1e-9);
+});
+
+test('Labor: fünf Voreinstellungen mit Reglern und Grundwerten im Reglerbereich', () => {
+  const { W } = alles();
+  eq(W.labor.PRESETS, ['gleichfoermig', 'anfahren', 'bremsen', 'fall', 'einholen']);
+  W.labor.PRESETS.forEach((p) => {
+    const def = W.labor.preset(p);
+    ok(def.titel && def.regler.length, p);
+    def.regler.forEach((r) => ok(r.wert >= r.min && r.wert <= r.max && r.label && r.einheit, p + ' ' + r.key));
+    const z = W.labor.zustand(p, {}, 1);
+    ok(z.every((x) => isFinite(x.s) && isFinite(x.v) && isFinite(x.a)), p + ': Grundwerte');
+    ok(W.labor.dauer(p, {}) > 0, p + ': Dauer');
+  });
+});
+
+test('Radarfalle: mindestens 40 Aussagen, jede mit Erklärung und Akte, alle neun Akten, halb wahr', () => {
+  const { W } = alles();
+  const A = W.radar.aussagen;
+  ok(A.length >= 40, 'nur ' + A.length);
+  A.forEach((a, i) => {
+    ok(a.text && typeof a.stimmt === 'boolean' && a.erkl, 'Aussage ' + i);
+    ok(AKTEN_IDS.indexOf(a.akte) >= 0, 'Akte unbekannt bei ' + i + ': ' + a.akte);
+    ok(!/\d\.\d/.test(a.text + a.erkl), 'Dezimalpunkt statt Komma bei ' + i);
+    ok(!/(^|[\s(=])-\s?\d/.test(a.text + a.erkl), 'Bindestrich statt Minuszeichen bei ' + i);
+  });
+  AKTEN_IDS.forEach((id) => ok(A.filter((a) => a.akte === id).length >= 4, 'zu wenig Aussagen zu ' + id));
+  eq(A.filter((a) => a.stimmt).length, A.filter((a) => !a.stimmt).length, 'gleich viele wahre und falsche');
+  eq(new Set(A.map((a) => a.text)).size, A.length, 'doppelte Aussage');
+});
+
+test('Radarfalle: Punkte = richtig minus falsch, nie unter 0', () => {
+  const { W } = alles();
+  eq(W.radar.punkte(5, 2), 3);
+  eq(W.radar.punkte(1, 4), 0);
+  eq(W.radar.DAUER, 60);
+});
+
+test('Radarfalle: Fehler kommen als r:<i> in die Nachermittlung und lösen sich auf', () => {
+  const { W } = alles();
+  W.state.load();
+  const i = W.radar.aussagen.findIndex((a) => !a.stimmt);
+  const it = W.ansichten.itemNachId('r:' + i);
+  eq(it.typ, 'wahl');
+  eq(it.id, 'r:' + i);
+  eq(it.optionen, ['Stimmt', 'Stimmt nicht']);
+  eq(it.richtig, 1);
+  ok(W.aufgaben.optErklOk(it), 'optErkl');
+  ok(it.frage.indexOf(W.radar.aussagen[i].text) >= 0, 'Frage ohne Aussage');
+  eq(W.ansichten.itemNachId('r:99999'), null);
+  W.state.itemErgebnis('r:' + i, false);
+  eq(W.ansichten.nmAnzahl(), 1);
+  W.state.itemErgebnis('r:' + i, true);
+  W.state.itemErgebnis('r:' + i, true);
+  eq(W.ansichten.nmAnzahl(), 0);
+});
+
 fertig('logic');

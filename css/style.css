@@ -481,3 +481,61 @@ table.tab .eingabe--zelle { width: 100%; min-width: 72px; min-height: 44px; font
   .fk-formeln { font-size: 11px; }
   .fk-graph figcaption { font-size: 8px; }
 }
+
+/* ---------- Labor und Radarfalle (Task 12) ---------- */
+.labor { display: grid; gap: 10px; }
+.labor__text { margin: 0; }
+.labor__regler { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.regler { display: grid; gap: 2px; padding: 8px 12px; background: var(--blatt); border: 1px solid var(--linie); border-radius: var(--r); }
+.regler__kopf { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: .9rem; color: var(--grau); }
+.regler__wert { color: var(--tinte); white-space: nowrap; }
+.regler input[type=range] { width: 100%; min-height: 44px; margin: 0; accent-color: var(--akzent); cursor: pointer; }
+.labor__steuer { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.labor__steuer .btn { min-width: 120px; }
+.labor__bahn { background: var(--blatt); border: 1px solid var(--linie); border-radius: var(--r); padding: 6px; }
+.labor__strecke { display: block; width: 100%; height: auto; font-family: var(--sans); }
+.labor__strecke--fall { max-width: 230px; margin: 0 auto; }
+.labor-strasse { stroke: var(--linie-stark); stroke-width: 2; }
+.labor-skala { stroke: var(--tinte); stroke-width: 1.5; }
+.labor-zahl { fill: var(--grau); font: 500 12px var(--mono); }
+.labor-start { stroke: var(--grau); stroke-width: 1; stroke-dasharray: 3 4; }
+.labor-boden { fill: var(--linie-stark); }
+.labor-spur { stroke: #2b2b2b; stroke-width: 4; stroke-linecap: round; opacity: .45; }
+.labor-treff line { stroke: var(--akzent); stroke-width: 2; stroke-dasharray: 5 4; }
+.labor-treff__text { fill: var(--akzent); font-weight: 600; }
+.labor-fz { color: var(--tinte); }
+.labor-fz--2 { color: var(--akzent); }
+.labor-fz__koerper { fill: currentColor; }
+.labor-fz__fenster { fill: var(--blatt); }
+.labor-fz__rad { fill: var(--tinte); stroke: var(--blatt); stroke-width: 1.5; }
+.labor-fz__reifen { fill: none; stroke: currentColor; stroke-width: 2.5; }
+.labor-fz__rahmen { fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.labor-fz__nr { fill: currentColor; font: 600 13px var(--mono); }
+.labor__werte { display: grid; gap: 2px; font-size: .92rem; }
+.labor__zeile { display: flex; flex-wrap: wrap; gap: 2px 18px; }
+.labor__name { min-width: 72px; color: var(--grau); }
+.labor__ergebnis { margin: 0; min-height: 1.55em; font-weight: 600; color: var(--akzent); }
+.labor__graphen { display: grid; gap: 8px; grid-template-columns: 1fr; }
+.labor__graph { margin: 0; padding: 6px; }
+.labor__graph .dia--klein { max-width: 420px; margin: 0 auto; }
+.labor-kurve--2 { stroke-dasharray: 8 5; }
+.labor-wahl { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 14px; }
+.labor-demo { margin: 14px 0; padding-top: 12px; border-top: 1px dashed var(--linie-stark); }
+.labor__mehr { margin: 0; }
+@media (min-width: 700px) {
+  .labor__graphen { grid-template-columns: repeat(3, 1fr); }
+}
+
+.falle__karte { min-height: 180px; display: grid; place-items: center; padding: 20px; margin: 12px 0; text-align: center; background: var(--blatt); border: 1px solid var(--linie-stark); border-radius: var(--r); }
+.falle__aussage { font-size: 1.2rem; font-weight: 600; line-height: 1.45; margin: 0; }
+.falle__erkl { font-size: .95rem; margin: 10px 0 0; color: var(--rot); }
+.falle__erkl:empty { display: none; }
+.falle__karte--ok { animation: falle-ok .4s; }
+.falle__karte--falsch { border-color: var(--rot); background: var(--rot-hell); }
+@keyframes falle-ok { from { background: var(--akzent-hell); border-color: var(--akzent); } to { background: var(--blatt); } }
+.falle__knoepfe { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.falle__btn { min-height: 72px; font-size: 1.05rem; }
+.falle__btn--ja { border-color: var(--akzent); color: var(--akzent); }
+.falle__btn--nein { border-color: var(--rot); color: var(--rot); }
+.falle__stand { font-size: 1.3rem; }
+.falle__fehler { margin: 0; }
