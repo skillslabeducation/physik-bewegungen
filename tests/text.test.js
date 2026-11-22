@@ -101,6 +101,15 @@ test('parseZahl: Einheit, Leerzeichen, Tausenderpunkt, Minus', () => {
   eq(T.parseZahl('−4,5'), -4.5);
 });
 
+test('parseZahl: Einheit mit Ziffern oder Hochzahl wird abgeschnitten', () => {
+  eq(T.parseZahl('1,56 m/s2'), 1.56);
+  eq(T.parseZahl('1,56 m/s^2'), 1.56);
+  eq(T.parseZahl('1,56m/s2'), 1.56);
+  eq(T.parseZahl('9,81 m/s²'), 9.81);
+  eq(T.parseZahl('120 km/h'), 120);
+  eq(T.parseZahl('4000 s2'), 4000);
+});
+
 test('passt: Sperrliste geht vor der Tippfehler-Toleranz', () => {
   ok(!T.passt('Bronchien', ['Bronchiolen', 'Bronchiole'], ['Bronchien', 'Bronchie']));
   ok(!T.passt('Bronchie', ['Bronchiolen', 'Bronchiole'], ['Bronchien', 'Bronchie']));

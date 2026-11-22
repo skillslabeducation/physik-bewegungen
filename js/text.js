@@ -91,6 +91,8 @@
   /** Die letzte Zahl im Text: „ca. 192“, „197,4 kcal“, „1.125“ (Tausenderpunkt), „1 125“, „67,5 km/h“. */
   function parseZahl(s) {
     var t = String(s == null ? '' : s).replace(/[−–]/g, '-').replace(/(\d)[ \u00a0](?=\d{3}(?!\d))/g, '$1');
+    // Einheit am Ende abschneiden, auch mit Ziffern oder Hochzahl (m/s2, m/s^2, m/s²).
+    t = t.replace(/(\d)\s*[a-zA-Zµ][a-zA-Z0-9\/^²³·* ]*$/, '$1');
     var m = t.match(/-?\d+(?:[.,]\d+)?/g);
     if (!m) return NaN;
     var z = m[m.length - 1];
