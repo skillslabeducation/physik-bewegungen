@@ -48,7 +48,7 @@ node tests/inhalt.test.js       # alle Akten: vollständig, jede Aufgabe mit ihr
 node tests/logic.test.js        # Fortschritt, Nachermittlung, Rang, Speicher
 node tests/physik.test.js       # Formeln, Umrechnung, Mittelpunkt-Auswertung, Lösungen der Blätter
 node tests/privat.test.js       # keine privaten Namen im Code
-node tests/pruefung.test.js       # Prüfung: Punkte, Varianten, Auswertung
+node tests/pruefung.test.js     # Prüfung: Punkte, Varianten, Auswertung
 node tests/text.test.js         # Eingaben, Dezimalkomma, Tippfehler
 node tests/trainer.test.js      # Rechentrainer mit Startwert
 ```
