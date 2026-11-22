@@ -26,6 +26,7 @@
   var TE = 300;                                   // Ende der Aufzeichnung
   var S1_FALSCH = V * T1;                         // Bericht: s = v·t mit Endgeschwindigkeit, 3200 m
   var SB_FALSCH = V * TB;                         // Bericht: 2000 m
+  var T_AB = 225, V_AB = V - AB * (T_AB - T2);    // Ablesen mitten in der Bremsung: 20 m/s
 
   function sICE(t) {
     if (t <= T1) return P.sBeschl(A1, t);
@@ -184,7 +185,7 @@
           'Die Ursprungsgerade gehört zu v(t) beim Anfahren. An der Hochachse steht v, gefragt ist s(t).'] },
 
       { id: 'diagramme-u3', typ: 'mehrfach', quelle: ['Tafel S. 12', 'Tafel 17.11.'],
-        frage: 'Tafel S. 12: Ab t = ' + T2 + ' s bremst der ICE gleichmäßig bis zum Stillstand. Wähle alle Graphen, die zu dieser Bremsung passen.',
+        frage: 'Tafel S. 12: Ab t = ' + T2 + ' s bremst der ICE gleichmäßig bis zum Stillstand (Uhr und Weg ab Bremsbeginn auf null). Wähle alle Graphen, die zu dieser Bremsung passen.',
         optionen: ['s-gleich', 'v-gleich', 'a-gleich', 's-beschl', 'v-beschl', 'a-beschl', 's-brems', 'v-brems', 'a-brems'].map(function (a) { return D.mini(a); }),
         richtig: [6, 7, 8],
         optErkl: ['Eine Gerade in s(t) heißt konstante Geschwindigkeit. Beim Bremsen wird s(t) immer flacher.',
@@ -207,10 +208,11 @@
           'Ein waagerechter s(t)-Graph heißt: Der Ort ändert sich nicht, der Zug steht.' },
 
       { id: 'diagramme-u5', typ: 'zahl',
-        frage: 'Ablesen: Der Ausdruck zeigt v(t) der ganzen ICE-Fahrt. Wie schnell war der ICE bei t = 50 s?',
+        frage: 'Ablesen: Der Ausdruck zeigt v(t) der ganzen ICE-Fahrt. Wie schnell war der ICE bei t = ' + T_AB + ' s?',
         abb: ABB_V,
-        antwort: P.vBeschl(A1, 50), tol: 1, einheit: 'm/s',
-        erkl: 'Bei t = 50 s senkrecht hoch bis zum Graphen, dann waagerecht zur v-Achse: 25 m/s, das sind 90 km/h. Probe: v = a·t = 0,5 m/s² · 50 s = 25 m/s.' },
+        antwort: V_AB, tol: 1, einheit: 'm/s',
+        erkl: 'Bei t = ' + T_AB + ' s senkrecht hoch bis zum Graphen, dann waagerecht zur v-Achse: ' + f(V_AB) + ' m/s, das sind ' + f(P.kmh(V_AB)) + ' km/h. ' +
+          'Der Punkt liegt mitten in der Bremsung, ' + f(T_AB - T2) + ' s nach Bremsbeginn. Probe: v = v₀ − a·t = 40 m/s − 0,8 m/s² · ' + f(T_AB - T2) + ' s = ' + f(V_AB) + ' m/s.' },
 
       { id: 'diagramme-u6', typ: 'rechnung', quelle: 'Tafel S. 3',
         frage: 'Tafel S. 3: Bestimme aus dem v(t)-Graphen die Beschleunigung. Nimm die beiden markierten Punkte.',
@@ -256,12 +258,12 @@
               F.messwertStattDifferenz.erkl + ' Für Δs gilt 1600 m − 400 m = 1200 m. So ergäbe sich ≈ ' + f(1600 / 30) + ' m/s.',
               F.kehrwert.erkl + ' Das ergäbe ' + f(30 / 1200, 3) + '.'] }
         ],
-        antwort: V_STEIG, einheit: 'm/s', formel: 'v-steigung',
+        antwort: V_STEIG, einheit: 'm/s', formel: 'v-mittel',
         loesung: '<p>v = Δs/Δt = (s₂ − s₁)/(t₂ − t₁)</p><p>v = (1600 m − 400 m) / (40 s − 10 s) = 1200 m / 30 s = ' + f(V_STEIG) + ' m/s</p>' +
           '<p>In km/h: ' + f(V_STEIG) + ' m/s · 3,6 = ' + f(P.kmh(V_STEIG)) + ' km/h. Das ist die Höhe der waagerechten Linie im v(t)-Ausdruck.</p>' },
 
       { id: 'diagramme-u8', typ: 'rechnung', quelle: 'Tafel S. 3',
-        frage: 'Tafel S. 3: An der Tafel ist für a = 2 m/s² (aus dem Stand) die Parabel s(t) gezeichnet. Welcher Wert gehört zu t = 3 s? Rechne nach.',
+        frage: 'Tafel S. 3: An der Tafel ist für a = 2 m/s² (aus dem Stand) die Parabel s(t) gezeichnet. Welcher Weg s gehört zu t = 3 s? Rechne nach.',
         gegeben: '<p>a = 2 m/s², t = 3 s</p>',
         schritte: [
           { art: 'gg', optionen: ['Gegeben: a = 2 m/s², t = 3 s<br>Gesucht: s in m', 'Gegeben: a = 2 m/s², t = 3 s<br>Gesucht: v in m/s', 'Gegeben: a = 2 m/s, t = 3 s<br>Gesucht: s in m'],
@@ -288,7 +290,7 @@
 
       { id: 'diagramme-u10', typ: 'punkte', quelle: 'Tafel S. 3',
         frage: 'Tafel S. 3: Zeichne den Graphen von s(t) = a/2·t² mit a = 2 m/s², also s(t) = 1 m/s² · t². Setze die Punkte für t = 1 s, 2 s, 3 s und 4 s.',
-        achsen: { x: { g: 't', e: 's', max: 4, schritt: 1 }, y: { g: 's', e: 'm', max: 16, schritt: 2 } },
+        achsen: { x: { g: 't', e: 's', max: 4, schritt: 1 }, y: { g: 's', e: 'm', max: 18, schritt: 2 } },
         xs: [1, 2, 3, 4],
         soll: [1, 2, 3, 4].map(function (t) { return P.sBeschl(A3, t); }),
         kurve: D.kurve(function (t) { return P.sBeschl(A3, t); }, 0, 4),
@@ -310,7 +312,7 @@
         optErkl: ['Richtig: Der größte Wert 40 m/s passt drauf, und der Graph nutzt fast die ganze Höhe. In 5er-Schritten lässt sich gut ablesen.',
           'Dann endet die Achse bei 10 m/s. Der Graph mit 40 m/s passt nicht aufs Blatt.',
           'Dann ist 40 m/s nicht einmal ein Kästchen hoch. Der Graph wäre fast flach und nicht ablesbar.',
-          'Die Skala passt nicht zur Einheit: 40 m/s sind ' + f(V_KMH) + ' km/h und passen nicht auf eine Achse bis 50 km/h.'] },
+          'Die Achse ist zu kurz: 40 m/s sind ' + f(V_KMH) + ' km/h, eine Achse bis 50 km/h reicht dafür nicht.'] },
 
       { id: 'diagramme-u13', typ: 'wahl',
         frage: 'Beschrifte das Diagramm sinnvoll: Wie beschriftest du die Achsen eines a(t)-Diagramms für die ICE-Fahrt?',
@@ -383,12 +385,12 @@
         tipp: 'Geh die Abschnitte der Reihe nach durch: 0 bis 80 s, 80 bis 200 s, 200 bis 250 s, ab 250 s. Nenne jeweils die Form, die Werte und die Bewegungsart.',
         begriffe: [
           { name: 'Ursprungsgerade', muster: ['ursprungsgerade', 'ursprung'] },
-          { name: 'gleichmäßig beschleunigt', muster: ['beschleunigt', 'anfahren', 'faehrt an'] },
+          { name: 'gleichmäßig beschleunigt', muster: ['beschleunigt', 'anfahren'] },
           { name: 'waagerecht', muster: ['waagerecht', 'waagrecht', 'horizontal'] },
-          { name: 'konstant', muster: ['konstant', 'gleichfoermig', 'gleich schnell'] },
+          { name: 'konstant', muster: ['konstant', 'gleichfoermig'] },
           { name: 'fallende Gerade', muster: ['faellt', 'fallend', 'sinkt'] },
           { name: 'Bremsen', muster: ['bremst', 'bremsen', 'abbremsen'] },
-          { name: 'Stillstand', muster: ['steht', 'stillstand', 'haelt', 'v 0'] }
+          { name: 'Stillstand', muster: ['stillstand', 'steht', 'haelt'] }
         ],
         punkte: [
           { text: '0 bis 80 s: Ursprungsgerade bis 40 m/s. Der Zug fährt aus dem Stand gleichmäßig beschleunigt an (Steigung a = 0,5 m/s²).', p: 1 },
@@ -416,7 +418,7 @@
         ],
         punkte: [
           { text: '0 bis 80 s: nach oben offene Parabel, immer steiler bis 1600 m. Der Zug wird schneller (Anfahren).', p: 1 },
-          { text: '80 bis 200 s: Gerade mit gleicher Steigung bis 6400 m. Konstante Geschwindigkeit 40 m/s.', p: 1 },
+          { text: '80 bis 200 s: Gerade mit gleichbleibender Steigung bis 6400 m. Konstante Geschwindigkeit 40 m/s.', p: 1 },
           { text: '200 bis 250 s: wird immer flacher (nach unten offene Parabel) bis 7400 m. Der Zug bremst.', p: 1 },
           { text: 'Ab 250 s waagerecht bei 7400 m: Steigung null, der Zug steht. Der Graph fällt nie, weil der Zug nur vorwärts fährt.', p: 1 }
         ],
@@ -431,9 +433,9 @@
         frage: 'Bericht, Punkt 1: „Anfahren mit 0,5 m/s², nach 80 s 144 km/h.“ Bestimme aus dem v(t)-Ausdruck die Beschleunigung beim Anfahren (Steigung von 0 bis 80 s).',
         abb: ABB_V,
         schritte: [
-          { art: 'gg', optionen: ['Gegeben: v₁ = 0 bei t₁ = 0, v₂ = 40 m/s bei t₂ = 80 s<br>Gesucht: a in m/s²',
-            'Gegeben: v₁ = 0 bei t₁ = 0, v₂ = 144 m/s bei t₂ = 80 s<br>Gesucht: a in m/s²',
-            'Gegeben: v₁ = 0 bei t₁ = 0, v₂ = 40 m/s bei t₂ = 80 s<br>Gesucht: s in m'],
+          { art: 'gg', optionen: ['Gegeben: v₁ = 0 m/s bei t₁ = 0 s, v₂ = 40 m/s bei t₂ = 80 s<br>Gesucht: a in m/s²',
+            'Gegeben: v₁ = 0 m/s bei t₁ = 0 s, v₂ = 144 m/s bei t₂ = 80 s<br>Gesucht: a in m/s²',
+            'Gegeben: v₁ = 0 m/s bei t₁ = 0 s, v₂ = 40 m/s bei t₂ = 80 s<br>Gesucht: s in m'],
             richtig: 0,
             optErkl: ['Richtig: Am Ende des Anfahrens zeigt der Ausdruck 40 m/s bei 80 s.',
               '144 ist der Wert in km/h. An der Achse steht v in m/s, abgelesen sind es 40 m/s.',
@@ -467,7 +469,7 @@
             richtig: 0,
             optErkl: ['Richtig: Punkt 2 nennt einen Weg.',
               'Die Geschwindigkeit hast du schon geprüft (40 m/s). Jetzt geht es um den Weg.',
-              '40 m/s hat der Zug erst am Ende. Für den Weg beim Anfahren brauchst du die Beschleunigung.'] },
+              'Mit v = 40 m/s und s = v·t käme der doppelte Weg heraus, genau der Fehler des Berichts. Für s = a/2·t² brauchst du a.'] },
           { art: 'formel', optionen: ['s = a/2·t²', 's = v·t', 'v = a·t'], richtig: 0,
             optErkl: ['Richtig: Aus dem Stand gilt s = a/2·t², der s(t)-Graph ist eine Halbparabel.',
               F.gleichfoermig.erkl + ' Genau so ist der Bericht auf 3,2 km gekommen.',
@@ -496,7 +498,7 @@
         optErkl: ['Richtig: s = v₀·t − a/2·t² = 40 m/s · 50 s − 0,4 m/s² · (50 s)² = 2000 m − 1000 m = 1000 m. Das ist auch die Dreiecksfläche unter v(t): ½ · 50 s · 40 m/s.',
           'Das ist s = v·t mit der Anfangsgeschwindigkeit, als wäre der Zug 50 s lang mit 40 m/s weitergefahren. Genau so kommt der Bericht auf 2,0 km.',
           'Beim Bremsen wird a/2·t² abgezogen, nicht addiert: s = v₀·t − a/2·t².',
-          F.halbVergessen.erkl + ' Dann bliebe 0 m übrig, als wäre der Zug beim Bremsen gar nicht gefahren.'] },
+          'In s = v₀·t − a/2·t² steckt die Hälfte. Du hast sie vergessen. Dann bliebe 0 m übrig, als wäre der Zug beim Bremsen gar nicht gefahren.'] },
 
       { id: 'diagramme-g4', typ: 'wahl',
         frage: 'Auf Ausdruck B ist die Beschriftung der Hochachse abgerissen. Der Graph liegt von 0 bis 80 s waagerecht oberhalb der t-Achse, von 80 s bis 200 s auf der t-Achse, ' +
