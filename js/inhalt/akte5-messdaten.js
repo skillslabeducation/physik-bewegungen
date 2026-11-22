@@ -32,9 +32,9 @@
   var vGesamt = P.vGleich(S2[5] - S2[0], T2[5] - T2[0]);   // 2,48 m/s
   var vScooter = P.ms(20);                                  // 5,56 m/s
   var sScooter = P.sGleich(vScooter, 20);                   // 111,1 m in 20 s
-  var nScooter = sScooter / SL;                             // 138,9 Schritte
   var nMax = 0;
   for (var i = 1; i < N2.length; i++) nMax = Math.max(nMax, N2[i] - N2[i - 1]);   // 70 Schritte
+  var sMax = r(nMax * SL);                                  // 56 m in 20 s (v̄ = 2,8 m/s)
 
   /* ---------- Tabellen (HTML) ---------- */
   function zeile(kopf, werte, tag) { return '<tr><th>' + kopf + '</th>' + werte.map(function (w) { return '<' + (tag || 'td') + '>' + w + '</' + (tag || 'td') + '>'; }).join('') + '</tr>'; }
@@ -101,7 +101,7 @@
 
       { titel: 'Den Graphen der Ergebnisse lesen',
         text: '<p>Trägst du die v̄-Werte der Lauf-App bei den Intervallmitten 10, 30, 50, 70 und 90 s ein, siehst du den Lauf: Erst wird der Läufer schneller (' + f(V2.wert[0], 1) + ' → ' + f(V2.wert[1]) + ' → ' + f(V2.wert[2]) + ' m/s), dann läuft er gleich schnell (' + f(V2.wert[3]) + ' m/s), am Ende wird er langsamer (' + f(V2.wert[4]) + ' m/s).</p>' +
-          '<p>Die Beschleunigungen sagen dasselbe: ā = ' + f(A2.wert[0]) + ' m/s² bei ' + f(A2.t[0]) + ' s und ' + f(A2.t[1]) + ' s (schneller werden), ā = ' + f(A2.wert[2]) + ' bei ' + f(A2.t[2]) + ' s (gleich schnell), ā = ' + f(A2.wert[3]) + ' m/s² bei ' + f(A2.t[3]) + ' s (langsamer werden).</p>',
+          '<p>Die Beschleunigungen sagen dasselbe: ā = ' + f(A2.wert[0]) + ' m/s² bei ' + f(A2.t[0]) + ' s und ' + f(A2.t[1]) + ' s (schneller werden), ā = ' + f(A2.wert[2]) + ' m/s² bei ' + f(A2.t[2]) + ' s (gleich schnell), ā = ' + f(A2.wert[3]) + ' m/s² bei ' + f(A2.t[3]) + ' s (langsamer werden).</p>',
         abb: { achsen: { x: AX_APP, y: { g: 'v', e: 'm/s', max: 3, schritt: 0.5 } }, kurven: [{ punkte: paare(V2.t, V2.wert), farbe: 'v' }], marken: paare(V2.t, V2.wert) },
         merk: 'ā > 0: schneller werden. ā = 0: gleich schnell. ā < 0: langsamer werden.' }
     ],
@@ -129,7 +129,7 @@
               F.messwertStattDifferenz.erkl + ' Das ergäbe ' + f(12 / 4) + ' m/s.',
               'Oben steht die Differenz, unten nur der Zeitpunkt 4 s. Auch die Zeit braucht die Differenz: 4 s − 2 s = 2 s. Das ergäbe ' + f(7 / 4) + ' m/s.'] }
         ],
-        antwort: V1.wert[1], einheit: 'm/s', formel: 'v-gleich',
+        antwort: V1.wert[1], einheit: 'm/s', formel: 'v-mittel',
         loesung: '<p>v̄₂₃ = (s₃ − s₂)/(t₃ − t₂)<br>v̄₂₃ = (12 m − 5 m)/(4 s − 2 s) = 7 m / 2 s = ' + f(V1.wert[1]) + ' m/s<br>Zeitpunkt: t₂₃ = (2 s + 4 s)/2 = ' + f(V1.t[1]) + ' s</p>' },
 
       { id: 'messdaten-u2', typ: 'wahl', quelle: 'Tafel 17.11.',
@@ -162,7 +162,7 @@
               'Oben die Differenz, unten aber nur der Zeitpunkt 5 s. Δt = 5 s − 3 s = 2 s. Das ergäbe ' + f(0.5 / 5) + ' m/s².',
               F.kehrwert.erkl + ' Das ergäbe ' + f(2 / 0.5) + ' s²/m.'] }
         ],
-        antwort: A1.wert[1], einheit: 'm/s²', formel: 'a-dv',
+        antwort: A1.wert[1], einheit: 'm/s²', formel: 'a-mittel',
         loesung: '<p>ā₂₋₄ = (v̄₃₄ − v̄₂₃)/(t₃₄ − t₂₃)<br>ā₂₋₄ = (4 m/s − 3,5 m/s)/(5 s − 3 s) = 0,5 m/s / 2 s = ' + f(A1.wert[1]) + ' m/s²<br>Zeitpunkt: (3 s + 5 s)/2 = ' + f(A1.t[1]) + ' s</p>' },
 
       { id: 'messdaten-u4', typ: 'tabelle', quelle: 'Tafel 17.11.',
@@ -183,13 +183,11 @@
         kurve: paare(V1.t, V1.wert) },
 
       /* ----- Tafel S. 13, Aufgabe 1: Lauf-App ----- */
-      { id: 'messdaten-u6', typ: 'tabelle', quelle: 'Tafel S. 13, A1',
-        frage: 'Tafel S. 13, Aufgabe 1: Ein Läufer misst mit einer App alle 20 s, wie viele Schritte er seit dem Start gemacht hat. Seine Schrittlänge ist ' + f(SL) + ' m. Rechne die Schrittzahlen in Strecken um.',
-        spalten: ['t in s'].concat(T2.map(f)),
-        zeilen: [
-          { kopf: 'Schritte n', zellen: N2.map(function (n) { return { fix: f(n) }; }) },
-          { kopf: 'Strecke s in m', zellen: S2.map(function (s, k) { return k === 0 ? { fix: f(s) } : { zahl: s }; }) }
-        ] },
+      { id: 'messdaten-u6', typ: 'punkte', quelle: 'Tafel S. 13, A1',
+        frage: 'Tafel S. 13, Aufgabe 1: Ein Läufer misst mit einer App alle 20 s, wie viele Schritte er seit dem Start gemacht hat. Seine Schrittlänge ist ' + f(SL) + ' m. Rechne die Schrittzahlen in Strecken um (s = n · ' + f(SL) + ' m) und zeichne den s(t)-Graphen. Der Punkt rastet im Karo ein, setze ihn so nah wie möglich an den richtigen Wert.' + TAB_APP,
+        achsen: { x: AX_APP, y: { g: 's', e: 'm', min: 0, max: 280, schritt: 40 } },
+        xs: T2.slice(1), soll: S2.slice(1), tol: 10,
+        kurve: paare(T2, S2) },
 
       { id: 'messdaten-u7', typ: 'rechnung', quelle: 'Tafel S. 13, A1',
         frage: 'Tafel S. 13 (Lauf-App, Schrittlänge ' + f(SL) + ' m): Berechne die mittlere Geschwindigkeit zwischen t = 20 s und t = 40 s.',
@@ -213,7 +211,7 @@
               'Das sind Schritte, keine Meter. Heraus kämen ' + f(60 / 20) + ' Schritte pro Sekunde, keine Geschwindigkeit in m/s.',
               F.kehrwert.erkl + ' Das ergäbe etwa ' + f(20 / 48) + ' s/m.'] }
         ],
-        antwort: V2.wert[1], einheit: 'm/s', formel: 'v-gleich',
+        antwort: V2.wert[1], einheit: 'm/s', formel: 'v-mittel',
         loesung: '<p>s₁ = 50 · 0,8 m = ' + f(S2[1]) + ' m, s₂ = 110 · 0,8 m = ' + f(S2[2]) + ' m<br>v̄ = (s₂ − s₁)/(t₂ − t₁)<br>v̄ = (88 m − 40 m)/(40 s − 20 s) = 48 m / 20 s = ' + f(V2.wert[1]) + ' m/s<br>Zeitpunkt: t₁₂ = (20 s + 40 s)/2 = ' + f(V2.t[1]) + ' s</p>' },
 
       { id: 'messdaten-u8', typ: 'behauptung', quelle: 'Tafel S. 13, A1',
@@ -223,7 +221,7 @@
           'Der Wert gehört zu t = 40 s, weil die App ihn erst am Ende des Intervalls kennt.',
           'Der Wert gehört zu t = 10 s, das ist die halbe Intervalllänge.'],
         richtig: 0,
-        erkl: F.intervallAnfang.erkl + ' t₁₂ = (t₁ + t₂)/2 = (20 s + 40 s)/2 = 30 s.' },
+        erkl: 'Falsch: Der Wert gehört zur Intervallmitte, nicht zum Anfang. t₁₂ = (t₁ + t₂)/2 = (20 s + 40 s)/2 = 30 s.' },
 
       { id: 'messdaten-u9', typ: 'tabelle', quelle: 'Tafel S. 13, A1',
         frage: 'Tafel S. 13: Berechne für jedes Intervall die mittlere Geschwindigkeit v̄ = (s₂ − s₁)/(t₂ − t₁) und ihren Zeitpunkt t₁₂ = (t₁ + t₂)/2.' + TAB_APP_S,
@@ -256,7 +254,7 @@
               'Oben die Differenz, unten nur der Zeitpunkt 50 s. Δt = 50 s − 30 s = 20 s. Das ergäbe ' + f(0.4 / 50, 3) + ' m/s².',
               F.kehrwert.erkl + ' Das ergäbe ' + f(20 / 0.4) + ' s²/m.'] }
         ],
-        antwort: A2.wert[1], einheit: 'm/s²', formel: 'a-dv',
+        antwort: A2.wert[1], einheit: 'm/s²', formel: 'a-mittel',
         loesung: '<p>ā = (v₂ − v₁)/(t₂ − t₁)<br>ā = (2,8 m/s − 2,4 m/s)/(50 s − 30 s) = 0,4 m/s / 20 s = ' + f(A2.wert[1]) + ' m/s²<br>Zeitpunkt: (30 s + 50 s)/2 = ' + f(A2.t[1]) + ' s</p>' },
 
       { id: 'messdaten-u11', typ: 'wahl', quelle: 'Tafel S. 13, A1',
@@ -304,14 +302,12 @@
           'Gleichmäßig beschleunigt heißt a = konst. Hier ändert sich ā von 0,5 auf 0,25 m/s².',
           'Gleichförmig heißt a = 0 und v = konst. Hier steigt v von 2,5 auf 4 m/s.'] },
 
-      { id: 'messdaten-u16', typ: 'wahl', quelle: 'Tafel S. 13, A1',
-        frage: 'Tafel S. 13: Bei t = 50 s und t = 70 s zeigt die Lauf-App beide Male v̄ = ' + f(V2.wert[2]) + ' m/s, also ā = 0 bei 60 s. Welcher v(t)-Graph passt zu diesem Abschnitt?',
-        optionen: [D.mini('v-gleich'), D.mini('v-beschl'), D.mini('v-brems'), D.mini('v-ruhe')],
-        richtig: 0,
-        optErkl: ['Richtig: konstante Geschwindigkeit, waagerechte Linie oberhalb der t-Achse.',
-          'Eine steigende Gerade heißt: v nimmt zu, ā > 0. Hier ist ā = 0.',
-          'Eine fallende Gerade heißt: v nimmt ab, ā < 0. Das passt eher zum Ende des Laufs, nicht zu diesem Abschnitt.',
-          'Eine Linie auf der t-Achse heißt v = 0, der Läufer stünde still. Er läuft aber ' + f(V2.wert[2]) + ' m/s.'] }
+      { id: 'messdaten-u16', typ: 'punkte', quelle: 'Tafel S. 13, A1',
+        frage: 'Tafel S. 13: Stelle auch die mittleren Beschleunigungen grafisch dar. Setze jeden Punkt bei seinem Zeitpunkt, negative Werte unterhalb der t-Achse.' +
+          '<table>' + zeile('t in s', A2.t.map(f)) + zeile('ā in m/s²', A2.wert.map(function (a) { return f(a); })) + '</table>',
+        achsen: { x: AX_APP, y: { g: 'a', e: 'm/s²', min: -0.04, max: 0.04, schritt: 0.01 } },
+        xs: A2.t.slice(), soll: A2.wert.slice(), tol: 0.0025,
+        kurve: paare(A2.t, A2.wert) }
     ],
 
     trainer: ['v-gleich', 'a-dv'],
@@ -340,7 +336,7 @@
               'Das sind Schritte, keine Meter. Heraus kämen ' + f(310 / 100) + ' Schritte pro Sekunde.',
               F.kehrwert.erkl + ' Das ergäbe etwa ' + f(100 / 248) + ' s/m.'] }
         ],
-        antwort: r(vGesamt), einheit: 'm/s', formel: 'v-gleich',
+        antwort: r(vGesamt), einheit: 'm/s', formel: 'v-mittel',
         loesung: '<p>s₂ = 310 · 0,8 m = ' + f(S2[5]) + ' m<br>v̄ = (s₂ − s₁)/(t₂ − t₁)<br>v̄ = (248 m − 0 m)/(100 s − 0 s) = 248 m / 100 s = ' + f(vGesamt) + ' m/s<br>In km/h: ' + f(vGesamt) + ' m/s · 3,6 ≈ ' + f(P.kmh(vGesamt)) + ' km/h</p>',
         satz: { optionen: [
           'Der Läufer war im Mittel mit ' + f(vGesamt) + ' m/s unterwegs, das sind rund ' + f(P.kmh(vGesamt), 1) + ' km/h: ein normales Lauftempo.',
@@ -352,13 +348,13 @@
             F.durch36.erkl] } },
 
       { id: 'messdaten-g2', typ: 'wahl',
-        frage: 'Wäre der Mann mit einem E-Scooter gefahren, etwa mit 20 km/h: Wie viele Schritte hätte die App dann in 20 s gezählt (Schrittlänge ' + f(SL) + ' m)? Zum Vergleich: In der Aufzeichnung sind es höchstens ' + nMax + ' Schritte pro 20 s.',
-        optionen: ['etwa ' + Math.round(nScooter) + ' Schritte', 'etwa ' + Math.round(sScooter) + ' Schritte', 'etwa ' + Math.round(20 * 20 / SL) + ' Schritte', 'etwa ' + Math.round(sScooter * SL) + ' Schritte'],
+        frage: 'Angenommen, der Mann wäre mit einem E-Scooter gefahren. Welche Strecke legt ein E-Scooter mit 20 km/h in 20 s zurück? Zum Vergleich: In der Aufzeichnung sind es höchstens ' + nMax + ' Schritte · ' + f(SL) + ' m = ' + f(sMax) + ' m pro 20 s.',
+        optionen: ['etwa ' + f(sScooter, 0) + ' m', f(20 * 20) + ' m', f(P.kmh(20) * 20) + ' m', 'etwa ' + f(vScooter / 20) + ' m'],
         richtig: 0,
-        optErkl: ['Richtig: 20 km/h : 3,6 ≈ ' + f(vScooter) + ' m/s. In 20 s sind das s = v·t ≈ ' + f(sScooter, 1) + ' m, geteilt durch 0,8 m rund ' + Math.round(nScooter) + ' Schritte, also etwa doppelt so viele wie in der Aufzeichnung.',
-          'Das sind die Meter in 20 s. Die App zählt Schritte: ' + f(sScooter, 1) + ' m : 0,8 m ≈ ' + Math.round(nScooter) + ' Schritte.',
+        optErkl: ['Richtig: 20 km/h : 3,6 ≈ ' + f(vScooter) + ' m/s, s = v·t ≈ ' + f(sScooter, 1) + ' m. Der Läufer schafft höchstens ' + f(sMax) + ' m in 20 s (v̄ = ' + f(sMax / 20) + ' m/s), der E-Scooter etwa doppelt so viel.',
           'Du hast 20 km/h wie 20 m/s behandelt. Erst umrechnen: 20 km/h : 3,6 ≈ ' + f(vScooter) + ' m/s.',
-          'Du hast die Strecke mit der Schrittlänge malgenommen. Schrittzahl = Strecke : Schrittlänge, also ' + f(sScooter, 1) + ' m : 0,8 m.'] },
+          F.mal36.erkl + ' 20 km/h · 3,6 = ' + f(P.kmh(20)) + ' m/s wäre viel zu schnell.',
+          'Du hast die Geschwindigkeit durch die Zeit geteilt. Die Strecke ist Geschwindigkeit mal Zeit: s = v·t.'] },
 
       { id: 'messdaten-g3', typ: 'wahl',
         frage: 'Die Lauf-App zeichnet ihre Geschwindigkeitskurve selbst. Sie trägt jeden v̄-Wert am Ende seines Intervalls ein, also bei 20 s, 40 s, 60 s … Was heißt das für die Kurve der App?',
@@ -386,6 +382,6 @@
     ],
 
     ergebnis: '<p><strong>Ergebnis:</strong> Laut Lauf-App hat der Mann in 100 s 310 Schritte gemacht, also ' + f(S2[5]) + ' m zurückgelegt. Seine mittlere Geschwindigkeit war ' + f(vGesamt) + ' m/s (rund ' + f(P.kmh(vGesamt), 1) + ' km/h), in den einzelnen Intervallen ' + f(V2.wert[0], 1) + ' bis ' + f(V2.wert[2]) + ' m/s. Die Beschleunigungen liegen nur zwischen ' + f(A2.wert[3]) + ' und ' + f(A2.wert[0]) + ' m/s².</p>' +
-      '<p>Ein E-Scooter mit 20 km/h hätte rund ' + Math.round(nScooter) + ' Schritte in 20 s ergeben, die App zeigt höchstens ' + nMax + '. Die Messdaten passen zu einem Läufer und stützen seine Aussage. Ob die App-Daten echt sind, ist keine Frage der Physik.</p>'
+      '<p>Ein E-Scooter mit 20 km/h legt in 20 s rund ' + f(sScooter, 0) + ' m zurück. Die Aufzeichnung zeigt höchstens ' + nMax + ' Schritte, also ' + f(sMax) + ' m in 20 s. Die Messdaten passen zu einem Läufer und stützen seine Aussage. Ob die App-Daten echt sind, ist keine Frage der Physik.</p>'
   });
 })();
